@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 This respository contains user tools, firmwares and example code for the QF2-pre.
 
-Files:
+Files in docs:
 
 QF2-pre Manual.odt - Manual for the QF2-pre in editable form.
 QF2-pre Manual.pdf - Manual for the QF2-pre in PDF format.
