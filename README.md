@@ -1,4 +1,4 @@
-Copyright (c) 2014-2017, Dr. John Alexander Jones
+Copyright (c) 2014-2017, Dr. John Alexander Jones.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
