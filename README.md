@@ -1,4 +1,4 @@
-Copyright (c) 2014-2017, Dr. John Alexander Jones
+Copyright (c) 2014-2017, Dr. John Alexander Jones.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 -----------------------------------------------------------------------
 
-This respository contains user tools, firmwares and example code for the QF2-pre. Summary as follows:
+This respository contains user tools, firmwares and example code for the QF2-pre.
+
+Files:
 
 QF2-pre Manual.odt - Manual for the QF2-pre in editable form.
 QF2-pre Manual.pdf - Manual for the QF2-pre in PDF format.
-
 
