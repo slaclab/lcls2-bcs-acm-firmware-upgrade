@@ -6,7 +6,7 @@ from configuration.spi import *
 
 CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
 
-parser = argparse.ArgumentParser(description='Verify Spartan-6 boot configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 args = parser.parse_args()
 

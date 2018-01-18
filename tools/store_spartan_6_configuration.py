@@ -7,7 +7,7 @@ from configuration.spi import *
 # Runtime is +32 sectors
 CONFIG_ADDRESS = 24+32 * spi.SECTOR_SIZE
 
-parser = argparse.ArgumentParser(description='Program BMB7 Spartan-6 boot configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-i', '--ip', help='Unicast IP address to be written into flash')
 parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into flash')

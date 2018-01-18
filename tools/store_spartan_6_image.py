@@ -9,7 +9,7 @@ from configuration.spi import *
 FIRMWARE_SECTOR_OFFSET = 0
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 
-parser = argparse.ArgumentParser(description='Program Spartan-6 boot image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
 args = parser.parse_args()

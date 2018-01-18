@@ -1,24 +1,19 @@
 #!/bin/env python
 
 from socket import *
-import string
-import time, sys
+import string, argparse, time, sys
 
-# REMEMBER TO SPECIFY THE PROPER DETINATION HOST HERE...
-# 'host' should be the address that the server half of this is running on
-host = "192.168.1.127"
-
-# if you change the port, change it on the server side as well
-port = 50000
+parser = argparse.ArgumentParser(description='Test UDP loopback', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-t', '--target', default='192.168.1.127', help='Target IP address')
+parser.add_argument('-p', '--port', default='7', help='Target port')
+args = parser.parse_args()
 
 UDPSock = socket(AF_INET,SOCK_DGRAM)
-UDPSock.bind(("0.0.0.0", 50002))
+UDPSock.bind(("0.0.0.0", 0)) #50002))
 UDPSock.settimeout(0.2)
 
+print "Targeting %s:%s" % (args.target, args.port)
 print "\nStarting echo test.  Control-C to quit."
-
-print "\nOur target:"
-print "echo server running on %s port %s" % (host, port)
 
 totalbytes = 0
 timestamp = time.time()
@@ -36,7 +31,7 @@ data2 = str()
 loopcount = 0
 
 while (1):
-	UDPSock.sendto(data,(host,port))
+	UDPSock.sendto(data,(args.target,int(args.port)))
 	try:
                 data2 = UDPSock.recv(size)
                 if not data2:

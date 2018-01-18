@@ -4,7 +4,7 @@ import time, sys, argparse
 from configuration.jtag import *
 from configuration.spi import *
 
-parser = argparse.ArgumentParser(description='Erase the Kintex-7 firmware image table', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Erase Kintex-7 firmware image table', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 args = parser.parse_args()
 

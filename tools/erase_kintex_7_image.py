@@ -4,7 +4,7 @@ import time, sys, argparse
 from configuration.jtag import *
 from configuration.spi import *
 
-parser = argparse.ArgumentParser(description='Erase a Kintex-7 boot image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Erase Kintex-7 boot image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
 args = parser.parse_args()
