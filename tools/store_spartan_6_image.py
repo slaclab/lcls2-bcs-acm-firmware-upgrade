@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from configuration.jtag import *
 from configuration.spi import *
 
+SEQUENCER_PORT = 50003
+
 # Sector offset is +32 for runtime image
 FIRMWARE_SECTOR_OFFSET = 0
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
@@ -15,7 +17,7 @@ parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
 args = parser.parse_args()
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=50005, input_select=0, speed=0, noinit=True))
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
 
 # Read the VCR and VECR
 print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)',

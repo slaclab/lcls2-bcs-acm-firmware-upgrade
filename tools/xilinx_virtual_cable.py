@@ -3,12 +3,14 @@
 import select, socket, string, sys, time, argparse
 from configuration.jtag import *
 
+SEQUENCER_PORT = 50003
+
 parser = argparse.ArgumentParser(description='Xilinx virtual cable interface', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 args = parser.parse_args()
 
 # Initialise the chain control
-chain = jtag.chain(ip=args.target, stream_port=50005, input_select=1, speed=0)
+chain = jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=1, speed=0)
 
 print 'There are', chain.num_devices(), 'devices in the chain:'
 

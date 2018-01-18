@@ -4,6 +4,8 @@ import time, sys, argparse
 from configuration.jtag import *
 from configuration.spi import *
 
+SEQUENCER_PORT = 50003
+
 # Runtime is +32 sectors
 CONFIG_ADDRESS = 24+32 * spi.SECTOR_SIZE
 
@@ -38,7 +40,7 @@ def fletcher_check(data):
     return bytearray([sum1, sum2])
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=50005, input_select=0, speed=0, noinit=True))
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
 
 # Read the VCR and VECR
 print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)',
