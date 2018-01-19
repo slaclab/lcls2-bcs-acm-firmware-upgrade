@@ -9,25 +9,49 @@ SEQUENCER_PORT = 50003
 
 # Sector offset is +32 for runtime image
 FIRMWARE_SECTOR_OFFSET = 0
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
+parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
+parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
+parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+
 args = parser.parse_args()
+
+# Check that the lock is only applied to the bootloader
+if args.lock:
+    if !args.bootloader:
+        print 'ERROR: Lock argument can only be used for the bootloader'
+        exit(1)
+
+# Currently disabled
+if args.reboot:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+if args.lock:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+
+# Chose firmware location
+if args.bootloader:
+    FIRMWARE_SECTOR_OFFSET = 0
+else:
+    FIRMWARE_SECTOR_OFFSET = 32
+
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
 
 # Read the VCR and VECR
-print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)',
-
+print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)'
 print 'VCR (should be 0xfb by default):',hex(prom.read_register(spi.RDVCR, 1)[0])
 print 'VECR (should be 0xdf):',hex(prom.read_register(spi.RDVECR, 1)[0])
 
 if prom.prom_size() != 25:
     print 'ERROR: PROM size incorrect, read',interface.prom_size()
-    exit()
+    exit(1)
 
 print 'PROM size: 256Mb == 500 x 64KB blocks'
 

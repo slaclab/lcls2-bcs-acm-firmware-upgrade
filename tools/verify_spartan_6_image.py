@@ -11,8 +11,17 @@ FIRMWARE_ID_ADDRESS = 23 * spi.SECTOR_SIZE
 
 parser = argparse.ArgumentParser(description='Verify Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-b', '--bit', help='Firmware bitfile to compare against')
+parser.add_argument('-b', '--bit', help='Bitfile to compare against')
+parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 args = parser.parse_args()
+
+# Chose firmware location
+if args.bootloader:
+    FIRMWARE_SECTOR_OFFSET = 0
+else:
+    FIRMWARE_SECTOR_OFFSET = 32
+
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
@@ -24,18 +33,18 @@ print 'VCR (should be 0xfb by default):',hex(prom.read_register(spi.RDVCR, 1)[0]
 print 'VECR (should be 0xdf):',hex(prom.read_register(spi.RDVECR, 1)[0])
 
 if prom.prom_size() != 25:
-    print 'PROM size incorrect, read',prom.prom_size()
-    exit()
+    print 'ERROR: PROM size incorrect, read',prom.prom_size()
+    exit(1)
 
 print 'PROM size: 256Mb == 500 x 64KB blocks'
 
-prom.verify_bitfile(args.bit, 0)
+prom.verify_bitfile(args.bit, FIRMWARE_SECTOR_OFFSET)
 
 parser = xilinx_bitfile_parser.bitfile(args.bit)
 
 # Extract the build date and time from the bitfile and encode it
 build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))
-    
+
 # Calculate SHA256 of bitfile
 sha256 = parser.hash()
 
