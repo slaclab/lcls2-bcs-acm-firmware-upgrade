@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time, sys
-from configuration.jtag import *
+from qf2_interface.configuration.jtag import *
 
 SUBSECTOR_SIZE = 4096
 SECTOR_SIZE = 65536

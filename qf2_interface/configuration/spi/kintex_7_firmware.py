@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from configuration.jtag import *
+from qf2_interface.configuration.jtag import *
 import spi, ntplib, time
 from datetime import datetime, timedelta
 

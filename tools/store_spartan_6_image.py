@@ -2,8 +2,8 @@
 
 import time, sys, ntplib, argparse
 from datetime import datetime, timedelta
-from configuration.jtag import *
-from configuration.spi import *
+from qf2_interface.configuration.jtag import *
+from qf2_interface.configuration.spi import *
 
 SEQUENCER_PORT = 50003
 
@@ -20,16 +20,16 @@ parser.add_argument('-r', '--reboot', action="store_true", default=False, help='
 args = parser.parse_args()
 
 # Check that the lock is only applied to the bootloader
-if args.lock:
-    if !args.bootloader:
+if args.lock == True:
+    if args.bootloader == False:
         print 'ERROR: Lock argument can only be used for the bootloader'
         exit(1)
 
 # Currently disabled
-if args.reboot:
+if args.reboot == True:
     print 'ERROR: This feature is not yet supported'
     exit(1)
-if args.lock:
+if args.lock == True:
     print 'ERROR: This feature is not yet supported'
     exit(1)
 

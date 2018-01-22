@@ -1,7 +1,7 @@
 #!/bin/env python
 
 import select, socket, string, sys, time, argparse
-from configuration.jtag import *
+from qf2_interface.configuration.jtag import *
 
 SEQUENCER_PORT = 50003
 

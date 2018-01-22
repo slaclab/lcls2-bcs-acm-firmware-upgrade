@@ -2,8 +2,8 @@
 
 import time, sys, argparse
 from datetime import datetime
-from configuration.jtag import *
-from configuration.spi import *
+from qf2_interface.configuration.jtag import *
+from qf2_interface.configuration.spi import *
 
 SEQUENCER_PORT = 50003
 
