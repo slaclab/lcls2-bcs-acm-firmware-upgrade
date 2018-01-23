@@ -35,3 +35,17 @@ Files in docs:
 QF2-pre Manual.odt - Manual for the QF2-pre in editable form.
 QF2-pre Manual.pdf - Manual for the QF2-pre in PDF format.
 
+Files in qf2_python:
+
+This is a Python package (qf2_python) which should be executed from the root
+directory (you can also add the package to PYTHONPATH). Example scripts are in:
+
+qf2_python/scripts
+
+Execute as:
+
+python -m qf2_python.scripts.[SCRIPT_TO_EXECUTE]
+
+Files in qf2_cpp:
+
+This is a placeholder for a future C++ version of the QF2-pre interface.
