@@ -8,7 +8,7 @@ from qf2_python.configuration.spi import *
 SEQUENCER_PORT = 50003
 
 # Sector offset is +32 for runtime image
-FIRMWARE_SECTOR_OFFSET = 0
+FIRMWARE_SECTOR_OFFSET = 32
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
@@ -34,10 +34,8 @@ if args.lock == True:
     exit(1)
 
 # Chose firmware location
-if args.bootloader:
+if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
-else:
-    FIRMWARE_SECTOR_OFFSET = 32
 
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 

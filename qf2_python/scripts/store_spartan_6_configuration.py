@@ -7,14 +7,36 @@ from qf2_python.configuration.spi import *
 SEQUENCER_PORT = 50003
 
 # Runtime is +32 sectors
-CONFIG_ADDRESS = 24+32 * spi.SECTOR_SIZE
+CONFIG_ADDRESS = (24 + 32) * spi.SECTOR_SIZE
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-i', '--ip', help='Unicast IP address to be written into flash')
 parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into flash')
+parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
+parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
+parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
+
 args = parser.parse_args()
+
+# Check that the lock is only applied to the bootloader
+if args.lock == True:
+    if args.bootloader == False:
+        print 'ERROR: Lock argument can only be used for the bootloader'
+        exit(1)
+
+# Currently disabled
+if args.reboot == True:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+if args.lock == True:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+
+# Chose firmware location
+if args.bootloader == True:
+    CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
 
 def fletcher(data):
 
