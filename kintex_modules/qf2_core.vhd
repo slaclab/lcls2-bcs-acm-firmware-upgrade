@@ -491,6 +491,10 @@ use ieee.numeric_std.all;
 library unimacro;
 use unimacro.vcomponents.FIFO_DUALCLOCK_MACRO;
 
+library unisim;
+use unisim.vcomponents.ibufds;
+use unisim.vcomponents.obufds;
+
 entity qf2_core is
   generic (
     CHANNEL_1_ENABLE   : boolean := false;
@@ -504,11 +508,22 @@ entity qf2_core is
     CHANNEL_4_LOOPBACK : boolean := false
     );
   port(
+    -- Async reset, 50MHz, 200MHz
     async_reset, clk, clk_4x : in std_logic;
 
-    data_in  : in  std_logic;
-    data_out : out std_logic;
+    -- Status signals to indicate data is being moved in / out of the FPGA
+    -- (50MHz domain)
+    transmitting, receiving : out std_logic;
 
+    -- Differential pins connected to Spartan-6 - Kintex-7 bridge
+    data_in_p, data_in_n   : in  std_logic;
+    data_out_p, data_out_n : out std_logic;
+
+    -- LED pass-through interface
+    led_lpc_r, led_lpc_g, led_lpc_b : in std_logic := '0';
+    led_hpc_r, led_hpc_g, led_hpc_b : in std_logic := '0';
+
+    -- Channel 1 interface (port 50004)
     channel_1_inbound_data       : out std_logic_vector(7 downto 0);
     channel_1_inbound_available  : out std_logic;
     channel_1_inbound_frame_end  : out std_logic;
@@ -518,6 +533,7 @@ entity qf2_core is
     channel_1_outbound_frame_end : in  std_logic                    := '1';
     channel_1_outbound_write     : in  std_logic                    := '0';
 
+    -- Channel 2 interface (port 50005)
     channel_2_inbound_data       : out std_logic_vector(7 downto 0);
     channel_2_inbound_available  : out std_logic;
     channel_2_inbound_frame_end  : out std_logic;
@@ -527,6 +543,7 @@ entity qf2_core is
     channel_2_outbound_frame_end : in  std_logic                    := '1';
     channel_2_outbound_write     : in  std_logic                    := '0';
 
+    -- Channel 3 interface (port 50006)
     channel_3_inbound_data       : out std_logic_vector(7 downto 0);
     channel_3_inbound_available  : out std_logic;
     channel_3_inbound_frame_end  : out std_logic;
@@ -536,6 +553,7 @@ entity qf2_core is
     channel_3_outbound_frame_end : in  std_logic                    := '1';
     channel_3_outbound_write     : in  std_logic                    := '0';
 
+    -- Channel 4 interface (port 50007)
     channel_4_inbound_data       : out std_logic_vector(7 downto 0);
     channel_4_inbound_available  : out std_logic;
     channel_4_inbound_frame_end  : out std_logic;
@@ -545,6 +563,7 @@ entity qf2_core is
     channel_4_outbound_frame_end : in  std_logic                    := '1';
     channel_4_outbound_write     : in  std_logic                    := '0';
 
+    -- Multicast    
     multicast_inbound_data       : out std_logic_vector(7 downto 0);
     multicast_inbound_available  : out std_logic;
     multicast_inbound_frame_end  : out std_logic;
@@ -624,6 +643,7 @@ architecture rtl of qf2_core is
   signal outbound_word_available                 : std_logic                    := '0';
   signal outbound_copy, outbound_empty           : std_logic;
   signal inbound_copy, inbound_full              : std_logic;
+  signal data_in, data_out                       : std_logic;
 
   -- Bridge FIFO signals
   signal inbound_bridge_dout, inbound_bridge_din     : std_logic_vector(8 downto 0);
@@ -632,6 +652,10 @@ architecture rtl of qf2_core is
   signal outbound_bridge_dout, outbound_bridge_din   : std_logic_vector(8 downto 0);
   signal outbound_bridge_empty, outbound_bridge_full : std_logic;
   signal outbound_bridge_read                        : std_logic;
+
+  -- LED update signals
+  signal led_outbound_read, led_outbound_empty : std_logic := '0';
+  signal led_outbound_dout : std_logic_vector(8 downto 0);
 
   -- Channel FIFO signals
   signal channel_1_inbound_fifo_din, channel_1_inbound_fifo_dout     : std_logic_vector(8 downto 0);
@@ -685,6 +709,27 @@ architecture rtl of qf2_core is
   
 begin
 
+  -- LVDS IOBs
+  inst_data_in_ibufds : IBUFDS
+    generic map (
+      IOSTANDARD => "LVDS_25",
+      DIFF_TERM  => true
+      )
+    port map (
+      I  => data_in_p,
+      IB => data_in_n,
+      O  => data_in
+      );
+  inst_data_out_obufds : OBUFDS
+    generic map (
+      IOSTANDARD => "LVDS_25"
+      )
+    port map (
+      O  => data_out_p,
+      OB => data_out_n,
+      I  => data_out
+      );
+
   ---- TX
   inst_tx : tx_8b9b
     generic map (
@@ -699,6 +744,7 @@ begin
       word_read      => outbound_bridge_read
       );
 
+  transmitting <= (outbound_word_available and outbound_bridge_read) when rising_edge(clk);
   outbound_word_available <= not(outbound_bridge_empty);
 
   inst_outbound_bridge_fifo : FIFO_DUALCLOCK_MACRO
@@ -751,7 +797,7 @@ begin
 
             -- Check the next stream
             outbound_stream_select <= std_logic_vector(unsigned(outbound_stream_select) + 1);
-            if (outbound_stream_select = "0100") then
+            if (outbound_stream_select = "0101") then
               outbound_stream_select <= "0000";
             end if;
 
@@ -776,7 +822,7 @@ begin
 
               -- Check the next stream
               outbound_stream_select <= std_logic_vector(unsigned(outbound_stream_select) + 1);
-              if (outbound_stream_select = "0100") then
+              if (outbound_stream_select = "0101") then
                 outbound_stream_select <= "0000";
               end if;
               
@@ -801,6 +847,7 @@ begin
     channel_3_outbound_fifo_empty when outbound_stream_select = "0010" else
     channel_4_outbound_fifo_empty when outbound_stream_select = "0011" else
     multicast_outbound_fifo_empty when outbound_stream_select = "0100" else
+    led_outbound_empty when outbound_stream_select = "0101" else
     '0';
 
   outbound_bridge_din <=
@@ -809,6 +856,7 @@ begin
     channel_3_outbound_fifo_dout when outbound_stream_select = "0010" else
     channel_4_outbound_fifo_dout when outbound_stream_select = "0011" else
     multicast_outbound_fifo_dout when outbound_stream_select = "0100" else
+    led_outbound_dout when outbound_stream_select = "0101" else
     ("00000" & outbound_target);
   
   channel_1_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0000" else '0';
@@ -816,7 +864,26 @@ begin
   channel_3_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0010" else '0';
   channel_4_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0011" else '0';
   multicast_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0100" else '0';
+  led_outbound_read <= outbound_copy when outbound_stream_select = "0101" else '0';
 
+  inst_led_update_proc : process(async_reset, clk)
+  begin
+    if ( async_reset = '1' ) then
+      -- Initialize LED status on reset
+      led_outbound_empty <= '0';
+      led_outbound_dout <= "100" & led_hpc_b & led_hpc_g & led_hpc_r & led_lpc_b & led_lpc_g & led_lpc_r;
+    elsif ( rising_edge(clk) ) then
+      if ( led_outbound_empty = '0' ) then
+        if ( led_outbound_read = '1' ) then
+          led_outbound_empty <= '1';
+        end if;
+      elsif ( led_outbound_dout /= ("100" & led_hpc_b & led_hpc_g & led_hpc_r & led_lpc_b & led_lpc_g & led_lpc_r) ) then
+        led_outbound_empty <= '0';
+        led_outbound_dout <= ("100" & led_hpc_b & led_hpc_g & led_hpc_r & led_lpc_b & led_lpc_g & led_lpc_r);
+      end if;
+    end if;
+  end process inst_led_update_proc;
+  
   ------ RX
   ------ No flow control - can overflow in principle
   inst_rx : oversampling_rx_8b9b
@@ -834,6 +901,8 @@ begin
       word_write     => inbound_bridge_write,
       frame_complete => inbound_bridge_din(8)
       );
+
+  receiving <= (inbound_bridge_write) when rising_edge(clk);
 
   inst_inbound_bridge_fifo : FIFO_DUALCLOCK_MACRO
     generic map (
