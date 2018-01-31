@@ -194,8 +194,8 @@ class interface():
                 
                     break
 
-        length = parser.length() / (8 * spi.SECTOR_SIZE)
-        if ( (parser.length() / 8) % spi.SECTOR_SIZE != 0 ):
+        length = parser.length() / spi.SECTOR_SIZE
+        if ( parser.length() % spi.SECTOR_SIZE != 0 ):
             length += 1
     
         print 'Sectors needed:',length
@@ -235,7 +235,7 @@ class interface():
         images.append({
                 'sha256' : parser.hash(),
                 'address' : location * spi.SECTOR_SIZE,
-                'length' : parser.length() / 8,
+                'length' : parser.length(),
                 'build_date' : build_date,
                 'storage_date' : storage_date
                 })

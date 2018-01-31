@@ -147,7 +147,7 @@ class bitfile():
             while bytes != b"":
                 bytes = bytearray(f.read(1000000))
                 result += bytes
-            
+                
             if name_length != len(result):
                 raise Xilinx_Bitfile_Parser_Exception('Bitstream length doesn\'t match rest of file')
 
@@ -174,7 +174,7 @@ class bitfile():
         return self.__build_time
 
     def length(self):
-        return len(self.__bitfile_data) * 8
+        return len(self.__bitfile_data)
 
     def match_idcode(self, idcode):
         v = xilinx_idcode_bitfile_dictionary[self.__device_name]
