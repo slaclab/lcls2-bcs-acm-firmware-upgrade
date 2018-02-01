@@ -17,10 +17,10 @@ parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into 
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-s', '--settings', help='Settings file CSV')
+#parser.add_argument('-s', '--settings', help='Settings file CSV')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 
-#parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
+parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
 
 args = parser.parse_args()
 
@@ -43,9 +43,9 @@ if args.bootloader == True:
     CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
 
 # Get a board interface so we know what we're dealing with...
-x = qf2_python.identifier.get_board_information(args.target, args.verbose)
+#x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
-exit()
+#exit()
 
 def fletcher(data):
 
@@ -198,7 +198,7 @@ x[81] = 0x03 # HSDIV[2:0]
 x[82] = 0x05 # Controller in reset, output disabled (6 == enabled)
 
 x[83] = 0x00 # [0] == POWER BURST MODE ENABLE
-x[84] = 0x17
+x[84] = 0x17 # Bypass sys I2C lines disabled, auto boot to runtime
 
 # Append checksum
 v = fletcher_check(x)

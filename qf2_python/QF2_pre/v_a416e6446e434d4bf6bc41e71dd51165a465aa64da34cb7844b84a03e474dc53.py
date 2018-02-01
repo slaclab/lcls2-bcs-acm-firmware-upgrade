@@ -44,7 +44,7 @@ def conv_n(x, n):
 	return x
 
 class cfg():
-        
+
         def __init__(self, verbose):
                 self.__cfg = {
                         'SI57X_A_DIV' : 202,
@@ -64,7 +64,8 @@ class cfg():
 class interface(cfg):
 
         def say_hello(self):
-                print 'guten tag'
+		pass
+                #print 'guten tag'
 
         def __init__(self, target, verbose):
                 # Initialize the configuration layer
