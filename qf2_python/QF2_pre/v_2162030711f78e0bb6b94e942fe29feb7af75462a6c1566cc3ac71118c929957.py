@@ -77,7 +77,7 @@ class interface(cfg):
                 self.host = target
                 self.port = 50001
                 self.WRITE_LENGTH = 63
-                self.READ_LENGTH = 63
+                self.READ_LENGTH = 105
 
                 # Interface socket
                 self.UDPSock = socket(AF_INET,SOCK_DGRAM)
@@ -88,7 +88,7 @@ class interface(cfg):
                 #self.set_byte(0, 7, 7)
 
                 # Turn on main power
-                self.set_byte(1, 2, 2)
+                #self.set_byte(1, 2, 2)
                 
                 # Turn on TAS2505
                 #self.set_byte(1, 4, 4)
@@ -567,8 +567,8 @@ class interface(cfg):
                 # Put the device back to sleep
                 self.atsha204_sleep()
                 
-        def max5387_write(self, address, resistor, value):
-                self.i2c_controller_write(0x2, 0x28 | address, 0x10 | resistor, value)
+        def max5387_write(self, resistor, value):
+                self.i2c_controller_write(0x2, 0x28, 0x10 | resistor, value)
                 return
 
                 #self.i2c_chain_set(0x2)                
@@ -1325,19 +1325,17 @@ class interface(cfg):
 
                 results = list()
                 for i in range(0, 4):
-                        self.i2c_controller_write(0x2, 0x40|i, 0x0, 0x4727, True) # write_16b_ina226(0x2, i, 0x0, 0x4727)
-                        r = self.i2c_controller_read(0x2, 0x40|i, 0x1, True) #self.read_16b_ina226(0x2, i, 0x1)
+                        self.i2c_controller_write(0x2, 0x40|i, 0x0, 0x4727, True)
+                        r = self.i2c_controller_read(0x2, 0x40|i, 0x1, True)
                         if ( r & 0x8000 != 0 ):
                                 results.append(0.0)
                                 results.append(0.0)
                         else:
                                 results.append(float(self.i2c_controller_read(0x2, 0x40|i, 0x1, True)) * 0.0000025)
                                 results.append(float(self.i2c_controller_read(0x2, 0x40|i, 0x2, True)) * 0.00125 * results[-1])
-                                #results.append(float(self.read_16b_ina226(0x2, i, 0x1)) * 0.0000025)
-                                #results.append(float(self.read_16b_ina226(0x2, i, 0x2)) * 0.00125 * results[-1])
                                 
                 for i in range(0, 6):
-                        self.write_16b_ina226(0x40, i, 0x0, 0x4727)
+                        self.write_16b_ina226(0x40, 0x40|i, 0x0, 0x4727)
                         if ( r & 0x8000 != 0 ):
                                 results.append(0.0)
                                 results.append(0.0)
@@ -1449,79 +1447,98 @@ class interface(cfg):
                 #        print hex(i),
                 #print
                 
-                power_state = int(data[55] >> 3) & 1
-                i2c_error_latch = int(data[52] >> 7) & 1
-                i2c_done_latch = int(data[52] >> 6) & 1
-                board_ot_shutdown_latch = int(data[52] >> 5) & 1
-                kintex_ot_shutdown_latch = int(data[52] >> 4) & 1
+                headphone_jack_sense = (int(data[97]) & 1)
+                is_qf2_pre = ((int(data[97] >> 1) & 1) ^ 1)
+                fan_tach = int(data[97] >> 2) & 1
+                power_state = int(data[97] >> 3) & 1
+                i2c_error_latch = int(data[94] >> 7) & 1
+                i2c_done_latch = int(data[94] >> 6) & 1
+                board_ot_shutdown_latch = int(data[94] >> 5) & 1
+                kintex_ot_shutdown_latch = int(data[94] >> 4) & 1
                 
                 print
+                print('Is QF2-pre: '+str(is_qf2_pre))
+                print('Headphone jack present: '+str(headphone_jack_sense))
+                print('Fan tach: '+str(fan_tach))
                 print('Power state: '+str(power_state))
                 print('I2C done latch: '+str(i2c_done_latch))
                 print('I2C error latch: '+str(i2c_error_latch))
                 print('Board OT shutdown latch: '+str(board_ot_shutdown_latch))
                 print('Kintex OT shutdown latch: '+str(kintex_ot_shutdown_latch))
                 
+                fan_speed = (int(data[77]) << 8) + int(data[76])
+                
+                #z = [
+                #        float(),
+                #        ]
+
+                #x = [
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float()
+                #        ]
+
+                #y = [
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float()
+                #        ]
+
+                z = []
+                y = []
+                x = []
+
+                for i in range(0, 10):
+                        z.append(((int(data[(i*4)+1+36]) << 8) + int(data[(i*4)+36])) * 0.0000025)
+                        z.append(((int(data[(i*4)+3+36]) << 8) + int(data[(i*4)+2+36])) * 0.00125 * z[-1])
+
+                for i in range(0, 8):
+                        x.append(float(2.56 * float((int(data[(i*2)+1+4]) << 8) + int(data[(i*2)+4])) / 65536.0))
+                        y.append(float(2.56 * float((int(data[(i*2)+1+20]) << 8) + int(data[(i*2)+20])) / 65536.0))
+
                 board_temperature = float((int(data[3]) << 4) + (int(data[2]) >> 4)) + (float(int(data[2]) & 0xF) * 0.0625)
                 kintex_temperature = float((int(data[1]) << 4) + (int(data[0]) >> 4)) + (float(int(data[0]) & 0xF) * 0.0625)
 
-                x = [
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float()
-                        ]
-
-                y = [
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float(),
-                        float()
-                        ]
-
-                for i in range(0, 8):
-                        x[i] = float(2.56 * float((int(data[(i*2)+1+4]) << 8) + int(data[(i*2)+4])) / 65536.0)
-                        y[i] = float(2.56 * float((int(data[(i*2)+1+20]) << 8) + int(data[(i*2)+20])) / 65536.0)
-
-                #z = self.read_ina226_values()
-
                 print('')
-                print('+12V:\t'+str(11.0 * y[0])+'V, ') #+str(z[18] / 0.004)+'A, '+str(z[19] / 0.004)+'W')
+                print('+12V:\t'+str(11.0 * y[0])+'V, '+str(z[18] / 0.004)+'A, '+str(z[19] / 0.004)+'W')
                 print('')
 
-                print('+3.3V_BOOT:\t'+str(2.0 * y[7])+'V, ') #+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
-                print('+1.2V_BOOT:\t'+str(y[1])+'V, ') #+str(z[16] / 0.01)+'A, '+str(z[17] / 0.01)+'W')
+                print('+3.3V_BOOT:\t'+str(2.0 * y[7])+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
+                print('+1.2V_BOOT:\t'+str(y[1])+'V, '+str(z[16] / 0.01)+'A, '+str(z[17] / 0.01)+'W')
                 print('')
 
-                print('+1.0V_K7_VCCINT:\t'+str(y[3])+'V, ')#+str(z[10] / 0.004)+'A, '+str(z[11] / 0.004)+'W')
-                print('+1.8V_K7_VCCAUX:\t'+str(y[2])+'V, ')#+str(z[12] / 0.01)+'A, '+str(z[13] / 0.01)+'W')
+                print('+1.0V_K7_VCCINT:\t'+str(y[3])+'V, '+str(z[10] / 0.004)+'A, '+str(z[11] / 0.004)+'W')
+                print('+1.8V_K7_VCCAUX:\t'+str(y[2])+'V, '+str(z[12] / 0.01)+'A, '+str(z[13] / 0.01)+'W')
                 print('K7_MGTAVTT:\t\t'+str(y[4])+'V')
-                print('K7_MGTAVCC:\t\t'+str(y[5])+'V, ')#+str(z[14] / 0.01)+'A, '+str(z[15] / 0.01)+'W')
+                print('K7_MGTAVCC:\t\t'+str(y[5])+'V, '+str(z[14] / 0.01)+'A, '+str(z[15] / 0.01)+'W')
                 print('K7_MGTAVCCAUX:\t\t'+str(y[6])+'V')
                 print('+2.5V_K7_A;\t\t'+str(2.0 * x[6])+'V')
                 print('+2.5V_K7_B:\t\t'+str(2.0 * x[7])+'V')
-                print('+3.3V_MAIN:\t\t'+str(2.0 * x[5])+'V, ')#+str(z[0] / 0.004)+'A, '+str(z[1] / 0.004)+'W')
+                print('+3.3V_MAIN:\t\t'+str(2.0 * x[5])+'V, '+str(z[0] / 0.004)+'A, '+str(z[1] / 0.004)+'W')
                 print('')
 
-                print('+12V_FMC:\t'+str(11.0 * x[2])+'V, ')#+str(z[4] / 0.01)+'A, '+str(z[5] / 0.01)+'W')
-                print('+3.3V_FMC:\t'+str(2.0 * x[1])+'V, ')#+str(z[2] / 0.004)+'A, '+str(z[3] / 0.004)+'W')
+                print('+12V_FMC:\t'+str(11.0 * x[2])+'V, '+str(z[4] / 0.01)+'A, '+str(z[5] / 0.01)+'W')
+                print('+3.3V_FMC:\t'+str(2.0 * x[1])+'V, '+str(z[2] / 0.004)+'A, '+str(z[3] / 0.004)+'W')
                 print('VADJ_FMC_TOP:\t'+str(2.0 * x[0])+'V')
                 print('VADJ_FMC_BOT:\t'+str(x[3])+'V')
-                #print('VADJ SUPPLY:\t'+str(z[6] / 0.01)+'A, '+str(z[7] / 0.01)+'W')
+                print('VADJ SUPPLY:\t'+str(z[6] / 0.01)+'A, '+str(z[7] / 0.01)+'W')
 
                 print('')
-                print('LTM4628 TEMPERATURE:\t'+str(150.0 - ((x[4] - 0.2) / 0.0023))+'C')
-                print('TMP461 TEMPERATURE:\t'+str(board_temperature)+'C')
-                print('Kintex-7 TEMPERATURE:\t'+str(kintex_temperature)+'C')
-                
+                print('LTM4628 temperature:\t'+str(150.0 - ((x[4] - 0.2) / 0.0023))+'C')
+                print('Board temperature:\t'+str(board_temperature)+'C')
+                print('Kintex-7 temperature:\t'+str(kintex_temperature)+'C')
+                print('ATX fan speed:\t\t'+str(fan_speed*60)+' rpm')
+
         def reboot_to_runtime(self, wait_for_reboot=False):
                 x = bytearray([0x81])
                 TempSock = socket(AF_INET,SOCK_DGRAM)

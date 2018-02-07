@@ -20,6 +20,13 @@ parser.add_argument('-v', '--verbose', action="store_true", default=False, help=
 
 args = parser.parse_args()
 
+if args.bit == None:
+    if args.bootloader == True:
+        args.bit = 'firmwares/spartan_bootloader.bit'
+    else:
+        args.bit = 'firmwares/spartan_runtime.bit'
+    print('Bitfile argument was not provided, assuming default from firmwares directory ('+args.bit+')')
+
 # Check that the lock is only applied to the bootloader
 if args.lock == True:
     if args.bootloader == False:
@@ -142,7 +149,7 @@ if did_break == False:
     storage_date = 0
     for i in range(0, 8):
         storage_date += int(pd[40+i]) * 2**(56-i*8)
-    print('Storage timestamp:'+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
+    print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
     # Disconnect the PROM interface before doing a reboot
     del prom
     if args.reboot == True:
@@ -170,12 +177,12 @@ for j in sha256[0:32]:
     s += '{:02x}'.format(j)
 print('SHA256: '+s)
 
-print('Build timestamp:'+str(build_date)+'('+str(datetime.utcfromtimestamp(build_date))+')')
+print('Build timestamp: '+str(build_date)+'('+str(datetime.utcfromtimestamp(build_date))+')')
 
 storage_date = 0
 for i in range(0, 8):
     storage_date += int(pd[40+i]) * 2**(56-i*8)
-print('Storage timestamp:'+str(storage_date)+'('+str(datetime.utcfromtimestamp(storage_date))+')')
+print('Storage timestamp: '+str(storage_date)+'('+str(datetime.utcfromtimestamp(storage_date))+')')
 
 # Disconnect the PROM interface before doing a reboot
 del prom

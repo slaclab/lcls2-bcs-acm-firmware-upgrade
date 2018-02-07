@@ -174,8 +174,8 @@ x[61] = 0x00
 x[62] = 0x01
 x[63] = 0x3F
 x[64] = 0x01
-x[65] = 0x30 # OT shutdown threshold for board
-x[66] = 0x30 # OT shutdown threshold for Kintex-7
+x[65] = 0x50 # OT shutdown threshold for board
+x[66] = 0x50 # OT shutdown threshold for Kintex-7
 
 # SI57X_B
 x[67] = 0x02
