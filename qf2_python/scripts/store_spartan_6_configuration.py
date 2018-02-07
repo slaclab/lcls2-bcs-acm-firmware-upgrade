@@ -174,8 +174,8 @@ x[61] = 0x00
 x[62] = 0x01
 x[63] = 0x3F
 x[64] = 0x01
-x[65] = 0x00
-x[66] = 0x0E
+x[65] = 0x30 # OT shutdown threshold for board
+x[66] = 0x30 # OT shutdown threshold for Kintex-7
 
 # SI57X_B
 x[67] = 0x02
@@ -197,7 +197,7 @@ x[80] = 0x03 # N1[6:0]
 x[81] = 0x03 # HSDIV[2:0]
 x[82] = 0x05 # Controller in reset, output disabled (6 == enabled)
 
-x[83] = 0x00 # [0] == POWER BURST MODE ENABLE
+x[83] = 0x02 # [0] == POWER BURST MODE ENABLE [1] == POWER ENABLE
 x[84] = 0x17 # Bypass sys I2C lines disabled, auto boot to runtime
 
 # Append checksum

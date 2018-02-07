@@ -170,12 +170,12 @@ for j in sha256[0:32]:
     s += '{:02x}'.format(j)
 print('SHA256: '+s)
 
-print('Build timestamp:', build_date, '('+str(datetime.utcfromtimestamp(build_date))+')')
+print('Build timestamp:'+str(build_date)+'('+str(datetime.utcfromtimestamp(build_date))+')')
 
 storage_date = 0
 for i in range(0, 8):
     storage_date += int(pd[40+i]) * 2**(56-i*8)
-print('Storage timestamp:', storage_date, '('+str(datetime.utcfromtimestamp(storage_date))+')')
+print('Storage timestamp:'+str(storage_date)+'('+str(datetime.utcfromtimestamp(storage_date))+')')
 
 # Disconnect the PROM interface before doing a reboot
 del prom
