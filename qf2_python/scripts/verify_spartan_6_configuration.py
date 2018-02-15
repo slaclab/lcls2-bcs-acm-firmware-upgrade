@@ -1,16 +1,91 @@
 #!/usr/bin/env python
 
 import time, sys, argparse
-from configuration.jtag import *
-from configuration.spi import *
+from qf2_python.configuration.jtag import *
+from qf2_python.configuration.spi import *
 
 SEQUENCER_PORT = 50003
+FIRMWARE_SECTOR_OFFSET = 32
 
-CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
+# Dynamic execution helper
+def my_exec_cfg(x, verbose=False):
+    ldict = locals()
+    exec('import qf2_python.QF2_pre.v_'+x+' as x',globals(),ldict)
+    return ldict['x'].cfg(verbose)
 
 parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
+parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
+parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
+
 args = parser.parse_args()
+
+# Check that the lock is only applied to the bootloader
+if args.lock == True:
+    if args.bootloader == False:
+        print('ERROR: Lock argument can only be used for the bootloader')
+        exit(1)
+
+# Currently disabled
+if args.lock == True:
+    print('ERROR: This feature is not yet supported')
+    exit(1)
+
+# Chose firmware location
+if args.bootloader == True:
+    FIRMWARE_SECTOR_OFFSET = 0
+
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
+
+# Initialise the interface to the PROM
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
+
+if prom.prom_size() != 25:
+    print('ERROR: PROM size incorrect, read',prom.prom_size())
+    exit(1)
+
+# Read the VCR and VECR
+if args.verbose == True:
+    print('PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)')
+    print('VCR (should be 0xfb by default): '+hex(prom.read_register(spi.RDVCR, 1)[0]))
+    print('VECR (should be 0xdf): '+hex(prom.read_register(spi.RDVECR, 1)[0]))
+    print('PROM size: 256Mb == 500 x 64KB blocks')
+    print('Scanning PROM bitstream and generating search hash')
+
+# Use the hash of the bitstream to determine the configuration
+prom_hash = prom.read_hash(FIRMWARE_SECTOR_OFFSET * spi.SECTOR_SIZE, 23 * spi.SECTOR_SIZE)
+
+# Convert the hash to text
+s = str()
+for j in prom_hash[0:32]:
+    s += '{:02x}'.format(j)
+prom_hash = s
+
+if args.verbose == True:
+    print('Loading configuration interface matching SHA256: '+prom_hash)
+
+# Get the configuration object for this firmware version
+cfg = my_exec_cfg(s, args.verbose)
+
+#import qf2_python.QF2_pre.v_a416e6446e434d4bf6bc41e71dd51165a465aa64da34cb7844b84a03e474dc53 as x
+#x = x.interface()
+
+
+
+exit()
+
+
+
+
+
+
+
+
+
+
+
 
 def fletcher(data):
 
@@ -49,6 +124,9 @@ if prom.prom_size() != 25:
     exit()
 
 print 'PROM size: 256Mb == 500 x 64KB blocks'
+
+
+
 
 print 'Reading Spartan-6 configuration settings'
 

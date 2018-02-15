@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import time, sys
-from configuration.jtag import *
+import time, sys, hashlib
+from ..jtag import *
 
 SUBSECTOR_SIZE = 4096
 SECTOR_SIZE = 65536
@@ -78,7 +78,7 @@ class interface():
         # because the Xilinx FPGAs are too stupid to not reinitialise the PROM before use
         self.write_register(WREN)
         self.write_register(EX4BYTEADDR)
-        print 'Exited 4 byte address mode during cleanup'
+        #print 'Exited 4 byte address mode during cleanup'
         
     def dummy_cycles(self):
         return self.__dummy_cycles
@@ -323,3 +323,8 @@ class interface():
             print 'UPDATED'
 
         print
+
+    def read_hash(self, start_address, num_bytes):
+        m = hashlib.sha256()
+        m.update(self.read_data(start_address, num_bytes))
+        return bytearray(m.digest())

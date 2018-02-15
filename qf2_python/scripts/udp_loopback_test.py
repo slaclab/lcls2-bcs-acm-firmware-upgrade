@@ -9,8 +9,8 @@ parser.add_argument('-p', '--port', default='7', help='Target port')
 args = parser.parse_args()
 
 UDPSock = socket(AF_INET,SOCK_DGRAM)
-UDPSock.bind(("0.0.0.0", 0)) #50002))
-UDPSock.settimeout(0.2)
+UDPSock.bind(("0.0.0.0", 0))
+UDPSock.settimeout(2)
 
 print "Targeting %s:%s" % (args.target, args.port)
 print "\nStarting echo test.  Control-C to quit."
@@ -31,6 +31,11 @@ data2 = str()
 loopcount = 0
 
 while (1):
+        size = size + 1
+        if size == 1451:
+                size = 1
+        
+        data = str(bytes[0:size])
 	UDPSock.sendto(data,(args.target,int(args.port)))
 	try:
                 data2 = UDPSock.recv(size)
@@ -49,7 +54,7 @@ while (1):
 		print "Incorrect data volume received"
 		break
 
-	if ( bytes != rbytes ):
+	if ( bytes[0:size] != rbytes ):
 		print "Incorrect data received"
 		break
 
@@ -57,12 +62,11 @@ while (1):
 	donestamp = time.time()
 	rate = totalbytes / (donestamp - timestamp) / 1024
 
-	#for i in range(0, size):
-	#	print bytes[i], rbytes[i]
-
 	if int(prevdonestamp) != int(donestamp):
                 print
 		print "Rcvd: %s bytes, %s total in %s s at %s kB/s" % (len(data2), totalbytes, donestamp - timestamp, rate)
 		prevdonestamp = donestamp
+
+        time.sleep(0.01)
 
 UDPSock.close()

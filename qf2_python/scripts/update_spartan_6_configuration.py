@@ -1,20 +1,51 @@
 #!/usr/bin/env python
 
 import time, sys, argparse
-from configuration.jtag import *
-from configuration.spi import *
+import qf2_python.identifier
+from qf2_python.configuration.jtag import *
+from qf2_python.configuration.spi import *
 
 SEQUENCER_PORT = 50003
 
 # Runtime is +32 sectors
-CONFIG_ADDRESS = 24+32 * spi.SECTOR_SIZE
+CONFIG_ADDRESS = (24 + 32) * spi.SECTOR_SIZE
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-i', '--ip', help='Unicast IP address to be written into flash')
 parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into flash')
+parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
+parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
+parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+#parser.add_argument('-s', '--settings', help='Settings file CSV')
+parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+
 parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
+
 args = parser.parse_args()
+
+# Check that the lock is only applied to the bootloader
+if args.lock == True:
+    if args.bootloader == False:
+        print 'ERROR: Lock argument can only be used for the bootloader'
+        exit(1)
+
+# Currently disabled
+if args.reboot == True:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+if args.lock == True:
+    print 'ERROR: This feature is not yet supported'
+    exit(1)
+
+# Chose firmware location
+if args.bootloader == True:
+    CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
+
+# Get a board interface so we know what we're dealing with...
+#x = qf2_python.identifier.get_board_information(args.target, args.verbose)
+
+#exit()
 
 def fletcher(data):
 
@@ -143,8 +174,8 @@ x[61] = 0x00
 x[62] = 0x01
 x[63] = 0x3F
 x[64] = 0x01
-x[65] = 0x00
-x[66] = 0x0E
+x[65] = 0x50 # OT shutdown threshold for board
+x[66] = 0x50 # OT shutdown threshold for Kintex-7
 
 # SI57X_B
 x[67] = 0x02
@@ -166,8 +197,8 @@ x[80] = 0x03 # N1[6:0]
 x[81] = 0x03 # HSDIV[2:0]
 x[82] = 0x05 # Controller in reset, output disabled (6 == enabled)
 
-x[83] = 0x00 # [0] == POWER BURST MODE ENABLE
-x[84] = 0x07
+x[83] = 0x02 # [0] == POWER BURST MODE ENABLE [1] == POWER ENABLE
+x[84] = 0x17 # Bypass sys I2C lines disabled, auto boot to runtime
 
 # Append checksum
 v = fletcher_check(x)
