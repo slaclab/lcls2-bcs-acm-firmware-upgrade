@@ -4,7 +4,7 @@ from ..jtag import *
 import spi, ntplib, time
 from datetime import datetime, timedelta
 
-KINTEX_IMAGE_TABLE_SECTOR = 25
+KINTEX_IMAGE_TABLE_SECTOR = 57
 KINTEX_IMAGE_TABLE_ADDRESS = KINTEX_IMAGE_TABLE_SECTOR * spi.SECTOR_SIZE
 KINTEX_IMAGE_TABLE_ENTRY_SIZE = 56
 
