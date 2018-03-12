@@ -71,19 +71,7 @@ def fletcher_check(data):
     return bytearray([sum1, sum2])
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
-
-# Read the VCR and VECR
-print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)',
-
-print 'VCR (should be 0xfb by default):',hex(prom.read_register(spi.RDVCR, 1)[0])
-print 'VECR (should be 0xdf):',hex(prom.read_register(spi.RDVECR, 1)[0])
-
-if prom.prom_size() != 25:
-    print 'PROM size incorrect, read',interface.prom_size()
-    exit()
-
-print 'PROM size: 256Mb == 500 x 64KB blocks'
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
 print 'Programming Spartan-6 configuration settings'
 
@@ -211,7 +199,7 @@ if ( x == pd ):
     print 'Values already programmed'
     exit()
 
-prom.subsector_erase(CONFIG_ADDRESS)
+prom.sector_erase(CONFIG_ADDRESS)
 prom.page_program(x, CONFIG_ADDRESS)
 
 pd = prom.read_data(CONFIG_ADDRESS, 256)

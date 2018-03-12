@@ -122,13 +122,15 @@ class interface(cfg):
                 # Reset debug I2C pins
                 #self.set_byte(0, 7, 7)
 
-                # Turn on main power
-                #self.set_byte(1, 2, 2)
-                
                 # Turn on TAS2505
                 #self.set_byte(1, 4, 4)
 
                 #exit()
+
+        def enable_main_power(self):
+                self.set_byte(1, 2, 2)
+        def disable_main_power(self):
+                self.set_byte(1, 0, 2)
 
         def set_byte(self, index, data, mask):
                 d = bytearray(self.WRITE_LENGTH)
@@ -943,8 +945,10 @@ class interface(cfg):
 
         def qsfp_get(self):
                 # Chain is already set, query the QSFP
-                self.i2c_controller_write(0x80, 0x50, 128, 0) #self.qsfp_set(128, 0)
+                self.i2c_controller_write(0x80, 0x50, 128, 0)
                 
+                time.sleep(0.2)
+
                 result = dict()
                 x = self.i2c_controller_block_read(0x80, 0x50, 0, 128)
                 for i in range(0, 128):
