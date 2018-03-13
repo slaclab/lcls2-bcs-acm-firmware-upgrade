@@ -39,6 +39,7 @@ class SL25FLL():
     RDCR2 = 0x15
     RDCR3 = 0x33
 
+    WRAR = 0x71
     WREN = 0x06
     #WRENV = 0x50
     EN4BYTEADDR = 0xB7
@@ -54,18 +55,22 @@ class SL25FLL():
         self.__verbose = verbose
         self.__dummy_cycles = 8
  
-        # Set 4 byte addressing mode
+        # Set the volatile dummy cycles register and disable wrapping
         self.write_register(self.WREN)
+        self.write_register(self.WRAR, bytearray([0x80, 0x00, 0x04, 0x10 | self.__dummy_cycles]))
+        #cr3 = self.read_register(self.RDCR3, 1)[0]
+
+        # Set 4 byte addressing mode
         self.write_register(self.EN4BYTEADDR)
 
     def __del__(self):
         # Ensure we return to 3-byte address mode in case someone is doing e.g. multiboot
         # because the Xilinx FPGAs are too stupid to not reinitialise the PROM before use
-        self.write_register(self.WREN)
         self.write_register(self.EX4BYTEADDR)
 
     def write_register(self, instruction, value = bytearray([])):
         # MSB first
+
         self.__target.write(instruction, 8, False, False, True)
         self.__target.write_bytearray(value, False, True, False)
 
@@ -190,8 +195,6 @@ class N25Q():
         self.__verbose = verbose
         self.__dummy_cycles = 10
         
-        vcr = self.read_register(self.RDVCR, 1)[0]
-
         # Set the dummy cycles in the PROM configuration register
         vcr = self.read_register(self.RDVCR, 1)[0]
         vcr &= 0xF & vcr
@@ -229,13 +232,37 @@ class N25Q():
         self.__target.jtag_clock([jtag.TMS])
         return result
 
+    def read_data(self, start_address, num_bytes):
+        self.__target.write(self.FAST_READ, 8, False, False, True)
+
+        # 32-bit address
+        send = bytearray()
+        for i in range(0, 32):
+            if (start_address >> 31 - i) & 0x1:
+                send += bytearray([jtag.TDI])
+            else:
+                send += bytearray([0])
+
+        # Dummy cycles (first data on falling edge of last cycle)
+        for i in range(0, self.__dummy_cycles):
+            send += bytearray([0])
+
+        self.__target.jtag_clock(send)
+
+        send = bytearray([0]) * num_bytes
+        result = self.__target.write_read_bytearray(send, False, False, True)
+
+        self.__target.jtag_clock([jtag.TMS])
+
+        return result
+
     def sector_erase(self, address):
 
         # Write enable
-        self.write_register(WREN)
+        self.write_register(self.WREN)
 
         # Erase a sector
-        self.__target.write(SE, 8, False, False, True)
+        self.__target.write(self.SE, 8, False, False, True)
 
         # 32-bit address
         send = bytearray()
@@ -249,22 +276,22 @@ class N25Q():
         self.__target.jtag_clock([jtag.TMS])
 
         # Read the status register and wait for completion
-        x = self.read_register(RDSR, 1)[0]
-        y = self.read_register(RFSR, 1)[0]
+        x = self.read_register(self.RDSR, 1)[0]
+        y = self.read_register(self.RFSR, 1)[0]
         while True:
             #print hex(x), hex(y),
             if ((x & 0x1) == 0) and ((y & 0x81) == 0x81):
                 break
-            x = self.read_register(RDSR, 1)[0]
-            y = self.read_register(RFSR, 1)[0]
+            x = self.read_register(self.RDSR, 1)[0]
+            y = self.read_register(self.RFSR, 1)[0]
 
     def subsector_erase(self, address):
 
         # Write enable
-        self.write_register(WREN)
+        self.write_register(self.WREN)
 
         # Erase a sector
-        self.__target.write(SSE, 8, False, False, True)
+        self.__target.write(self.SSE, 8, False, False, True)
 
         # 32-bit address
         send = bytearray()
@@ -278,24 +305,24 @@ class N25Q():
         self.__target.jtag_clock([jtag.TMS])
 
         # Read the status register and wait for completion
-        x = self.read_register(RDSR, 1)[0]
-        y = self.read_register(RFSR, 1)[0]
+        x = self.read_register(self.RDSR, 1)[0]
+        y = self.read_register(self.RFSR, 1)[0]
         while True:
             #print hex(x), hex(y),
             if ((x & 0x1) == 0) and ((y & 0x81) == 0x81):
                 break
-            x = self.read_register(RDSR, 1)[0]
-            y = self.read_register(RFSR, 1)[0]
+            x = self.read_register(self.RDSR, 1)[0]
+            y = self.read_register(self.RFSR, 1)[0]
 
     def page_program(self, data, address):
         if len(data) != 256:
             raise SPI_Base_Exception('Data is not size of page')
 
         # Write enable
-        self.write_register(WREN)
+        self.write_register(self.WREN)
 
         # Page program
-        self.__target.write(PP, 8, False, False, True)
+        self.__target.write(self.PP, 8, False, False, True)
 
         send = bytearray()
         for i in range(0, 32):
@@ -311,7 +338,7 @@ class N25Q():
         self.__target.jtag_clock([jtag.TMS])
 
         # Read the status register and wait for completion
-        while self.read_register(RDSR, 1)[0] & 0x1:
+        while self.read_register(self.RDSR, 1)[0] & 0x1:
             continue
 
 class SPI_Base_Exception(Exception):

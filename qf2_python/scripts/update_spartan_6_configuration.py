@@ -16,7 +16,7 @@ parser.add_argument('-i', '--ip', help='Unicast IP address to be written into fl
 parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into flash')
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
-parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+#parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 #parser.add_argument('-s', '--settings', help='Settings file CSV')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 
@@ -31,9 +31,9 @@ if args.lock == True:
         exit(1)
 
 # Currently disabled
-if args.reboot == True:
-    print 'ERROR: This feature is not yet supported'
-    exit(1)
+#if args.reboot == True:
+#    print 'ERROR: This feature is not yet supported'
+#    exit(1)
 if args.lock == True:
     print 'ERROR: This feature is not yet supported'
     exit(1)
