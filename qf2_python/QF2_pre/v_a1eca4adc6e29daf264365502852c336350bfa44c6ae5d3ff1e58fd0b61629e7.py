@@ -72,23 +72,345 @@ def conv_n(x, n):
 		x = x - 2**n
 	return x
 
-class cfg():
+class cfg:
+
+        class SHA256(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                if (len(val) != 64):
+                                        raise Exception('Bad SHA256 hash argument')
+                                self.__val = list([0] * 32)
+                                for i in range(0, 32):
+                                        self.__val[i] = int(val[i*2:i*2+2], 16)
+                                return
+                        if type(val) == bytearray:
+                                if (len(val) != 32):
+                                        raise Exception('Bad SHA256 hash argument')
+                                self.__val = list([0] * 32)
+                                for i in range(0, 32):
+                                        self.__val[i] = int(val[i])
+                                return                                
+                        raise Exception('Invalid type assignment')
+
+                def __get__(self, objtype=None):
+                        print type(objtype)
+                        return self.__val
+
+                def __set__(self, val):
+                        print type(val)
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 32):
+                                s += '{:02x}'.format(self.__val[i])
+                        return s[:-1]
+
+        class IPV4_IP(object):
+
+                def __init__(self, val):
+                        if val > (2**32)-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __get__(self, objtype=None):
+                        print type(objtype)
+                        return self.__val
+
+                def __set__(self, val):
+                        print type(val)
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 4):
+                                s += '{:d}'.format((self.__val >> ((3-i) * 8)) & 0xFF) + '.'
+                        return s[:-1]
+
+        class IPV4_PORT(object):
+
+                def __init__(self, val):
+                        if val > 2**16-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __get__(self, objtype=None):
+                        print type(objtype)
+                        return self.__val
+
+                def __set__(self, val):
+                        print type(val)
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        return str(self.__val)
+
+        class IPV4_MAC(object):
+
+                def __init__(self, val):
+                        if val > 2**48-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __get__(self, objtype=None):
+                        print type(objtype)
+                        return self.__val
+
+                def __set__(self, val):
+                        print type(val)
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 6):
+                                s += '{:02X}'.format((self.__val >> ((5-i) * 8)) & 0xFF) + ':'
+                        return s[:-1]
 
         def __init__(self, verbose):
-                self.__cfg = {
-                        'SI57X_A_DIV' : 202,
+                self.__verbose = verbose
+                self.__WRITE_LENGTH = 63
+                self.__READ_LENGTH = 105
+                self.__NETWORK_LENGTH = 22
+
+                # Key : [Start (bits), Length (bits), Type / Default]
+                self.__network_cfg = {
+
+                        'IPV4_MULTICAST_MAC' : [128, 48, self.IPV4_MAC(0)],
+                        'IPV4_MULTICAST_IP' : [96, 32, self.IPV4_IP(0)],
+                        'IPV4_MULTICAST_PORT' : [80, 16, self.IPV4_PORT(0)],
+
+                        'IPV4_UNICAST_MAC' : [32, 48, self.IPV4_MAC(0xAABBCCDDEEFF)],
+                        'IPV4_UNICAST_IP' : [0, 32, self.IPV4_IP(0xC0A8017F)]
+
                         }
 
-                if verbose == True:
+                # Key : [Start (bits), Length (bits), Type / Default]
+                self.__write_cfg = {
+
+                        'KINTEX_BOOT_SHA256' : [248, 256, self.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
+
+                        'BOARD_SHUTDOWN_TEMPERATURE' : [152, 8, int(64)],
+                        'KINTEX_SHUTDOWN_TEMPERATURE' : [144, 8, int(64)],
+
+                        'SI57X_B_NEW_RFREQ' : [104, 38, int(0x02BBEAD49B)],
+                        'SI57X_B_NEW_N1' : [96, 7, int(3)],
+                        'SI57X_B_NEW_HSDIV' : [88, 3, int(0)],
+                        'SI57X_B_UPDATE' : [82, 1, int(1)],
+                        'SI57X_B_OE' : [81, 1, int(0)],
+                        'N_SI57X_B_CFG_ENABLE' : [80, 1, int(1)],
+
+                        'SI57X_A_NEW_RFREQ' : [40, 38, int(0x02BBEAD49B)],
+                        'SI57X_A_NEW_N1' : [32, 7, int(3)],
+                        'SI57X_A_NEW_HSDIV' : [24, 3, int(0)],
+                        'SI57X_A_UPDATE' : [18, 1, int(1)],
+                        'SI57X_A_OE' : [17, 1, int(0)],
+                        'N_SI57X_A_CFG_ENABLE' : [16, 1, int(1)],
+                        
+                        'N_TAS_2505_RESET' : [11, 1, int(0)],
+                        'MONITORING_ENABLE' : [10, 1, int(0)],
+                        'MAIN_POWER_ENABLE' : [9, 1, int(0)],
+                        'POWER_BURST_MODE' : [8, 1, int(1)],
+
+                        'SYS_I2C_RESET' : [2, 1, int(1)],
+                        'SYS_I2C_SDA' : [1, 1, int(1)],
+                        'SYS_I2C_SCL' : [0, 1, int(1)]
+
+                        }
+                                        
+                # Key : [Start (bits), Length (bits), Type]
+                self.__read_cfg = {
+
+                        #TAS COUNT, CORRUPTED BITSTREAM, FLASH DEBUG
+
+                        'MAIN_POWER_STATE' : [763, 1, int()],
+                        'JACK_SENSE' : [760, 1, int()],
+
+                        '__FAN_TACH' : [762, 1, int()],
+                        '__N_IS_QF2P' : [761, 1, int()],
+                        '__CONTROLLER_I2C_READ_DATA' : [744, 1, int()],
+                        
+                        'I2C_ERROR_LATCH' : [743, 1, int()],
+                        'I2C_DONE_LATCH' : [742, 1, int()],
+                        'BOARD_OT_SHUTDOWN_LATCH' : [741, 1, int()],
+                        'KINTEX_OT_SHUTDOWN_LATCH' : [740, 1, int()],
+                        'SYS_I2C_SDA' : [737, 1, int()],
+                        'SYS_I2C_SCL' : [736, 1, int()],
+
+                        'SI57X_B_CURRENT_RFREQ' : [696, 38, int()],
+                        'SI57X_B_CURRENT_N1' : [688, 7, int()],
+                        'SI57X_B_CURRENT_HSDIV' : [680, 3, int()],
+                        'SI57X_B_ERROR' : [673, 1, int()],
+                        'SI57X_B_DONE' : [672, 1, int()],
+
+                        'SI57X_A_CURRENT_RFREQ' : [632, 38, int()],
+                        'SI57X_A_CURRENT_N1' : [624, 7, int()],
+                        'SI57X_A_CURRENT_HSDIV' : [616, 3, int()],
+                        'SI57X_A_ERROR' : [609, 1, int()],
+                        'SI57X_A_DONE' : [608, 1, int()],
+
+                        'FAN_SPEED' : [592, 16, int()],
+
+                        'INA226_9_1' : [576, 16, int()],
+                        'INA226_9_0' : [560, 16, int()],
+                        'INA226_8_1' : [544, 16, int()],
+                        'INA226_8_0' : [528, 16, int()],
+                        'INA226_7_1' : [512, 16, int()],
+                        'INA226_7_0' : [496, 16, int()],
+                        'INA226_6_1' : [480, 16, int()],
+                        'INA226_6_0' : [464, 16, int()],
+                        'INA226_5_1' : [448, 16, int()],
+                        'INA226_5_0' : [432, 16, int()],
+                        'INA226_4_1' : [416, 16, int()],
+                        'INA226_4_0' : [400, 16, int()],
+                        'INA226_3_1' : [384, 16, int()],
+                        'INA226_3_0' : [368, 16, int()],
+                        'INA226_2_1' : [352, 16, int()],
+                        'INA226_2_0' : [336, 16, int()],
+                        'INA226_1_1' : [320, 16, int()],
+                        'INA226_1_0' : [304, 16, int()],
+                        'INA226_0_1' : [288, 16, int()],
+                        'INA226_0_0' : [272, 16, int()],
+
+                        'VMON_1_6' : [256, 16, int()],
+                        'VMON_1_5' : [240, 16, int()],
+                        'VMON_1_4' : [224, 16, int()],
+                        'VMON_1_3' : [208, 16, int()],
+                        'VMON_1_2' : [192, 16, int()],
+                        'VMON_1_1' : [176, 16, int()],
+                        'VMON_1_0' : [160, 16, int()],
+                        'VMON_0_7' : [144, 16, int()],
+                        'VMON_0_6' : [128, 16, int()],
+                        'VMON_0_5' : [112, 16, int()],
+                        'VMON_0_4' : [96, 16, int()],
+                        'VMON_0_3' : [80, 16, int()],
+                        'VMON_0_2' : [64, 16, int()],
+                        'VMON_0_1' : [48, 16, int()],
+                        'VMON_0_0' : [32, 16, int()],
+
+                        'BOARD_TEMPERATURE' : [16, 12, int()],
+                        'KINTEX_TEMPERATURE' : [0, 12, int()]
+
+                        }
+
+                #print self.__network_cfg['IPV4_MULTICAST_IP'][2]
+
+                if self.__verbose == True:
+                        print('')
                         print('Initial configuration is:')
-                        for key, value in self.__cfg.items():
-                                print key + ': ' + str(value)
+                        print('')
+                        for key, value in self.__write_cfg.items():
+                                print(key+' : '+str(value[2]))
+
+        def export_network_data(self):
+                pass
+
+        def import_network_data(self, data):
+                pass
 
         def export_prom_data(self):
-                return None
+                pass
+
+        def __import_cfg_value(self, key, target, data):
+                print key
+
+                value = target[key]
+                start_point = int(value[0])
+                bit_length = int(value[1])
+                block = bytearray()
+
+                # Parse into an integer, then shift and mask
+                myi = 0
+                start = (start_point >> 3)
+                end = start + (bit_length >> 3) + 2
+                if end > len(data):
+                        end = len(data)
+                for i in range(start, end):
+                        myi = myi | (int(data[i]) << ((i-start)*8))
+
+                # Generate the mask
+                mask = 0
+                for i in range(0, bit_length):
+                        mask = (mask << 1) | 1
+                
+                # Shift the data down to align and mask off
+                myi = (myi >> (start_point & 0x7)) & mask
+
+                print hex(myi)
+
+                # Convert the integer into a bytearray
+                num_bytes = (bit_length / 8)
+                if (bit_length & 0x7) != 0:
+                        num_bytes += 1
+
+                # Just pass the underlying integer if the default is integer
+                if type(target[key][2]) == int:
+                        target[key][2] = myi
+                        return
+
+                # Otherwise pass a block
+                for i in range(0, num_bytes):
+                        block.append(myi & 0xFF)
+                        myi = myi >> 8
+
+                target[key][2] = type(target[key][2])(block)
 
         def import_prom_data(self, data):
-                self.say_hello()
+
+                v = self.fletcher_check(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
+
+                if ( v != data[self.__WRITE_LENGTH + self.__NETWORK_LENGTH:self.__WRITE_LENGTH + self.__NETWORK_LENGTH+2] ):
+                        # Invalid checksum
+                        if self.__verbose == True:
+                                print('Imported PROM data checksum is invalid, configuration will not be imported')
+                        return
+
+                # Reverse so ordering matches VHDL
+                rdata = data[0:self.__WRITE_LENGTH+self.__NETWORK_LENGTH]
+                rdata.reverse()
+
+                for key, value in self.__write_cfg.items():
+                        self.__import_cfg_value(key, self.__write_cfg, rdata[0:self.__WRITE_LENGTH])
+
+                # Import each value one by one from the PROM data
+                for key, value in self.__network_cfg.items():
+                        self.__import_cfg_value(key, self.__network_cfg, rdata[self.__WRITE_LENGTH:self.__NETWORK_LENGTH+self.__WRITE_LENGTH])
+
+                if self.__verbose == True:
+                        print('')
+                        print('Imported configuration is:')
+                        print('')
+                        for key, value in self.__write_cfg.items():
+                                print(key+' : '+str(value[2]))
+                        for key, value in self.__network_cfg.items():
+                                print(key+' : '+str(value[2]))
+                
+        def fletcher(self, data):
+
+                sum1 = 0xAA
+                sum2 = 0x55
+
+                for i in data:
+                        sum1 = sum1 + int(i)
+                        sum2 = sum1 + sum2
+
+                sum1 = sum1 % 255
+                sum2 = sum2 % 255
+
+                return bytearray([sum1, sum2])
+
+        def fletcher_check(self, data):
+                
+                v = self.fletcher(data)
+
+                sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
+                sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+
+                return bytearray([sum1, sum2])
 
 class interface(cfg):
 
@@ -96,18 +418,17 @@ class interface(cfg):
 		pass
                 #print 'guten tag'
 
-        def __init__(self, target, verbose):
+        def __init__(self, host, verbose):
+                self.__host = host
+                self.__port = 50001
+
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
                 x=5
                 self.import_prom_data(x)
 
-                self.host = target
-                self.port = 50001
-                self.i2c_port = 50002
-                self.WRITE_LENGTH = 63
-                self.READ_LENGTH = 105
+                self.__i2c_port = 50002
                 self.BOARD_UID = str()
 
                 # Interface socket
@@ -122,6 +443,7 @@ class interface(cfg):
 
                 # Disable monitoring
                 self.disable_monitoring()
+
                 # Wait 1s to ensure I2C bus is quiet
                 time.sleep(1)
 

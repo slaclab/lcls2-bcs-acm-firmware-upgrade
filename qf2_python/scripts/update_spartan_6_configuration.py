@@ -5,6 +5,11 @@ import qf2_python.identifier
 from qf2_python.configuration.jtag import *
 from qf2_python.configuration.spi import *
 
+def my_exec_cfg(x, verbose=False):
+    ldict = locals()
+    exec(x,globals(),ldict)
+    return ldict['x'].cfg(verbose)
+
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 
@@ -15,21 +20,21 @@ parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-#parser.add_argument('-f', '--file', help='Settings file CSV')
+parser.add_argument('-f', '--file', help='JSON settings file')
 parser.add_argument("--settings", nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
 
 args = parser.parse_args()
 
-d = dict()
-j = args.settings[0]
-for i in j:
-    d[i[0]] = i[1]
+#d = dict()
+#j = args.settings
+#for i in j:
+#    d[i[0]] = i[1]
 
-print d
+#print d
 
-exit()
+#exit()
 
 # Check that the lock is only applied to the bootloader
 if args.lock == True:
@@ -51,49 +56,34 @@ if args.bootloader == True:
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
-    
-# Get a board interface so we know what we're dealing with...
-#x = qf2_python.identifier.get_board_information(args.target, args.verbose)
-
-#exit()
-
-def fletcher(data):
-
-    sum1 = 0xAA
-    sum2 = 0x55
-
-    for i in data:
-        sum1 = sum1 + int(i)
-        sum2 = sum1 + sum2
-
-    sum1 = sum1 % 255
-    sum2 = sum2 % 255
-
-    return bytearray([sum1, sum2])
-
-def fletcher_check(data):
-
-    v = fletcher(data)
-
-    sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
-    sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
-
-    return bytearray([sum1, sum2])
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
-print 'Programming Spartan-6 configuration settings'
+# Check the stored SHA256 to see what configuration space we should be using
+pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
 
-pd = prom.read_data(CONFIG_ADDRESS, 256)
+print 'Stored SHA256:',
+s = str()
+for i in pd[0:32]:
+    s += '{:02x}'.format(i)
+print s
 
-valid_checksum = True
-v = fletcher_check(pd[0:85])
+print 'Selecting matching configuration interface...'
 
-if ( v != pd[85:87] ):
-    valid_checksum = False
+cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
+
+# TODO - Warn on mismatch with running firmware
+#x = qf2_python.identifier.get_board_information(args.target, args.verbose)
+
+print 'Importing stored Spartan-6 configuration settings...'
+
+cfg.import_prom_data(prom.read_data(CONFIG_ADDRESS, 256))
+
+exit()
 
 x = bytearray(85)
 

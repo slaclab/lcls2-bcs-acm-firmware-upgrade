@@ -39,7 +39,7 @@ def prom_integrity_check(prom):
         exit(0)
 
     print 'PROM bitstream integrity BAD'
-    exit(1)    
+    exit(1)
 
 def prom_compare_check(prom, bitfile):
 
