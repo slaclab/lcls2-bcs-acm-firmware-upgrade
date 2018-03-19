@@ -38,6 +38,7 @@ if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
 
 CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
+SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))

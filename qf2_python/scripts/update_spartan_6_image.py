@@ -17,6 +17,7 @@ parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lo
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
+parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
 
 args = parser.parse_args()
 
@@ -43,6 +44,7 @@ if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
 
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
+SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))

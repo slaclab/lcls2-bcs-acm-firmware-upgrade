@@ -18,7 +18,7 @@ def prom_integrity_check(prom):
     # As the Spartan-6 bitstream length can vary slightly from version to version,
     # the hash is generated to the end of the sector
     prom_hash = prom.read_hash(FIRMWARE_SECTOR_OFFSET * spi.SECTOR_SIZE, 23 * spi.SECTOR_SIZE)
-    
+
     # Compare the current data with the previous to see if we have to erase
     pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
 
@@ -70,7 +70,7 @@ def prom_compare_check(prom, bitfile):
     sha256.append((build_date >> 16) & 0xFF)
     sha256.append((build_date >> 8) & 0xFF)
     sha256.append((build_date) & 0xFF)
-    
+
     # Compare the current data with the previous to see if we have to erase
     pd = prom.read_data(FIRMWARE_ID_ADDRESS, 48)
 
@@ -121,23 +121,23 @@ def prom_compare_check(prom, bitfile):
     print 'Firmware ID doesn\'t match'
     exit(1)    
 
-SEQUENCER_PORT = 50003
-#FIRMWARE_ID_ADDRESS = 23 * spi.SECTOR_SIZE
-
 parser = argparse.ArgumentParser(description='Verify Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Bitfile to compare against')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Verify bootloader')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
+parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
+
 args = parser.parse_args()
 
 # Chose firmware location (bootloader or runtime)
-if args.bootloader:
+if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
+SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))

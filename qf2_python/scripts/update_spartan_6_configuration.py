@@ -5,24 +5,32 @@ import qf2_python.identifier
 from qf2_python.configuration.jtag import *
 from qf2_python.configuration.spi import *
 
-SEQUENCER_PORT = 50003
-
-# Runtime is +32 sectors
-CONFIG_ADDRESS = (24 + 32) * spi.SECTOR_SIZE
-
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+
 parser.add_argument('-i', '--ip', help='Unicast IP address to be written into flash')
 parser.add_argument('-m', '--mac', help='Unicast MAC address to be written into flash')
+parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
+
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-#parser.add_argument('-s', '--settings', help='Settings file CSV')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+#parser.add_argument('-f', '--file', help='Settings file CSV')
+parser.add_argument("--settings", nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
 
-parser.add_argument('-s', '--hash', help='Kintex-7 boot firmware SHA256 hash')
+parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
 
 args = parser.parse_args()
+
+d = dict()
+j = args.settings[0]
+for i in j:
+    d[i[0]] = i[1]
+
+print d
+
+exit()
 
 # Check that the lock is only applied to the bootloader
 if args.lock == True:
@@ -40,8 +48,13 @@ if args.lock == True:
 
 # Chose firmware location
 if args.bootloader == True:
-    CONFIG_ADDRESS = 24 * spi.SECTOR_SIZE
+    FIRMWARE_SECTOR_OFFSET = 0
+else:
+    FIRMWARE_SECTOR_OFFSET = 32
 
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
+SEQUENCER_PORT = int(args.port)
+    
 # Get a board interface so we know what we're dealing with...
 #x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
