@@ -140,18 +140,7 @@ FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True))
-
-if prom.prom_size() != 25:
-    print 'ERROR: PROM size incorrect, read',prom.prom_size()
-    exit(1)
-
-# Read the VCR and VECR
-if args.verbose == True:
-    print 'PROM ID (0x20BA, Capacity=0x19, EDID+CFD length=0x10, EDID (2 bytes), CFD (14 bytes)',
-    print 'VCR (should be 0xfb by default):',hex(prom.read_register(spi.RDVCR, 1)[0])
-    print 'VECR (should be 0xdf):',hex(prom.read_register(spi.RDVECR, 1)[0])
-    print 'PROM size: 256Mb == 500 x 64KB blocks'
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
 # If not bitfile provided for comparison, do an integrity check
 if args.bit == None:

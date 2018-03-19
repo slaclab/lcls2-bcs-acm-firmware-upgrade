@@ -108,6 +108,7 @@ class interface(cfg):
                 self.i2c_port = 50002
                 self.WRITE_LENGTH = 63
                 self.READ_LENGTH = 105
+                self.BOARD_UID = str()
 
                 # Interface socket
                 self.UDPSock = socket(AF_INET,SOCK_DGRAM)
@@ -119,13 +120,47 @@ class interface(cfg):
                 self.I2CSock.bind(("0.0.0.0", 0))
                 self.I2CSock.settimeout(2)
 
-                # Reset debug I2C pins
-                #self.set_byte(0, 7, 7)
+                # Disable monitoring
+                self.disable_monitoring()
+                # Wait 1s to ensure I2C bus is quiet
+                time.sleep(1)
+
+                try:
+                        # Pull the board ID
+                        cfg0 = self.atsha204_cfg_read(0)
+                        cfg1 = self.atsha204_cfg_read(1)
+                        cfg2 = self.atsha204_cfg_read(2)
+                        cfg3 = self.atsha204_cfg_read(3)
+                
+                        serial_number = 0
+                        serial_number |= (cfg3[0] << (8 * 8))
+                        serial_number |= (cfg2[3] << (8 * 7))
+                        serial_number |= (cfg2[2] << (8 * 6))
+                        serial_number |= (cfg2[1] << (8 * 5))
+                        serial_number |= (cfg2[0] << (8 * 4))
+                        serial_number |= (cfg0[3] << (8 * 3))
+                        serial_number |= (cfg0[2] << (8 * 2))
+                        serial_number |= (cfg0[1] << (8 * 1))
+                        serial_number |= cfg0[0]
+
+                        self.BOARD_UID = '{:018X}'.format(serial_number)
+                except:
+                        self.enable_monitoring()
+                        raise
+
+                # Enable monitoring
+                self.enable_monitoring()
+                
+                if verbose == True:
+                        print('Board UID: '+self.BOARD_UID)
 
                 # Turn on TAS2505
                 #self.set_byte(1, 4, 4)
 
-                #exit()
+        def enable_monitoring(self):
+                self.set_byte(1, 4, 4)
+        def disable_monitoring(self):
+                self.set_byte(1, 0, 4)
 
         def enable_main_power(self):
                 self.set_byte(1, 2, 2)
@@ -224,37 +259,6 @@ class interface(cfg):
                         else:
                                 print('ACTIVE')
                         time.sleep(1)
-
-
-
-#               print 'Main +3.3V status:', self.get_main_3p3v_status()
-#               print 'Main +1.8V status:', self.get_main_1p8v_status()
-#               print 'Kintex +1.0V VCCINT status:', self.get_kintex_vccint_status()
-#               print 'Kintex +1.0V GTX status:', self.get_kintex_1p0v_gtx_status()
-#
-#               print 'Boot +3.3V status:', self.get_boot_3p3v_status()
-#               print 'Spartan +1.2V VCCINT status:', self.get_spartan_vccint_status()
-#
-#               print 'Standby +1.2V status:', self.get_standby_1p2v_status()
-#
-#               print 'Top FMC present:', not(self.get_n_top_fmc_present())
-#               print 'Top FMC +12V status:', int(not(self.get_n_top_fmc_12v_status()))
-#               print 'Top FMC +3.3V / VADJ status:', self.get_top_fmc_vadj_3p3v_status()
-#               print 'Bottom FMC present:', not(self.get_n_bottom_fmc_present())
-#               print 'Bottom FMC +12V status:', int(not(self.get_n_bottom_fmc_12v_status()))
-#               print 'Bottom FMC +3.3V / VADJ status:', self.get_bottom_fmc_vadj_3p3v_status()
-#
-#               print 'S6 QSFP present:', not(self.get_n_s6_qsfp_present())
-
-#       def get_n_fmc_3p3v_status(self):
-#               return self.get_port_expander_bit(0x1, 1, 6)
-
-#       def get_n_bottom_fmc_present(self):
-#               return self.get_port_expander_bit(0x2, 0, 1)
-#
-#       def get_n_bottom_fmc_12v_status(self):
-#               return self.get_port_expander_bit(0x1, 1, 4)
-#
 
         def main_3p3v_enable(self):
                 self.pca9534_bit_set(0x2, 0, 6, True)
@@ -403,7 +407,7 @@ class interface(cfg):
         def atsha204_wake(self):
                 addr = int('{:08b}'.format(0xC8)[::-1], 2)
                 addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
-
+                
                 self.i2c_start()
                 time.sleep(0.001) # Wake
                 self.i2c_stop()
@@ -798,7 +802,7 @@ class interface(cfg):
                 self.set_byte(0, 0x1, 0x1)
 
                 # Sample bit
-                result = int(self.get_byte(0) & 0x2) >> 1
+                result = int(self.get_byte(94) & 0x2) >> 1
                
                 # Bring clock low
                 self.set_byte(0, 0, 0x1)
@@ -1503,7 +1507,7 @@ class interface(cfg):
                 
                 return int(res[1])
 
-        def i2c_controller_write(self, chain, address, register, data, data_16b=False, register_16b=False):
+        def i2c_controller_write(self, chain, address, register, data, data_16b=False, register_16b=False, ignore_ack=False):
                 
                 # 7 byte command structure
                 d = bytearray(7)
@@ -1545,7 +1549,7 @@ class interface(cfg):
 
                 res = bytearray(read_bytes)
 
-                if res[0] == 0x02:
+                if (res[0] == 0x02) and (ignore_ack == False):
                         raise Exception('I2C acknowledge failed')
 
         def print_monitors(self):
