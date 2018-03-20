@@ -43,9 +43,6 @@ def prom_integrity_check(prom):
 
 def prom_compare_check(prom, bitfile):
 
-    # Compare bitfile with data stored in PROM
-    prom.verify_bitfile(bitfile, FIRMWARE_SECTOR_OFFSET)
-
     # Check hash and timestamps stored in PROM
     parser = xilinx_bitfile_parser.bitfile(bitfile)
 
@@ -71,17 +68,6 @@ def prom_compare_check(prom, bitfile):
     sha256.append((build_date >> 8) & 0xFF)
     sha256.append((build_date) & 0xFF)
 
-    # Compare the current data with the previous to see if we have to erase
-    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 48)
-
-    # Only check the first two, the third changes each time
-    did_break = False
-    for i in range(0, len(sha256)):
-        if ( sha256[i] != pd[i] ):
-            if ( pd[i] != 0xFF ):
-                did_break = True
-                break
-
     print
     print 'Firmware ID from bitfile:'
     print
@@ -92,6 +78,20 @@ def prom_compare_check(prom, bitfile):
         s += '{:02x}'.format(i)
     print s
     print 'Build timestamp:', build_date, '('+str(datetime.utcfromtimestamp(build_date))+')'
+
+    # Compare bitfile with data stored in PROM
+    prom.verify_bitfile(bitfile, FIRMWARE_SECTOR_OFFSET)
+
+    # Compare the current data with the previous to see if we have to erase
+    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 48)
+
+    # Only check the first two, the third changes each time
+    did_break = False
+    for i in range(0, len(sha256)):
+        if ( sha256[i] != pd[i] ):
+            if ( pd[i] != 0xFF ):
+                did_break = True
+                break
 
     print
     print 'Firmware ID stored in PROM:'
@@ -138,6 +138,7 @@ else:
 
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
+
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)

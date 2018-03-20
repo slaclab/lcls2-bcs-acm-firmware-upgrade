@@ -1,0 +1,2147 @@
+#!/bin/env python
+
+from socket import *
+import string, time, sys
+from datetime import datetime, timedelta
+
+class QSFP_INFO:
+        IDENTIFIER = {
+                1 : 'GBIC',
+                2 : 'Module / connector soldered to motherboard',
+                3 : 'SFP or SFP+',
+                4 : '300 pin XBI',
+                5 : 'XENPAK',
+                6 : 'XFP',
+                7 : 'XFF',
+                8 : 'XFP-E',
+                9 : 'XPAK',
+                10 : 'X2',
+                11 : 'DWDM-SFP',
+                12 : 'QSFP',
+                13 : 'QSFP+',
+                14 : 'CXP'
+                }
+
+        STATUS = {
+                0 : 'PAGED UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA READY',
+                1 : 'PAGED UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA NOT READY',
+                2 : 'PAGED UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA READY',
+                3 : 'PAGED UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA NOT READY',
+                4 : 'NO UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA READY',
+                5 : 'NO UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA NOT READY',
+                6 : 'NO UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA READY',
+                7 : 'NO UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA NOT READY',
+                }
+
+class SI570:
+        HSDIV_2_0_N1_6_2 = 7
+        N1_1_0_RFREQ_37_32 = 8
+        RFREQ_31_24 = 9
+        RFREQ_23_16 = 10
+        RFREQ_15_8 = 11
+        RFREQ_7_0 = 12
+        SETTINGS = 135
+        FREEZE_DCO = 137
+
+class PCA9534:
+	INPUT = 0
+	OUTPUT = 1
+	POLARITY = 2
+	DIRECTION = 3
+
+class LTC2990:
+	STATUS = 0
+	CONTROL = 1
+	TRIGGER = 2
+	T_MSB = 4
+	T_LSB = 5
+	V1_MSB = 6
+	V1_LSB = 7
+	V2_MSB = 8
+	V2_LSB = 9
+	V3_MSB = 10
+	V3_LSB = 11
+	V4_MSB = 12
+	V4_LSB = 13
+	VCC_MSB = 14
+	VCC_LSB = 15
+
+def conv_n(x, n):
+	if x > (2**(n-1) - 1):
+		x = x - 2**n
+	return x
+
+class cfg:
+
+        class SHA256(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                if (len(val) != 64):
+                                        raise Exception('Bad SHA256 hash argument')
+                                self.__val = list([0] * 32)
+                                for i in range(0, 32):
+                                        self.__val[i] = int(val[i*2:i*2+2], 16)
+                                return
+                        if type(val) == bytearray:
+                                if (len(val) != 32):
+                                        raise Exception('Bad SHA256 hash argument')
+                                self.__val = list([0] * 32)
+                                for i in range(0, 32):
+                                        self.__val[i] = int(val[i])
+                                return                                
+                        raise Exception('Invalid type assignment')
+
+                def __int__(self):
+                        x = 0
+                        for i in range(0, 32):
+                                x = x | (int(self.__val[i]) << 8 * i)
+                        return x
+
+                def __get__(self, objtype=None):
+                        return self.__val
+
+                def __set__(self, val):
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 32):
+                                s += '{:02x}'.format(self.__val[i])
+                        return s[:-1]
+
+        class IPV4_IP(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                ip = val.split('.')
+                                if (len(ip) != 4):
+                                        raise Exception('Bad IPv4 address argument')
+                                x = 0
+                                for i in range(0, 4):
+                                        x = x | (int(ip[i]) << ((3-i)*8))
+                                val = x
+                        if type(val) == bytearray:
+                                if len(val) != 4:
+                                        raise Exception('Value is too large')
+                                x = 0
+                                for i in range(0, 4):
+                                        x = x | (int(val[i]) << (i*8))
+                                val = x
+                        if val > (2**32)-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __int__(self):
+                        return self.__val
+
+                def __get__(self, objtype=None):
+                        return self.__val
+
+                def __set__(self, val):
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 4):
+                                s += '{:d}'.format((self.__val >> ((3-i) * 8)) & 0xFF) + '.'
+                        return s[:-1]
+
+        class IPV4_PORT(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                val = int(val)
+                        if type(val) == bytearray:
+                                if len(val) != 2:
+                                        raise Exception('Value is too large')
+                                x = 0
+                                for i in range(0, 2):
+                                        x = x | (int(val[i]) << (i*8))
+                                val = x
+                        if val > 2**16-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __int__(self):
+                        return self.__val
+
+                def __get__(self, objtype=None):
+                        return self.__val
+
+                def __set__(self, val):
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        return str(self.__val)
+
+        class IPV4_MAC(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                mac = val.split(':')
+                                if (len(mac) != 6):
+                                        raise Exception('Bad MAC address argument')
+                                x = 0
+                                for i in range(0, 6):
+                                        x = x | (int(mac[i], 16) << ((5-i)*8))
+                                val = x
+                        if type(val) == bytearray:
+                                if len(val) != 6:
+                                        raise Exception('Value is too large')
+                                x = 0
+                                for i in range(0, 6):
+                                        x = x | (int(val[i]) << (i*8))
+                                val = x
+                        if val > 2**48-1:
+                                raise Exception('Value is too large')
+                        self.__val = val
+
+                def __int__(self):
+                        return self.__val
+
+                def __get__(self, objtype=None):
+                        return self.__val
+
+                def __set__(self, val):
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        s = str()
+                        for i in range(0, 6):
+                                s += '{:02X}'.format((self.__val >> ((5-i) * 8)) & 0xFF) + ':'
+                        return s[:-1]
+
+        def __init__(self, verbose):
+                self.__verbose = verbose
+                self.__WRITE_LENGTH = 63
+                self.__READ_LENGTH = 105
+                self.__NETWORK_LENGTH = 22
+
+                # Key : [Start (bits), Length (bits), Type / Default]
+                self.__network_cfg = {
+
+                        'IPV4_MULTICAST_MAC' : [128, 48, self.IPV4_MAC(0)],
+                        'IPV4_MULTICAST_IP' : [96, 32, self.IPV4_IP(0)],
+                        'IPV4_MULTICAST_PORT' : [80, 16, self.IPV4_PORT(0)],
+
+                        'IPV4_UNICAST_MAC' : [32, 48, self.IPV4_MAC(0xAABBCCDDEEFF)],
+                        'IPV4_UNICAST_IP' : [0, 32, self.IPV4_IP(0xC0A8017F)]
+
+                        }
+
+                # Key : [Start (bits), Length (bits), Type / Default]
+                self.__write_cfg = {
+
+                        'KINTEX_BOOT_SHA256' : [248, 256, self.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
+
+                        'BOARD_SHUTDOWN_TEMPERATURE' : [152, 8, int(64)],
+                        'KINTEX_SHUTDOWN_TEMPERATURE' : [144, 8, int(64)],
+
+                        'SI57X_B_NEW_RFREQ' : [104, 38, int(0x02BBEAD49B)],
+                        'SI57X_B_NEW_N1' : [96, 7, int(3)],
+                        'SI57X_B_NEW_HSDIV' : [88, 3, int(0)],
+                        'SI57X_B_UPDATE' : [82, 1, int(1)],
+                        'SI57X_B_OE' : [81, 1, int(0)],
+                        'N_SI57X_B_CFG_ENABLE' : [80, 1, int(1)],
+
+                        'SI57X_A_NEW_RFREQ' : [40, 38, int(0x02BBEAD49B)],
+                        'SI57X_A_NEW_N1' : [32, 7, int(3)],
+                        'SI57X_A_NEW_HSDIV' : [24, 3, int(0)],
+                        'SI57X_A_UPDATE' : [18, 1, int(1)],
+                        'SI57X_A_OE' : [17, 1, int(0)],
+                        'N_SI57X_A_CFG_ENABLE' : [16, 1, int(1)],
+                        
+                        'N_TAS_2505_RESET' : [11, 1, int(0)],
+                        'MONITORING_ENABLE' : [10, 1, int(0)],
+                        'MAIN_POWER_ENABLE' : [9, 1, int(0)],
+                        'POWER_BURST_MODE' : [8, 1, int(1)],
+
+                        'SYS_I2C_RESET' : [2, 1, int(1)],
+                        'SYS_I2C_SDA' : [1, 1, int(1)],
+                        'SYS_I2C_SCL' : [0, 1, int(1)]
+
+                        }
+                                        
+                # Key : [Start (bits), Length (bits), Type]
+                self.__read_cfg = {
+
+                        #TAS COUNT, CORRUPTED BITSTREAM, FLASH DEBUG
+
+                        'MAIN_POWER_STATE' : [763, 1, int()],
+                        'JACK_SENSE' : [760, 1, int()],
+
+                        'FAN_TACH' : [762, 1, int()],
+                        'N_IS_QF2P' : [761, 1, int()],
+                        'CONTROLLER_I2C_READ_DATA' : [744, 16, int()],
+                        
+                        'I2C_ERROR_LATCH' : [743, 1, int()],
+                        'I2C_DONE_LATCH' : [742, 1, int()],
+                        'BOARD_OT_SHUTDOWN_LATCH' : [741, 1, int()],
+                        'KINTEX_OT_SHUTDOWN_LATCH' : [740, 1, int()],
+                        'SYS_I2C_SDA' : [737, 1, int()],
+                        'SYS_I2C_SCL' : [736, 1, int()],
+
+                        'SI57X_B_CURRENT_RFREQ' : [696, 38, int()],
+                        'SI57X_B_CURRENT_N1' : [688, 7, int()],
+                        'SI57X_B_CURRENT_HSDIV' : [680, 3, int()],
+                        'SI57X_B_ERROR' : [673, 1, int()],
+                        'SI57X_B_DONE' : [672, 1, int()],
+
+                        'SI57X_A_CURRENT_RFREQ' : [632, 38, int()],
+                        'SI57X_A_CURRENT_N1' : [624, 7, int()],
+                        'SI57X_A_CURRENT_HSDIV' : [616, 3, int()],
+                        'SI57X_A_ERROR' : [609, 1, int()],
+                        'SI57X_A_DONE' : [608, 1, int()],
+
+                        'FAN_SPEED' : [592, 16, int()],
+
+                        'INA226_9_1' : [576, 16, int()],
+                        'INA226_9_0' : [560, 16, int()],
+                        'INA226_8_1' : [544, 16, int()],
+                        'INA226_8_0' : [528, 16, int()],
+                        'INA226_7_1' : [512, 16, int()],
+                        'INA226_7_0' : [496, 16, int()],
+                        'INA226_6_1' : [480, 16, int()],
+                        'INA226_6_0' : [464, 16, int()],
+                        'INA226_5_1' : [448, 16, int()],
+                        'INA226_5_0' : [432, 16, int()],
+                        'INA226_4_1' : [416, 16, int()],
+                        'INA226_4_0' : [400, 16, int()],
+                        'INA226_3_1' : [384, 16, int()],
+                        'INA226_3_0' : [368, 16, int()],
+                        'INA226_2_1' : [352, 16, int()],
+                        'INA226_2_0' : [336, 16, int()],
+                        'INA226_1_1' : [320, 16, int()],
+                        'INA226_1_0' : [304, 16, int()],
+                        'INA226_0_1' : [288, 16, int()],
+                        'INA226_0_0' : [272, 16, int()],
+
+                        'VMON_1_6' : [256, 16, int()],
+                        'VMON_1_5' : [240, 16, int()],
+                        'VMON_1_4' : [224, 16, int()],
+                        'VMON_1_3' : [208, 16, int()],
+                        'VMON_1_2' : [192, 16, int()],
+                        'VMON_1_1' : [176, 16, int()],
+                        'VMON_1_0' : [160, 16, int()],
+                        'VMON_0_7' : [144, 16, int()],
+                        'VMON_0_6' : [128, 16, int()],
+                        'VMON_0_5' : [112, 16, int()],
+                        'VMON_0_4' : [96, 16, int()],
+                        'VMON_0_3' : [80, 16, int()],
+                        'VMON_0_2' : [64, 16, int()],
+                        'VMON_0_1' : [48, 16, int()],
+                        'VMON_0_0' : [32, 16, int()],
+
+                        'BOARD_TEMPERATURE' : [16, 12, int()],
+                        'KINTEX_TEMPERATURE' : [0, 12, int()]
+
+                        }
+
+                if self.__verbose == True:
+                        print('')
+                        print('Initial configuration is:')
+                        print('')
+                        self.print_write_cfg()
+
+        def is_network_key(self, key):
+                return key in self.__network_cfg
+
+        def is_write_key(self, key):
+                return key in self.__write_cfg
+
+        def set_write_key(self, key, value):
+                # Just pass the underlying integer if the default is integer
+                if type(self.__write_cfg[key][2]) == int:
+                        if value[0:2] == '0x':
+                                self.__write_cfg[key][2] = int(value, 16)
+                        else:
+                                self.__write_cfg[key][2] = int(value)
+                        return
+
+                self.__write_cfg[key][2] = type(self.__write_cfg[key][2])(value)
+
+        def set_network_key(self, key, value):
+                # Just pass the underlying integer if the default is integer
+                if type(self.__network_cfg[key][2]) == int:
+                        if value[0:2] == '0x':
+                                self.__network_cfg[key][2] = int(value, 16)
+                        else:
+                                self.__network_cfg[key][2] = int(value)
+                        return
+
+                self.__network_cfg[key][2] = type(self.__network_cfg[key][2])(value)
+
+        def print_network_cfg(self):
+                for key, value in sorted(self.__network_cfg.items()):
+                        print(key+' : '+str(value[2]))
+
+        def print_write_cfg(self):
+                for key, value in sorted(self.__write_cfg.items()):
+                        print(key+' : '+str(value[2]))
+
+        def __export_cfg_value(self, value):
+                return int(value[2]) << value[0]
+
+        def export_prom_data(self):
+
+                result = bytearray(self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
+
+                total = 0
+                for key, value in self.__write_cfg.items():
+                        x = self.__export_cfg_value(value)
+                        total = total | x
+
+                for i in range(0, self.__WRITE_LENGTH):
+                        result[i] = total & 0xFF
+                        total = total >> 8
+
+                total = 0
+                for key, value in self.__network_cfg.items():
+                        x = self.__export_cfg_value(value)
+                        total = total | x
+
+                for i in range(0, self.__NETWORK_LENGTH):
+                        result[i + self.__WRITE_LENGTH] = total & 0xFF
+                        total = total >> 8
+
+                result.reverse()
+
+                v = self.fletcher_check(result)
+                result += v
+                result += bytearray([0xFF]) * (256 - len(result))
+
+                return result
+
+        def __import_cfg_value(self, key, target, data):
+                value = target[key]
+                start_point = int(value[0])
+                bit_length = int(value[1])
+                block = bytearray()
+
+                # Parse into an integer, then shift and mask
+                myi = 0
+                start = (start_point >> 3)
+                end = start + (bit_length >> 3) + 2
+                if end > len(data):
+                        end = len(data)
+                for i in range(start, end):
+                        myi = myi | (int(data[i]) << ((i-start)*8))
+
+                # Generate the mask
+                mask = 0
+                for i in range(0, bit_length):
+                        mask = (mask << 1) | 1
+                
+                # Shift the data down to align and mask off
+                myi = (myi >> (start_point & 0x7)) & mask
+
+                # Convert the integer into a bytearray
+                num_bytes = (bit_length / 8)
+                if (bit_length & 0x7) != 0:
+                        num_bytes += 1
+
+                # Just pass the underlying integer if the default is integer
+                if type(target[key][2]) == int:
+                        target[key][2] = myi
+                        return
+
+                # Otherwise pass a block
+                for i in range(0, num_bytes):
+                        block.append(myi & 0xFF)
+                        myi = myi >> 8
+
+                target[key][2] = type(target[key][2])(block)
+
+        def import_prom_data(self, data):
+
+                v = self.fletcher_check(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
+
+                if ( v != data[self.__WRITE_LENGTH + self.__NETWORK_LENGTH:self.__WRITE_LENGTH + self.__NETWORK_LENGTH+2] ):
+                        # Invalid checksum
+                        print('Imported PROM data checksum is invalid, configuration will not be imported')
+                        return False
+
+                # Reverse so ordering matches VHDL
+                rdata = data[0:self.__WRITE_LENGTH+self.__NETWORK_LENGTH]
+                rdata.reverse()
+
+                for key, value in self.__write_cfg.items():
+                        self.__import_cfg_value(key, self.__write_cfg, rdata[0:self.__WRITE_LENGTH])
+
+                # Import each value one by one from the PROM data
+                for key, value in self.__network_cfg.items():
+                        self.__import_cfg_value(key, self.__network_cfg, rdata[self.__WRITE_LENGTH:self.__NETWORK_LENGTH+self.__WRITE_LENGTH])
+
+                return True
+
+        def write_length(self):
+                return self.__WRITE_LENGTH
+        def read_length(self):
+                return self.__READ_LENGTH
+
+        def fletcher(self, data):
+
+                sum1 = 0xAA
+                sum2 = 0x55
+
+                for i in data:
+                        sum1 = sum1 + int(i)
+                        sum2 = sum1 + sum2
+
+                sum1 = sum1 % 255
+                sum2 = sum2 % 255
+
+                return bytearray([sum1, sum2])
+
+        def fletcher_check(self, data):
+                
+                v = self.fletcher(data)
+
+                sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
+                sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+
+                return bytearray([sum1, sum2])
+
+class interface(cfg):
+
+        def __init__(self, host, verbose):
+                # Initialize the configuration layer
+                cfg.__init__(self, verbose)
+
+                # Settings
+                self.__host = host
+                self.__port = 50001
+                self.__i2c_port = 50002
+                self.BOARD_UID = str()
+
+                # Interface socket
+                self.UDPSock = socket(AF_INET,SOCK_DGRAM)
+                self.UDPSock.bind(("0.0.0.0", 0))
+                self.UDPSock.settimeout(2)
+
+                # External I2C socket
+                self.I2CSock = socket(AF_INET, SOCK_DGRAM)
+                self.I2CSock.bind(("0.0.0.0", 0))
+                self.I2CSock.settimeout(2)
+
+                # Disable monitoring
+                self.disable_monitoring()
+
+                # Wait 1s to ensure I2C bus is quiet
+                time.sleep(1)
+
+                try:
+                        # Pull the board ID
+                        cfg0 = self.atsha204_cfg_read(0)
+                        cfg1 = self.atsha204_cfg_read(1)
+                        cfg2 = self.atsha204_cfg_read(2)
+                        cfg3 = self.atsha204_cfg_read(3)
+                
+                        serial_number = 0
+                        serial_number |= (cfg3[0] << (8 * 8))
+                        serial_number |= (cfg2[3] << (8 * 7))
+                        serial_number |= (cfg2[2] << (8 * 6))
+                        serial_number |= (cfg2[1] << (8 * 5))
+                        serial_number |= (cfg2[0] << (8 * 4))
+                        serial_number |= (cfg0[3] << (8 * 3))
+                        serial_number |= (cfg0[2] << (8 * 2))
+                        serial_number |= (cfg0[1] << (8 * 1))
+                        serial_number |= cfg0[0]
+
+                        self.BOARD_UID = '{:018X}'.format(serial_number)
+                except:
+                        self.enable_monitoring()
+                        raise
+
+                # Enable monitoring
+                self.enable_monitoring()
+                
+                if verbose == True:
+                        print
+                        print('Board UID: '+self.BOARD_UID)
+
+                # Turn on TAS2505
+                #self.set_byte(1, 4, 4)
+
+        def enable_monitoring(self):
+                self.set_byte(1, 4, 4)
+        def disable_monitoring(self):
+                self.set_byte(1, 0, 4)
+
+        def enable_main_power(self):
+                self.set_byte(1, 2, 2)
+        def disable_main_power(self):
+                self.set_byte(1, 0, 2)
+
+        def set_byte(self, index, data, mask):
+                d = bytearray(cfg.write_length(self))
+                m = bytearray(cfg.write_length(self))
+                d[index] = data
+                m[index] = mask
+                self.send_receive(d, m)
+
+        def get_byte(self, index):
+                d = bytearray(cfg.write_length(self))
+                m = bytearray(cfg.write_length(self))
+                res = self.send_receive(d, m)
+                return res[index]
+
+        def get_bytes(self):
+                d = bytearray(cfg.write_length(self))
+                m = bytearray(cfg.write_length(self))
+                return self.send_receive(d, m)
+
+        def send_receive(self, data, mask):
+                data.reverse()
+                mask.reverse()
+                rbytes = bytearray()
+                rbytes[:] = (mask + data)
+                
+                read_bytes = str()
+
+                while True:
+                        try:
+                                self.UDPSock.sendto(str(rbytes),(self.__host, self.__port))
+                                read_bytes = self.UDPSock.recv(cfg.read_length(self))
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                res = bytearray(read_bytes)
+                res.reverse()
+                return res
+
+        def i2c_chain_set(self, value):
+                # Reset the mux first
+                self.set_byte(0, 0x3, 0x7)
+                self.set_byte(0, 0x7, 0x7)
+
+                address = 0xE0
+                address = int('{:08b}'.format(address)[::-1], 2)
+                value = int('{:08b}'.format(value)[::-1], 2)
+
+                self.i2c_start()
+
+                self.i2c_write(address)
+                self.i2c_check_ack()
+                self.i2c_write(value)
+                self.i2c_check_ack()
+
+                self.i2c_stop()
+               
+        def i2c_chain_get(self):
+                address = 0xE1
+                address = int('{:08b}'.format(address)[::-1], 2)
+
+                self.i2c_start()
+
+                self.i2c_write(address)
+                self.i2c_check_ack()
+                
+                result = self.i2c_read()
+                self.i2c_clk(1)
+                
+                self.i2c_stop()
+                
+                return result
+
+        def print_status(self):
+
+                # Wait for system I2C controller to be inactive
+                while True:
+                        v = self.get_byte(3)
+                        print('System I2C controller: ')
+                        if v == 2:
+                                print('ERROR')
+                                break
+                        elif v == 1:
+                                print('IDLE')
+                                break
+                        else:
+                                print('ACTIVE')
+                        time.sleep(1)
+
+        def main_3p3v_enable(self):
+                self.pca9534_bit_set(0x2, 0, 6, True)
+
+        def main_3p3v_disable(self):
+                self.pca9534_bit_set(0x2, 0, 6, False)
+
+        def fmc_vadj_enable(self):
+                self.pca9534_bit_set(0x2, 0, 5, True)
+
+        def fmc_vadj_disable(self):
+                self.pca9534_bit_set(0x2, 0, 5, False)
+                
+        def fmc_3p3v_enable(self):
+                self.pca9534_bit_set(0x2, 0, 4, True)
+
+        def fmc_3p3v_disable(self):
+                self.pca9534_bit_set(0x2, 0, 4, False)
+
+        def fmc_12v_enable(self):
+                self.pca9534_bit_set(0x2, 0, 0, True)
+
+        def fmc_12v_disable(self):
+                self.pca9534_bit_set(0x2, 0, 0, False)
+
+        def kintex_vccint_enable(self):
+                self.pca9534_bit_set(0x80, 0, 1, True)
+
+        def kintex_vccint_disable(self):
+                self.pca9534_bit_set(0x80, 0, 1, False)
+
+        def kintex_1p0v_gtx_enable(self):
+                self.pca9534_bit_set(0x80, 0, 0, True)
+
+        def kintex_1p0v_gtx_disable(self):
+                self.pca9534_bit_set(0x80, 0, 0, False)
+
+        def kintex_1p2v_gtx_enable(self):
+                self.pca9534_bit_set(0x80, 0, 7, True)
+
+        def kintex_1p2v_gtx_disable(self):
+                self.pca9534_bit_set(0x80, 0, 7, False)
+
+        def get_port_expander_bit(self, chain, address, bit):
+                return ((self.pca9534_read_input(chain, address) >> bit) & 0x1)
+
+        def pca9534_bit_set(self, chain, address, bit, state = True):
+                i = 1 << bit
+
+                # Mask out to get the correct setting
+                if state:
+                        self.pca9534_write(chain, address, (self.pca9534_read_output(chain, address) & ~i) | i)
+                else:
+                        self.pca9534_write(chain, address, (self.pca9534_read_output(chain, address) & ~i))
+
+                self.pca9534_direction_set(chain, address, (self.pca9534_direction_get(chain, address) & ~i))
+                        
+
+        def pca9534_direction_set(self, chain, address, direction):
+                self.i2c_controller_write(chain, 0x20 | address, PCA9534.DIRECTION, direction)
+                return
+
+        #address = ((0x20 | address) << 1)
+        #        address = int('{:08b}'.format(address)[::-1], 2)
+        #        command = int('{:08b}'.format(PCA9534.DIRECTION)[::-1], 2)
+        #        direction = int('{:08b}'.format(direction)[::-1], 2)
+
+                # Set direction bits
+        #        self.i2c_start()
+        #        self.i2c_write(address)
+        #        self.i2c_check_ack()
+        #        self.i2c_write(command)
+        #        self.i2c_check_ack()
+        #        self.i2c_write(direction)
+        #        self.i2c_check_ack()
+        #        self.i2c_stop()
+                
+        def pca9534_direction_get(self, chain, address):
+                return self.i2c_controller_read(chain, 0x20 | address, PCA9534.DIRECTION)
+
+
+        #address_r = ((0x20 | address) << 1) | 1
+        #        addr = ((0x20 | address) << 1)
+        #        address_r = int('{:08b}'.format(address_r)[::-1], 2)
+        #        addr = int('{:08b}'.format(addr)[::-1], 2)
+        #        command = int('{:08b}'.format(PCA9534.DIRECTION)[::-1], 2)
+
+                # Set direction bits
+        #        self.i2c_start()
+
+        #        self.i2c_write(addr)
+        #        self.i2c_check_ack()
+        #        self.i2c_write(command)
+        #        self.i2c_check_ack()
+                
+        #        self.i2c_repeated_start()
+
+        #        self.i2c_write(address_r)
+        #        self.i2c_check_ack()
+        #        result = self.i2c_read()
+        #        self.i2c_clk(1)
+                
+        #        self.i2c_stop()
+
+        #        return result
+
+        def pca9534_write(self, chain, address, value):
+                self.i2c_controller_write(chain, 0x20 | address, PCA9534.OUTPUT, value)
+
+        def pca9534_read_output(self, chain, address):
+                return self.i2c_controller_read(chain, 0x20 | address, PCA9534.OUTPUT)
+
+        def pca9534_read_input(self, chain, address):
+                return self.i2c_controller_read(chain, 0x20 | address, PCA9534.INPUT)
+
+        #address_r = ((0x20 | address) << 1) | 1
+        #        addr = ((0x20 | address) << 1)
+        #        address_r = int('{:08b}'.format(address_r)[::-1], 2)
+        #        addr = int('{:08b}'.format(addr)[::-1], 2)
+        #        command = int('{:08b}'.format(PCA9534.INPUT)[::-1], 2)
+                
+         #       self.i2c_start()
+
+         #       self.i2c_write(addr)
+         #       self.i2c_check_ack()
+         #       self.i2c_write(command)
+         #       self.i2c_check_ack()
+                
+         #       self.i2c_repeated_start()
+                
+         #       self.i2c_write(address_r)
+         #       self.i2c_check_ack()
+         #       result = self.i2c_read()
+         #       self.i2c_clk(1)
+                
+         #       self.i2c_stop()
+                
+         #       return result
+
+        def set_top_fmc_vadj_resistor(self, value):
+                self.max5387_write(0, 2, value)
+
+        def set_bottom_fmc_vadj_resistor(self, value):
+                self.max5387_write(0, 1, value)
+               
+        def atsha204_wake(self):
+                addr = int('{:08b}'.format(0xC8)[::-1], 2)
+                addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
+                
+                self.i2c_start()
+                time.sleep(0.001) # Wake
+                self.i2c_stop()
+                self.i2c_start()
+                time.sleep(0.001) # Wake
+                self.i2c_stop()
+
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                l =  self.i2c_read()
+                self.i2c_clk(1)
+                self.i2c_stop()
+
+                if l != 4:
+                        raise Exception('Failed to wake ATSHA204A')
+
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                l = self.i2c_read()
+                self.i2c_clk(1)
+                self.i2c_stop()
+
+                if l != 0x11:
+                        raise Exception('Failed to wake ATSHA204A')
+
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                l = self.i2c_read()
+                self.i2c_clk(1)
+                self.i2c_stop()
+
+                if l != 0x33:
+                        raise Exception('Failed to wake ATSHA204A')
+
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                l = self.i2c_read()
+                self.i2c_clk(1)
+                self.i2c_stop()
+
+                if l != 0x43:
+                        raise Exception('Failed to wake ATSHA204A')
+
+        def atsha204_sleep(self):
+                addr = int('{:08b}'.format(0xC8)[::-1], 2)
+                word = int('{:08b}'.format(0x01)[::-1], 2)
+
+                self.i2c_start()
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(word)
+                self.i2c_check_ack()
+                self.i2c_stop()
+
+        def crc16_arc(self, data):
+                generator = 0x8005
+                crc = 0
+
+                for d in data:
+
+                        crc = crc ^ (int('{:08b}'.format(d)[::-1], 2) << 8)
+
+                        for i in range(0, 8):
+                                crc = crc << 1
+                                if ( (crc & 0x10000) != 0 ):
+                                        crc = (crc & 0xFFFF) ^ generator
+                
+                return crc
+
+        # read 0x02
+        def atsha204_cfg_read(self, radd):
+                addr = int('{:08b}'.format(0xC8)[::-1], 2)
+                addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
+                word = int('{:08b}'.format(0x03)[::-1], 2)
+                count = int('{:08b}'.format(0x07)[::-1], 2)
+                cmd = int('{:08b}'.format(0x02)[::-1], 2)
+
+                crc = self.crc16_arc([0x07, 0x02, 0x00, radd, 0x00])                
+                crcl = int('{:08b}'.format(crc & 0xFF)[::-1], 2)
+                crch = int('{:08b}'.format(crc >> 8)[::-1], 2)
+
+                radd = int('{:08b}'.format(radd)[::-1], 2)
+
+                self.i2c_chain_set(0x8)
+                self.atsha204_wake()
+
+                self.i2c_start()
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(word)
+                self.i2c_check_ack()
+                self.i2c_write(count) # count + crc(2) + opcode + param1 + param2(2)
+                self.i2c_check_ack()
+                self.i2c_write(cmd) # 0x02
+                self.i2c_check_ack()
+                self.i2c_write(0) # param1
+                self.i2c_check_ack()
+                self.i2c_write(radd) # param2 (addr)
+                self.i2c_check_ack()
+                self.i2c_write(0) # param2
+                self.i2c_check_ack()
+                self.i2c_write(crcl) # crc lsb
+                self.i2c_check_ack()
+                self.i2c_write(crch) # crc msb
+                self.i2c_check_ack()
+                self.i2c_stop()
+                
+                self.i2c_start()
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                
+                # wait texec (max) for read
+                time.sleep(0.004)
+
+                # Read (must be done by now)
+                v = list()
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                v.append(self.i2c_read())
+                self.i2c_clk(1)
+                self.i2c_stop()
+                
+                for i in range(1, v[0]):
+                        self.i2c_start()
+                        self.i2c_write(addr_r)
+                        self.i2c_check_ack()
+                        v.append(self.i2c_read())
+                        self.i2c_clk(1)
+                        self.i2c_stop()
+
+                if (self.crc16_arc(v[0:-2]) != ((v[-1] << 8) | v[-2])):
+                        raise Exception('CRC error reading ATSHA204A')
+
+                # Put the device back to sleep
+                self.atsha204_sleep()
+
+                return v[1:5]
+
+        def atsha204_random(self):
+                addr = int('{:08b}'.format(0xC8)[::-1], 2)
+                addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
+                word = int('{:08b}'.format(0x03)[::-1], 2)
+                count = int('{:08b}'.format(0x07)[::-1], 2)
+                cmd = int('{:08b}'.format(0x1B)[::-1], 2)
+
+                crc = self.crc16_arc([0x07, 0x1B, 0x00, 0x00, 0x00])                
+                crcl = int('{:08b}'.format(crc & 0xFF)[::-1], 2)
+                crch = int('{:08b}'.format(crc >> 8)[::-1], 2)
+
+                self.i2c_chain_set(0x8)
+                self.atsha204_wake()
+
+                self.i2c_start()
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(word)
+                self.i2c_check_ack()
+                self.i2c_write(count) # count + crc(2) + opcode + param1 + param2(2)
+                self.i2c_check_ack()
+                self.i2c_write(cmd) # 0x1b
+                self.i2c_check_ack()
+                self.i2c_write(0) # param1
+                self.i2c_check_ack()
+                self.i2c_write(0) # param2
+                self.i2c_check_ack()
+                self.i2c_write(0) # param2
+                self.i2c_check_ack()
+                self.i2c_write(crcl) # crc lsb
+                self.i2c_check_ack()
+                self.i2c_write(crch) # crc msb
+                self.i2c_check_ack()
+                self.i2c_stop()
+                
+                # wait texec (max)
+                time.sleep(0.1)
+
+                # Read (must be done by now)
+                self.i2c_start()
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                l = self.i2c_read()
+                self.i2c_clk(1)
+                self.i2c_stop()
+                
+                for i in range(1, l):
+                        self.i2c_start()
+                        self.i2c_write(addr_r)
+                        self.i2c_check_ack()
+                        print(hex(self.i2c_read()))
+                        self.i2c_clk(1)
+                        self.i2c_stop()
+
+                # Put the device back to sleep
+                self.atsha204_sleep()
+                
+        def max5387_write(self, resistor, value):
+                self.i2c_controller_write(0x2, 0x28, 0x10 | resistor, value)
+                return
+
+                #self.i2c_chain_set(0x2)                
+        #addr = ((0x28 | address) << 1)
+        #        addr = int('{:08b}'.format(addr)[::-1], 2)
+         #       resistor = (0x10 | resistor)
+          #      resistor = int('{:08b}'.format(resistor)[::-1], 2)
+           #     value = int('{:08b}'.format(value)[::-1], 2)
+
+            #    # Set value bits
+             #   self.i2c_start()
+              #  self.i2c_write(addr)
+               # self.i2c_check_ack()
+             #   self.i2c_write(resistor)
+             #   self.i2c_check_ack()
+             #   self.i2c_write(value)
+             #   self.i2c_check_ack()
+             #   self.i2c_stop()
+
+        def write_at24c32d_prom(self, prom_address, word_address, value):
+                addr = (prom_address << 1)
+                addr = int('{:08b}'.format(addr)[::-1], 2)
+                wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
+                wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+                val = int('{:08b}'.format(value)[::-1], 2)
+
+        def write_m24c02_prom(self, prom_address, word_address, bottom_site, value):
+
+                if bottom_site == True:
+                        self.i2c_controller_write(1, prom_address, word_address, value)
+                else:
+                        self.i2c_controller_write(4, prom_address, word_address, value)
+
+                time.sleep(0.005)
+                
+                return
+
+        #addr = (prom_address << 1)
+        #        addr = int('{:08b}'.format(addr)[::-1], 2)
+         #       w = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+          #      val = int('{:08b}'.format(value)[::-1], 2)
+#
+ #               # Select chain
+  #              if bottom_site == True:
+   #                     self.i2c_chain_set(1)
+ #            else:
+     #                   self.i2c_chain_set(4)
+#
+  #              self.i2c_start()
+#
+  #              self.i2c_write(addr)
+ #               self.i2c_check_ack()
+    #            self.i2c_write(w)
+   #             self.i2c_check_ack()
+     #           self.i2c_write(val)
+      #          self.i2c_check_ack()
+#
+ #               self.i2c_stop()              
+
+
+        def read_m24c02_prom(self, prom_address, word_address, bottom_site):
+
+                if bottom_site == True:
+                        return self.i2c_controller_read(1, prom_address, word_address)
+                else:
+                        return self.i2c_controller_read(4, prom_address, word_address)
+
+               # address_r = (prom_address << 1) | 1
+               # addr = (prom_address << 1)
+               # address_r = int('{:08b}'.format(address_r)[::-1], 2)
+               # addr = int('{:08b}'.format(addr)[::-1], 2)
+               # w = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+                
+               # # Select chain
+               # if bottom_site == True:
+               #         self.i2c_chain_set(1)
+               # else:
+               #         self.i2c_chain_set(4)
+                        
+               # self.i2c_start()
+                        
+               # self.i2c_write(addr)
+               # self.i2c_check_ack()
+               # self.i2c_write(w)
+               # self.i2c_check_ack()
+
+               # self.i2c_repeated_start()
+
+        #self.i2c_write(address_r)
+        #        self.i2c_check_ack()
+        #        result = self.i2c_read()
+        #        self.i2c_clk(1)
+
+        #        self.i2c_stop()
+
+#                return result
+
+#       def write_at24c32d_prom(self, prom_address, word_address, value):
+#               addr = (prom_address << 1)
+#               addr = int('{:08b}'.format(addr)[::-1], 2)
+#               wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
+#               wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+#               val = int('{:08b}'.format(value)[::-1], 2)
+#
+#               self.fmc_i2c_start()
+#
+#               self.fmc_i2c_write(addr)
+#               self.fmc_i2c_check_ack()
+#               self.fmc_i2c_write(wh)
+#               self.fmc_i2c_check_ack()
+#               self.fmc_i2c_write(wl)
+#               self.fmc_i2c_check_ack()
+#               self.fmc_i2c_write(val)
+#               self.fmc_i2c_check_ack()
+#
+#               self.fmc_i2c_stop()              
+#
+#               time.sleep(0.005)
+#
+#       def read_at24c32d_prom(self, prom_address, word_address):
+#               address_r = (prom_address << 1) | 1
+#               addr = (prom_address << 1)
+#               address_r = int('{:08b}'.format(address_r)[::-1], 2)
+#               addr = int('{:08b}'.format(addr)[::-1], 2)
+#               wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
+#               wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+#
+#               self.fmc_i2c_start()
+#
+#               self.fmc_i2c_write(addr)
+#               self.fmc_i2c_check_ack()
+#               self.fmc_i2c_write(wh)
+#               self.fmc_i2c_check_ack()
+#               self.fmc_i2c_write(wl)
+#               self.fmc_i2c_check_ack()
+#
+#               self.fmc_i2c_repeated_start()
+#
+#               self.fmc_i2c_write(address_r)
+#               self.fmc_i2c_check_ack()
+#               result = self.fmc_i2c_read()
+#               self.fmc_i2c_clk(1)
+#
+#               self.fmc_i2c_stop()
+#
+#               return result
+#
+#       #def gtp_init(self):
+#       #        self.write_bytes[1] = 0xE
+#       #        self.send_receive()
+#       #        self.write_bytes[1] = 0xC
+#       #        self.send_receive()
+#
+#       #        time.sleep(1)
+#
+#       #        self.write_bytes[1] = 0x8
+#       #        self.send_receive()
+#       #        self.write_bytes[1] = 0
+#       #        self.send_receive()
+#
+#       #def gtp_status(self):
+#       #        self.send_receive()
+#       #        print 'PLLs LOCKED:', hex(self.read_bytes[6] >> 4)
+#       #        print 'RESET DONE:', hex(self.read_bytes[6] & 0xF)
+#       #        print 'RX DATA CHECKER TRACKING:', hex(self.read_bytes[7] >> 4)
+#       #        print 'RX BYTE IS ALIGNED:', hex(self.read_bytes[7] & 0xF)
+#       #        print 'RX DATA ERROR COUNTS:', hex(self.read_bytes[140]), hex(self.read_bytes[139])
+#
+#       #        self.write_bytes[63] = 1
+#       #        self.send_receive()
+#       #        time.sleep(0.1)
+#       #        self.write_bytes[63] = 0
+#       #        self.send_receive()
+#
+#       #        print
+#
+#       #        for i in range(0, 16):
+#       #                self.write_bytes[64] = i
+#       #                self.send_receive()
+#       #                self.send_receive()
+#       #                print str(i) + ':', hex(self.read_bytes[145]), hex(self.read_bytes[144]), hex(self.read_bytes[143]), hex(self.read_bytes[142]), hex(self.read_bytes[141])
+
+
+        def i2c_clk(self, bit):
+                
+                # Isolate reset bits with clock low and set data bit
+                self.set_byte(0, ((bit & 1) << 1), 0x3)
+                
+                # Set clock high
+                self.set_byte(0, 0x1, 0x1)
+
+                # Sample bit
+                result = int(self.get_byte(94) & 0x2) >> 1
+               
+                # Bring clock low
+                self.set_byte(0, 0, 0x1)
+
+                # Bring data low
+                self.set_byte(0, 0, 0x2)
+                
+                return result
+
+        def i2c_start(self):
+
+                # Bring clock and data high
+                self.set_byte(0, 0x3, 0x3)
+
+                # Bring data low
+                self.set_byte(0, 0, 0x2)
+
+                # Bring clock low
+                self.set_byte(0, 0, 0x1)
+
+        def i2c_repeated_start(self):
+
+                # Bring data high
+                self.set_byte(0, 0x2, 0x2)
+
+                # Bring clock high
+                self.set_byte(0, 0x1, 0x1)
+
+                # Bring data low
+                self.set_byte(0, 0, 0x2)
+
+                # Bring clock low
+                self.set_byte(0, 0, 0x1)
+
+        def i2c_stop(self):
+
+                # Bring clock high
+                self.set_byte(0, 0x1, 0x1)
+
+                # Bring data high
+                self.set_byte(0, 0x2, 0x2)
+              
+        def i2c_write(self, value):
+                
+                for i in range(0, 8):
+                        self.i2c_clk(value & 0x1)
+                        value = value >> 1
+
+        def i2c_read(self):
+                       
+                result = int()
+                for i in range(0, 8):
+                        bit = self.i2c_clk(1)
+                        result = (result << 1) | bit
+
+                return result
+
+        def i2c_check_ack(self, must_ack = True):
+                
+                if self.i2c_clk(1) == 1:
+                        if ( must_ack ):
+                                raise Exception('I2C acknowledge failed')
+                        else:
+                                return False
+
+                return True
+
+#       def ltc2990_i2c_write(self, address, command, data):
+#               address = 0x98 | ((address & 0x3) << 1)
+#               address = int('{:08b}'.format(address)[::-1], 2)
+#               command = int('{:08b}'.format(command)[::-1], 2)
+#               data = int('{:08b}'.format(data)[::-1], 2)
+#
+#               self.i2c_start()
+#
+#               self.i2c_write(address)
+#               self.i2c_check_ack()
+#               self.i2c_write(command)
+#               self.i2c_check_ack()
+#               self.i2c_write(data)
+#               self.i2c_check_ack()
+#
+#               self.i2c_stop()
+#
+#       def ltc2990_i2c_read(self, address, command):
+#               address = 0x98 |  ((address & 0x3) << 1)
+#               address_r = int(address) | 1
+#               address = int('{:08b}'.format(address)[::-1], 2)
+#               address_r = int('{:08b}'.format(address_r)[::-1], 2)
+#               command = int('{:08b}'.format(command)[::-1], 2)
+#
+#               self.i2c_start()
+#
+#               self.i2c_write(address)
+#               self.i2c_check_ack()
+#               self.i2c_write(command)
+#               self.i2c_check_ack()
+#
+#               self.i2c_repeated_start()
+#
+#               self.i2c_write(address_r)
+#               self.i2c_check_ack()
+#               result = self.i2c_read()
+#               self.i2c_clk(1)
+#
+#               self.i2c_stop()
+#
+#               return result
+
+        def kintex_qsfp_1_get(self):
+
+                # Modsel the Kintex-7 QSFP1, disable the others
+                self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
+                self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
+                self.pca9534_bit_set(0x80, 0, 4, True) # s6
+
+                self.pca9534_bit_set(0x80, 0, 2, False) # k7_1
+
+                # Chain is already set, query the QSFP
+                return self.qsfp_get()
+
+        def kintex_qsfp_2_get(self):
+
+                # Modsel the Kintex-7 QSFP2, disable the others
+                self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
+                self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
+                self.pca9534_bit_set(0x80, 0, 4, True) # s6
+
+                self.pca9534_bit_set(0x80, 0, 3, False) # k7_2
+
+                # Chain is already set, query the QSFP
+                return self.qsfp_get()
+
+        def spartan_qsfp_get(self):
+
+                # Modsel the Spartan-6 QSFP, disable the others
+                self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
+                self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
+                self.pca9534_bit_set(0x80, 0, 4, True) # s6
+
+                self.pca9534_bit_set(0x80, 0, 4, False) # s6
+
+                return self.qsfp_get()
+
+        def qsfp_get(self):
+                # Chain is already set, query the QSFP
+                self.i2c_controller_write(0x80, 0x50, 128, 0)
+                
+                time.sleep(0.2)
+
+                result = dict()
+                x = self.i2c_controller_block_read(0x80, 0x50, 0, 128)
+                for i in range(0, 128):
+                        result[i] = x[i]
+                x = self.i2c_controller_block_read(0x80, 0x50, 128, 128)
+                for i in range(0, 128):
+                        result[i+128] = x[i]
+
+                # Lower memory
+                result['IDENTIFIER'] = QSFP_INFO.IDENTIFIER.get(result[0], 'Unknown / unspecified')
+                result['STATUS'] = QSFP_INFO.STATUS.get(result[2], 'Unknown / unspecified')
+                for j in range(0, 4):
+                        result['LOS RX' + str(j+1)] = '(' + str((result[3] >> j) & 1) + ')'
+                        result['LOS TX' + str(j+1)] = '(' + str((result[3] >> j+4) & 1) + ')'
+                        result['FAULT TX' + str(j+1)] = '(' + str((result[4] >> j) & 1) + ')'
+                result['TEMPERATURE'] = str(float(conv_n((result[22] << 8) | result[23], 16)) / 256.0) + ' C'
+                result['SUPPLY VOLTAGE'] = str(float((result[26] << 8) | result[27]) * 0.0001) + ' V'
+
+                # Upper memory
+                result['NOMINAL BIT RATE'] = str(float(result[140]) * 0.1) + ' Gb/s'
+                result['SUPPORTED OM3 50um LENGTH'] = str(result[143] * 2) + ' m'
+                output = str()
+                for j in range(148, 164):
+                        output += str(unichr(result[j]))
+                result['VENDOR NAME'] = output
+                result['IEEE COMPANY ID'] = '0x' + '{:06x}'.format(result[165] << 16 | result[166] << 8 | result[167])
+                output = str()
+                for j in range(168, 186):
+                        output += str(unichr(result[j]))
+                result['PART NUMBER'] = output
+                result['REVISION LEVEL'] = str(unichr(result[184])) + str(unichr(result[185]))
+                result['LASER WAVELENGTH'] = str(float((result[186] << 8) | result[187]) / 20.0) + ' nm'
+                output = str()
+                for j in range(196, 212):
+                        output += str(unichr(result[j]))
+                result['VENDOR SERIAL NUMBER'] = output
+
+                return result
+
+        def si57X_b_get(self):
+
+                # Put SI57X_B controller in reset, with update low
+                self.set_byte(10, 0x1, 0x5)
+
+                # Release SI57X_A controller from reset
+                self.set_byte(10, 0x0, 0x1)
+
+                # Wait until done or error
+                while True:
+                        x = self.get_byte(16)
+                        if x == 1:
+                                break
+                        if x == 2:
+                                raise Exception('SI57X_B I2C error')
+
+                # Read the data
+                r = self.get_bytes()
+
+                return {
+                        'RFREQ' : (int(r[23]) << 32 |
+                                   int(r[22]) << 24 |
+                                   int(r[21]) << 16 |
+                                   int(r[20]) << 8 |
+                                   int(r[19])),
+                        'N1' : int(r[18]),
+                        'HSDIV' : int(r[17])
+                        }
+
+        def si57X_a_get(self):
+
+                # Put SI57X_A controller in reset, with update low
+                self.set_byte(2, 0x1, 0x5)
+
+                # Release SI57X_A controller from reset
+                self.set_byte(2, 0x0, 0x1)
+
+                # Wait until done or error
+                while True:
+                        x = self.get_byte(8)
+                        if x == 1:
+                                break
+                        if x == 2:
+                                raise Exception('SI57X_A I2C error')
+
+                # Read the data
+                r = self.get_bytes()
+
+                return {
+                        'RFREQ' : (int(r[15]) << 32 |
+                                   int(r[14]) << 24 |
+                                   int(r[13]) << 16 |
+                                   int(r[12]) << 8 |
+                                   int(r[11])),
+                        'N1' : int(r[10]),
+                        'HSDIV' : int(r[9])
+                        }
+
+        def si57X_a_set(self, a):
+                # Put SI57X_A controller in reset, with update high
+                self.set_byte(2, 0x5, 0x5)
+                
+                # Load new settings
+                self.set_byte(3, a['HSDIV'], 0xFF)
+                self.set_byte(4, a['N1'], 0xFF)
+                self.set_byte(5, a['RFREQ'] & 0xFF, 0xFF)
+                self.set_byte(6, (a['RFREQ'] >> 8) & 0xFF, 0xFF)
+                self.set_byte(7, (a['RFREQ'] >> 16) & 0xFF, 0xFF)
+                self.set_byte(8, (a['RFREQ'] >> 24) & 0xFF, 0xFF)
+                self.set_byte(9, (a['RFREQ'] >> 32) & 0xFF, 0xFF)
+
+                # Release controller from reset
+                self.set_byte(2, 0x0, 0x1)
+
+                # Wait until done or error
+                while True:
+                        x = self.get_byte(8)
+                        if x == 1:
+                                break
+                        if x == 2:
+                                raise Exception('SI57X_A I2C error')
+
+                # Verify the values
+                # Read the data
+                r = self.get_bytes()
+                x = {
+                        'RFREQ' : (int(r[15]) << 32 |
+                                   int(r[14]) << 24 |
+                                   int(r[13]) << 16 |
+                                   int(r[12]) << 8 |
+                                   int(r[11])),
+                        'N1' : int(r[10]),
+                        'HSDIV' : int(r[9])
+                        }
+
+                if x['HSDIV'] != a['HSDIV']:
+                        raise Exception('SI57X_A frequency update failed')
+                if x['N1'] != a['N1']:
+                        raise Exception('SI57X_A frequency update failed')
+                if x['RFREQ'] != a['RFREQ']:
+                        raise Exception('SI57X_A frequency update failed')
+
+        def si57X_a_enable(self):
+                self.set_byte(2, 0x2, 0x2)
+
+        def si57X_a_disable(self):
+                self.set_byte(2, 0x0, 0x2)
+
+        def si57X_b_enable(self):
+                self.set_byte(10, 0x2, 0x2)
+
+        def si57X_b_disable(self):
+                self.set_byte(10, 0x0, 0x2)
+
+#       def trigger_monitor_v1v2v3v4(self, device):
+#               self.ltc2990_i2c_write(device, 1, 0xDF)
+#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
+#
+#       def trigger_monitor_v1v2tr2(self, device):
+#               self.ltc2990_i2c_write(device, 1, 0xD8)
+#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
+#
+#       def trigger_monitor_dv12dv34(self, device):
+#               self.ltc2990_i2c_write(device, 1, 0xDE)
+#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
+#
+#       def get_monitor(self, device):
+#
+#               while self.ltc2990_i2c_read(device, LTC2990.STATUS) & 0x1:
+#                       continue
+#
+#               #short_open1 = self.ltc2990_i2c_read(device, LTC2990.V1_MSB)
+#               #short_open1 = ((short_open1 & 0x40) >> 6) | ((short_open1 & 0x20) >> 5)
+#               #short_open2 = self.ltc2990_i2c_read(device, LTC2990.V3_MSB)
+#               #short_open2 = ((short_open2 & 0x40) >> 6) | ((short_open2 & 0x20) >> 5)
+#
+#               return [
+#                       (float((self.ltc2990_i2c_read(device, LTC2990.T_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.T_LSB)) * 0.0625) - 273.2,
+#                       2.5 + float((self.ltc2990_i2c_read(device, LTC2990.VCC_MSB) & 0x3F) * 256 + self.ltc2990_i2c_read(device, LTC2990.VCC_LSB)) * 0.00030518,
+#                       
+#                       # V1V2V3V4 conversions
+#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V1_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V1_LSB), 15)) * 0.00030518,
+#                       #float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V2_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V2_LSB), 15)) * 0.00030518,
+#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V3_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V3_LSB), 15)) * 0.00030518,
+#                       #float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB), 15)) * 0.00030518,
+#
+#                       # TR2 conversions
+#                       (float((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB)) * 0.0625) - 273.2,
+#                       0, #short_open1,
+#                       (float((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB)) * 0.0625) - 273.2, # * 1.004 * 2.3 / 2.0) - (273.2 / (1.004 * 3.0 * (2.3 / 2.0))),
+#                       0, #short_open2,
+#
+#                       # Current conversions                        
+#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V2_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V2_LSB), 15)) * (0.00001942 / 0.02),
+#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB), 15)) * (0.00001942 / 0.02),
+#
+#                       ]
+#               
+#       def get_humidity(self):
+#               command = 0xF5 # RH measure no I2C block
+#               command = int('{:08b}'.format(command)[::-1], 2)
+#
+#               self.i2c_start()
+#               self.i2c_write(0x1)
+#               self.i2c_check_ack()
+#               self.i2c_write(command)
+#               self.i2c_check_ack()
+#               self.i2c_stop()
+#
+#               time.sleep(0.00002)
+#
+#               self.i2c_start()
+#               self.i2c_write(0x81)
+#
+#               while (not(self.i2c_check_ack(False))):
+#                       self.i2c_stop()
+#                       self.i2c_start()
+#                       self.i2c_write(0x81)
+#                       
+#               res1 = self.i2c_read()
+#               self.i2c_clk(0)
+#               res2 = self.i2c_read()
+#               self.i2c_clk(0)
+#               res3 = self.i2c_read()
+#               self.i2c_clk(1)
+#               self.i2c_stop()
+#
+#               print hex(res1), hex(res2), hex(res3)
+#
+#               humidity = -6.0 + (125.0 * float(res1 * 256 + (res2 & 0xFC)) / 65536.0)
+#               print humidity
+#
+
+        #def read_ina226(self, address):
+
+        def write_8b_adc128d818(self, chain, address, value):
+                addr = (0x1D << 1)
+                addr_r = (0x1D << 1) | 1
+                addr = int('{:08b}'.format(addr)[::-1], 2)
+                addr_r = int('{:08b}'.format(addr_r)[::-1], 2)
+                w = int('{:08b}'.format((address) & 0xFF)[::-1], 2)
+                v = int('{:08b}'.format((value) & 0xFF)[::-1], 2)
+
+                self.i2c_chain_set(chain)
+
+                self.i2c_start()
+
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(w)
+                self.i2c_check_ack()
+                self.i2c_write(v)
+                self.i2c_check_ack()
+
+                self.i2c_stop()             
+
+        def read_8b_adc128d818(self, chain, address):
+                addr = (0x1D << 1)
+                addr_r = (0x1D << 1) | 1
+                addr = int('{:08b}'.format(addr)[::-1], 2)
+                addr_r = int('{:08b}'.format(addr_r)[::-1], 2)
+                w = int('{:08b}'.format((address) & 0xFF)[::-1], 2)
+
+                self.i2c_chain_set(chain)
+
+                self.i2c_start()
+
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(w)
+                self.i2c_check_ack()
+                
+                self.i2c_repeated_start()
+
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                result = self.i2c_read()
+                self.i2c_clk(1)
+
+                self.i2c_stop()             
+
+                return result
+
+        def read_16b_adc128d818(self, chain, address):
+                addr = (0x1D << 1)
+                addr_r = (0x1D << 1) | 1
+                addr = int('{:08b}'.format(addr)[::-1], 2)
+                addr_r = int('{:08b}'.format(addr_r)[::-1], 2)
+                w = int('{:08b}'.format((address) & 0xFF)[::-1], 2)
+
+                self.i2c_chain_set(chain)
+
+                self.i2c_start()
+
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(w)
+                self.i2c_check_ack()
+                
+                self.i2c_repeated_start()
+
+                self.i2c_write(addr_r)
+                self.i2c_check_ack()
+                result = self.i2c_read()
+                self.i2c_clk(0)
+                result = (result << 8) | self.i2c_read()
+                self.i2c_clk(1)
+
+                self.i2c_stop()             
+
+                return (2.56 * float(result) / 65536.0)
+
+        def read_adc128d818_values(self, chain):
+                
+                #print self.read_8b_adc128d818(chain, 0x3E) # Manufacturer ID (0x1)
+                #print self.read_8b_adc128d818(chain, 0x3F) # Revision ID (0x9)
+
+                # Check device ready
+                while True:
+                        if self.i2c_controller_read(chain, 0x1D, 0xC) == 0:
+                                break
+                        time.sleep(0.01)
+
+                #self.write_8b_adc128d818(chain, 0xB, 2) # Advanced configuration
+                self.i2c_controller_write(chain, 0x1D, 0xB, 2)
+
+                #self.write_8b_adc128d818(chain, 0x9, 1) # One-shot
+                self.i2c_controller_write(chain, 0x1D, 0x9, 1)
+                
+                # Check device ready
+                while True:
+                        #if self.read_8b_adc128d818(chain, 0xC) == 0:
+                        #        break
+                        if self.i2c_controller_read(chain, 0x1D, 0xC) == 0:
+                                break
+                        time.sleep(0.01)
+
+                results = list()
+                for i in range(0x20, 0x28):
+                        results.append(2.56 * float(self.i2c_controller_read(chain, 0x1D, i, True)) / 65536.0)
+                        #results.append(self.read_16b_adc128d818(chain, i))
+
+                return results
+
+        def write_16b_ina226(self, chain, device, address, value):
+                d = int('{:08b}'.format((0x40 | device) << 1)[::-1], 2)
+                a = int('{:08b}'.format((address) & 0xFF)[::-1], 2)
+                msb = int('{:08b}'.format((value >> 8) & 0xFF)[::-1], 2)
+                lsb = int('{:08b}'.format(value & 0xFF)[::-1], 2)
+
+                self.i2c_chain_set(chain)
+
+                self.i2c_start()
+
+                self.i2c_write(d)
+                self.i2c_check_ack()
+                self.i2c_write(a)
+                self.i2c_check_ack()
+                self.i2c_write(msb)
+                self.i2c_check_ack()
+                self.i2c_write(lsb)
+                self.i2c_check_ack()
+
+                self.i2c_stop()             
+
+        def read_16b_ina226(self, chain, device, address):
+                d = int('{:08b}'.format((0x40 | device) << 1)[::-1], 2)
+                d_r = int('{:08b}'.format(((0x40 | device) << 1) | 1)[::-1], 2)
+                a = int('{:08b}'.format((address) & 0xFF)[::-1], 2)
+
+                self.i2c_chain_set(chain)
+
+                self.i2c_start()
+
+                self.i2c_write(d)
+                self.i2c_check_ack()
+                self.i2c_write(a)
+                self.i2c_check_ack()
+
+                self.i2c_repeated_start()
+
+                self.i2c_write(d_r)
+                self.i2c_check_ack()
+                result = self.i2c_read()
+                self.i2c_clk(0)
+                result = (result << 8) | self.i2c_read()
+                self.i2c_clk(1)
+
+                self.i2c_stop()             
+
+                return result
+
+        def read_ina226_values(self):
+
+                # Chip IDs
+                #print hex(self.read_16b_ina226(0x2, 0, 0xFE)) # +3.3V_MAIN
+                ##print hex(self.read_16b_ina226(0x2, 1, 0xFE)) # +3.3V_FMC
+                ##print hex(self.read_16b_ina226(0x2, 2, 0xFE)) # +12V_FMC
+                ##print hex(self.read_16b_ina226(0x2, 3, 0xFE)) # VADJ
+                ##print hex(self.read_16b_ina226(0x40, 0, 0xFE)) # +3.3V_BOOT
+                ##print hex(self.read_16b_ina226(0x40, 1, 0xFE)) # +1.0V_K7_VCCINT
+                ##print hex(self.read_16b_ina226(0x40, 2, 0xFE)) # +1.8V_K7_VCCAUX
+                ##print hex(self.read_16b_ina226(0x40, 3, 0xFE)) # +1.0V_K7_GTX
+                ##print hex(self.read_16b_ina226(0x40, 4, 0xFE)) # +1.2V_BOOT
+                ##print hex(self.read_16b_ina226(0x40, 5, 0xFE)) # +12V
+
+                # Bus voltages
+                #for i in range(0, 4):
+                #        print  float(self.read_16b_ina226(0x2, i, 0x2)) * 0.00125
+                #for i in range(0, 6):
+                #        print float(self.read_16b_ina226(0x40, i, 0x2)) * 0.00125
+
+                # Change to average of 64 samples
+
+                results = list()
+                for i in range(0, 4):
+                        self.i2c_controller_write(0x2, 0x40|i, 0x0, 0x4727, True)
+                        print 'a'
+                        r = self.i2c_controller_read(0x2, 0x40|i, 0x1, True)
+                        print 'b'
+                        if ( r & 0x8000 != 0 ):
+                                results.append(0.0)
+                                results.append(0.0)
+                        else:
+                                results.append(float(self.i2c_controller_read(0x2, 0x40|i, 0x1, True)) * 0.0000025)
+                                results.append(float(self.i2c_controller_read(0x2, 0x40|i, 0x2, True)) * 0.00125 * results[-1])
+                                
+                for i in range(0, 6):
+                        print 'c'
+                        self.write_16b_ina226(0x40, 0x40|i, 0x0, 0x4727)
+                        r = self.i2c_controller_read(0x40, 0x40|i, 0x1, True)
+                        if ( r & 0x8000 != 0 ):
+                                results.append(0.0)
+                                results.append(0.0)
+                        else:
+                                results.append(float(self.i2c_controller_read(0x40, 0x40|i, 0x1, True)) * 0.0000025)
+                                results.append(float(self.i2c_controller_read(0x40, 0x40|i, 0x2, True)) * 0.00125 * results[-1])
+
+                return results
+
+        def i2c_controller_block_read(self, chain, address, register_base, num_times, data_16b=False, register_16b=False):
+                if num_times > 128:
+                        raise Exception('num_times is too large ('+str(num_times)+')')
+
+                results = list()
+                v = bytearray()
+
+                for i in range(0, num_times):
+
+                        # 7 byte command structure
+                        d = bytearray(7)
+
+                        # Mode bits
+                        if data_16b:
+                                if register_16b:
+                                        d[0] = 0x1
+                                else:
+                                        d[0] = 0x3
+                        else:
+                                if register_16b:
+                                        d[0] = 0x5
+                                else:
+                                        d[0] = 0x7
+
+                        d[1] = chain
+                        d[2] = address << 1
+                        d[3] = (register_base+i) & 0xFF
+                        d[4] = ((register_base+i) >> 8) & 0xFF
+                        d[5] = 0
+                        d[6] = 0
+
+                        v = v + d
+
+                # Send command
+                read_bytes = str()
+
+                while True:
+                        try:
+                                self.I2CSock.sendto(str(v),(self.__host, self.__i2c_port))
+                                read_bytes = self.I2CSock.recv(1400)
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                res = bytearray(read_bytes)
+
+                for i in range(0, num_times):
+                        if res[i*3] == 0x2:
+                                raise Exception('I2C acknowledge failed')
+                        
+                        if data_16b:
+                                results.append((int(res[(i*3)+2]) << 8) | int(res[(i*3)+1]))
+                        else:
+                                results.append(int(res[(i*3)+1]))
+
+                return results
+
+        def i2c_controller_read(self, chain, address, register, data_16b=False, register_16b=False):
+
+                # 7 byte command structure
+                d = bytearray(7)
+
+                # Mode bits
+                if data_16b:
+                        if register_16b:
+                                d[0] = 0x1
+                        else:
+                                d[0] = 0x3
+                else:
+                        if register_16b:
+                                d[0] = 0x5
+                        else:
+                                d[0] = 0x7
+
+                d[1] = chain
+                d[2] = address << 1
+                d[3] = register & 0xFF
+                d[4] = (register >> 8) & 0xFF
+                d[5] = 0
+                d[6] = 0
+
+                #for i in d:
+                #        print hex(i)
+
+                # Send command
+                read_bytes = str()
+
+                while True:
+                        try:
+                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
+                                read_bytes = self.I2CSock.recv(1400)
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                res = bytearray(read_bytes)
+
+                if res[0] == 0x02:
+                        raise Exception('I2C acknowledge failed')
+
+                if data_16b:
+                        return ((int(res[2]) << 8) | int(res[1]))
+                
+                return int(res[1])
+
+        def i2c_controller_write(self, chain, address, register, data, data_16b=False, register_16b=False, ignore_ack=False):
+                
+                # 7 byte command structure
+                d = bytearray(7)
+
+                # Mode bits
+                if data_16b:
+                        if register_16b:
+                                d[0] = 0x0
+                        else:
+                                d[0] = 0x2
+                else:
+                        if register_16b:
+                                d[0] = 0x4
+                        else:
+                                d[0] = 0x6
+
+                d[1] = chain
+                d[2] = address << 1
+                d[3] = register & 0xFF
+                d[4] = (register >> 8) & 0xFF
+                d[5] = data & 0xFF
+                d[6] = (data >> 8) & 0xFF
+
+                # Send command
+                read_bytes = str()
+
+                while True:
+                        try:
+                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
+                                read_bytes = self.I2CSock.recv(1400)
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                res = bytearray(read_bytes)
+
+                if (res[0] == 0x02) and (ignore_ack == False):
+                        raise Exception('I2C acknowledge failed')
+
+        def print_monitors(self):
+
+                # TODO: Fix two's complement calculations
+                # TODO: Check sense resistor values
+                # TODO: Tach reading issue
+
+                # Get the monitoring data
+                data = self.get_bytes()
+
+                #for i in data:
+                #        print hex(i),
+                #print
+                
+                headphone_jack_sense = (int(data[97]) & 1)
+                is_qf2_pre = ((int(data[97] >> 1) & 1) ^ 1)
+                fan_tach = int(data[97] >> 2) & 1
+                power_state = int(data[97] >> 3) & 1
+                i2c_error_latch = int(data[94] >> 7) & 1
+                i2c_done_latch = int(data[94] >> 6) & 1
+                board_ot_shutdown_latch = int(data[94] >> 5) & 1
+                kintex_ot_shutdown_latch = int(data[94] >> 4) & 1
+                
+                print
+                print('Is QF2-pre: '+str(is_qf2_pre))
+                print('Headphone jack present: '+str(headphone_jack_sense))
+                print('Fan tach: '+str(fan_tach))
+                print('Power state: '+str(power_state))
+                print('I2C done latch: '+str(i2c_done_latch))
+                print('I2C error latch: '+str(i2c_error_latch))
+                print('Board OT shutdown latch: '+str(board_ot_shutdown_latch))
+                print('Kintex OT shutdown latch: '+str(kintex_ot_shutdown_latch))
+                
+                fan_speed = (int(data[77]) << 8) + int(data[76])
+                
+                #z = [
+                #        float(),
+                #        ]
+
+                #x = [
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float()
+                #        ]
+
+                #y = [
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float(),
+                #        float()
+                #        ]
+
+                z = []
+                y = []
+                x = []
+
+                for i in range(0, 10):
+                        if ( int(data[(i*4)+1+36]) & 0x80 != 0 ):
+                                z.append(0.0)
+                                z.append(0.0)
+                        else:
+                                z.append(((int(data[(i*4)+1+36]) << 8) + int(data[(i*4)+36])) * 0.0000025)
+                                z.append(((int(data[(i*4)+3+36]) << 8) + int(data[(i*4)+2+36])) * 0.00125 * z[-1])
+
+                for i in range(0, 8):
+                        x.append(float(2.56 * float((int(data[(i*2)+1+4]) << 8) + int(data[(i*2)+4])) / 65536.0))
+                        y.append(float(2.56 * float((int(data[(i*2)+1+20]) << 8) + int(data[(i*2)+20])) / 65536.0))
+
+                board_temperature = float((int(data[3]) << 4) + (int(data[2]) >> 4)) + (float(int(data[2]) & 0xF) * 0.0625)
+                kintex_temperature = float((int(data[1]) << 4) + (int(data[0]) >> 4)) + (float(int(data[0]) & 0xF) * 0.0625)
+
+                print('')
+                print('+12V:\t'+str(11.0 * y[0])+'V, '+str(z[18] / 0.004)+'A, '+str(z[19] / 0.004)+'W')
+                print('')
+
+                print('+3.3V_BOOT:\t'+str(2.0 * y[7])+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
+                print('+1.2V_BOOT:\t'+str(y[1])+'V, '+str(z[16] / 0.01)+'A, '+str(z[17] / 0.01)+'W')
+                print('')
+
+                print('+1.0V_K7_VCCINT:\t'+str(y[3])+'V, '+str(z[10] / 0.004)+'A, '+str(z[11] / 0.004)+'W')
+                print('+1.8V_K7_VCCAUX:\t'+str(y[2])+'V, '+str(z[12] / 0.01)+'A, '+str(z[13] / 0.01)+'W')
+                print('K7_MGTAVTT:\t\t'+str(y[4])+'V')
+                print('K7_MGTAVCC:\t\t'+str(y[5])+'V, '+str(z[14] / 0.01)+'A, '+str(z[15] / 0.01)+'W')
+                print('K7_MGTAVCCAUX:\t\t'+str(y[6])+'V')
+                print('+2.5V_K7_A;\t\t'+str(2.0 * x[6])+'V')
+                print('+2.5V_K7_B:\t\t'+str(2.0 * x[7])+'V')
+                print('+3.3V_MAIN:\t\t'+str(2.0 * x[5])+'V, '+str(z[0] / 0.004)+'A, '+str(z[1] / 0.004)+'W')
+                print('')
+
+                print('+12V_FMC:\t'+str(11.0 * x[2])+'V, '+str(z[4] / 0.01)+'A, '+str(z[5] / 0.01)+'W')
+                print('+3.3V_FMC:\t'+str(2.0 * x[1])+'V, '+str(z[2] / 0.004)+'A, '+str(z[3] / 0.004)+'W')
+                print('VADJ_FMC_TOP:\t'+str(2.0 * x[0])+'V')
+                print('VADJ_FMC_BOT:\t'+str(x[3])+'V')
+                print('VADJ SUPPLY:\t'+str(z[6] / 0.01)+'A, '+str(z[7] / 0.01)+'W')
+
+                print('')
+                print('LTM4628 temperature:\t'+str(150.0 - ((x[4] - 0.2) / 0.0023))+'C')
+                print('Board temperature:\t'+str(board_temperature)+'C')
+                print('Kintex-7 temperature:\t'+str(kintex_temperature)+'C')
+                print('ATX fan speed:\t\t'+str(fan_speed*60)+' rpm')
+
+        def reboot_to_runtime(self, wait_for_reboot=False):
+                x = bytearray([0x81])
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+                TempSock.sendto(x,(self.__host,50000))
+                TempSock.close()
+
+                if wait_for_reboot == False:
+                        return
+
+                # Wait two seconds for board to enter reset phase
+                time.sleep(2)
+                
+                # Loop wait for reboot
+                print('Waiting for board to reconnect...')
+                x = bytearray([0x0])
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+                TempSock.bind(("0.0.0.0", 0))
+                TempSock.settimeout(1)
+
+                count = 0
+                for count in range(0, 15):
+                        try:
+                                TempSock.sendto(x,(self.__host, 50000))
+                                TempSock.recv(1000)
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                if count == 14:
+                        raise Exception('Reboot failed')
+
+                print('Reboot complete')
+                TempSock.close()
+
+        def reboot_to_bootloader(self, wait_for_reboot=False):
+                x = bytearray([0x01])
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+                TempSock.sendto(x,(self.__host,50000))
+                TempSock.close()
+
+                if wait_for_reboot == False:
+                        return
+
+                # Wait two seconds for board to enter reset phase
+                time.sleep(2)
+                
+                # Loop wait for reboot
+                print('Waiting for board to reconnect...')
+                x = bytearray([0x0])
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+                TempSock.bind(("0.0.0.0", 0))
+                TempSock.settimeout(1)
+
+                count = 0
+                for count in range(0, 15):
+                        try:
+                                TempSock.sendto(x,(self.__host, 50000))
+                                TempSock.recv(1000)
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
+
+                if count == 14:
+                        raise Exception('Reboot failed')
+
+                print('Reboot complete')
+                TempSock.close()
