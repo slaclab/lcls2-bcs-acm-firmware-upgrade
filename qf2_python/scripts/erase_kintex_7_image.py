@@ -13,7 +13,7 @@ parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output
 args = parser.parse_args()
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True),args.verbose)
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
 # Create a Kintex firmware interface
 interface = kintex_7_firmware.interface(prom)

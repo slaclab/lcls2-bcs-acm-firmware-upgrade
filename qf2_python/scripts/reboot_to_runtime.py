@@ -5,6 +5,7 @@ import qf2_python.identifier
 
 parser = argparse.ArgumentParser(description='Identify a board and get an interface', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Target IP address')
+parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
-qf2_python.identifier.reboot_to_runtime(args.target, True)
+qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)

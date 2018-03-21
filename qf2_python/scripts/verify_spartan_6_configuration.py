@@ -12,24 +12,11 @@ def my_exec_cfg(x, verbose=False):
 
 parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
-parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 
 args = parser.parse_args()
-
-# Check that the lock is only applied to the bootloader
-if args.lock == True:
-    if args.bootloader == False:
-        print('ERROR: Lock argument can only be used for the bootloader')
-        exit(1)
-
-# Currently disabled
-if args.lock == True:
-    print('ERROR: This feature is not yet supported')
-    exit(1)
 
 # Chose firmware location
 if args.bootloader == True:

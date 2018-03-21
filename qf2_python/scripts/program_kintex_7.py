@@ -8,6 +8,7 @@ SEQUENCER_PORT = 50003
 parser = argparse.ArgumentParser(description='Program Kintex-7 firmware directly', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Firmware bitfile to program')
+parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 # Initialise the chain control
