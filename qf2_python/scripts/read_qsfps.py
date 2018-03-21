@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description='Identify a board and get an interf
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Target IP address')
 args = parser.parse_args()
 
-x = qf2_python.identifier.get_active_interface(args.target, True)
+x = qf2_python.identifier.get_active_interface(args.target)
 
 v = x.kintex_qsfp_1_get()
 

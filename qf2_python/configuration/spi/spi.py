@@ -401,7 +401,6 @@ class interface():
         return self.__interface.page_program(data, address)
 
     def verify_bitfile(self, name, offset):
-        print offset
         
         # Parse the bitfile and extract the bitstream
         data = xilinx_bitfile_parser.bitfile(name).data()

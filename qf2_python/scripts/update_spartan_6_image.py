@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import time, sys, ntplib, argparse, hashlib, qf2_python.identifier
+import time, sys, argparse, hashlib, qf2_python.identifier
 from datetime import datetime, timedelta
 from qf2_python.configuration.jtag import *
 from qf2_python.configuration.spi import *
@@ -77,12 +77,17 @@ parser = xilinx_bitfile_parser.bitfile(args.bit)
 storage_date = 0
         
 try:
-    c = ntplib.NTPClient()
-    response = c.request('0.pool.ntp.org', version=3)
-    storage_date = int(response.tx_time)
-except ntplib.NTPException:
-    print('ERROR: Timeout on NTP request, using local clock instead')
-    storage_date = int(time.time())
+    import ntplib
+    try:
+        c = ntplib.NTPClient()
+        response = c.request('0.pool.ntp.org', version=3)
+        storage_date = int(response.tx_time)
+    except ntplib.NTPException:
+        print 'Timeout on NTP request, using local clock instead'
+        storage_date = int(time.time())
+except:
+    print 'ntplib does not appear to be installed, using local clock instead'
+    storage_date = int(time.time())            
 
 # Extract the build date and time from the bitfile and encode it
 build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))

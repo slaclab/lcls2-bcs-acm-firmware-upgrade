@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ..jtag import *
-import spi, ntplib, time
+import spi, time
 from datetime import datetime, timedelta
 
 KINTEX_IMAGE_TABLE_SECTOR = 57
@@ -218,12 +218,17 @@ class interface():
         storage_date = 0
         
         try:
-            c = ntplib.NTPClient()
-            response = c.request('0.pool.ntp.org', version=3)
-            storage_date = int(response.tx_time)
-        except ntplib.NTPException:
-            print 'Timeout on NTP request, using local clock instead'
-            storage_date = int(time.time())
+            import ntplib
+            try:
+                c = ntplib.NTPClient()
+                response = c.request('0.pool.ntp.org', version=3)
+                storage_date = int(response.tx_time)
+            except ntplib.NTPException:
+                print 'Timeout on NTP request, using local clock instead'
+                storage_date = int(time.time())
+        except:
+                print 'ntplib does not appear to be installed, using local clock instead'
+                storage_date = int(time.time())            
 
         build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))
 

@@ -15,24 +15,19 @@ parser.add_argument('-t', '--target', default='192.168.1.127', help='Current uni
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-f', '--file', help='JSON settings file')
+parser.add_argument('-d', '--defaults', action="store_true", help='Reset to defaults')
+parser.add_argument('-j', '--json', help='JSON settings file')
 parser.add_argument('-s', '--settings', nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 
 args = parser.parse_args()
 
-
 # Check that the lock is only applied to the bootloader
 if args.lock == True:
     if args.bootloader == False:
-        print 'ERROR: Lock argument can only be used for the bootloader'
-        exit(1)
+        raise Exception('ERROR: Lock argument can only be used for the bootloader')
 
-# Currently disabled
-#if args.reboot == True:
-#    print 'ERROR: This feature is not yet supported'
-#    exit(1)
 if args.lock == True:
     print 'ERROR: This feature is not yet supported'
     exit(1)
@@ -59,32 +54,66 @@ for i in pd[0:32]:
     s += '{:02x}'.format(i)
 print s
 
-print 'Selecting matching configuration interface...'
+print('')
+print('Selecting matching configuration interface...')
 
 cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
 
 # TODO - Warn on mismatch with running firmware
 #x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
-print 'Importing stored Spartan-6 configuration settings...'
-
 pd = prom.read_data(CONFIG_ADDRESS, 256)
-cfg.import_prom_data(pd)
 
-print 'Modifying settings...'
+if args.defaults == False:
+    print('')
+    print('Importing stored Spartan-6 configuration settings...')
+    cfg.import_prom_data(pd)
 
-for i in args.settings[0]:
-    print(i[0]+' : '+i[1])
-    unknown_key = True
-    if cfg.is_network_key(i[0]):
-        unknown_key = False
-        cfg.set_network_key(i[0], i[1])
-    if cfg.is_write_key(i[0]):
-        unknown_key = False
-        cfg.set_write_key(i[0], i[1])
-    if unknown_key == True:
-        raise Exception('Unknown key '+i[0])
-print 'Exporting PROM settings...'
+    if args.json != None:
+        print('')
+        print('Importing JSON file settings from '+args.json+'...')
+        print('')
+        import json
+        with open(args.json) as json_data:
+            d = json.load(json_data)
+            for i_k, i_v in d.iteritems():
+                print(str(i_k)+' : '+str(i_v))
+                if type(i_v) == unicode:
+                    i_v = str(i_v)
+                    unknown_key = True
+                if cfg.is_network_key(i_k):
+                    unknown_key = False
+                    cfg.set_network_key(i_k, i_v)
+                if cfg.is_write_key(i_k):
+                    unknown_key = False
+                    cfg.set_write_key(i_k, i_v)
+                if unknown_key == True:
+                    raise Exception('Unknown key '+i_k)
+
+    if args.settings != None:
+        print('')
+        print('Adding command line settings...')
+        print('')
+        for i in args.settings[0]:
+            print(i[0]+' : '+i[1])
+            unknown_key = True
+            if cfg.is_network_key(i[0]):
+                unknown_key = False
+                cfg.set_network_key(i[0], i[1])
+            if cfg.is_write_key(i[0]):
+                unknown_key = False
+                cfg.set_write_key(i[0], i[1])
+            if unknown_key == True:
+                raise Exception('Unknown key '+i[0])
+
+if args.verbose == True:
+    print('')
+    print('Updated settings are...')
+    print('')
+    cfg.print_network_cfg()
+    cfg.print_write_cfg()
+
+print('Exporting PROM settings...')
 
 x = cfg.export_prom_data()
 
@@ -101,7 +130,7 @@ if ( x == pd ):
             qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
     exit()
 
-print 'Updating PROM settings...'
+print('Updating PROM settings...')
 
 prom.sector_erase(CONFIG_ADDRESS)
 prom.page_program(x, CONFIG_ADDRESS)

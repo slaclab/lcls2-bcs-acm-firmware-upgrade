@@ -8,11 +8,11 @@ parser.add_argument('-t', '--target', default='192.168.1.127', help='Current uni
 
 args = parser.parse_args()
 
-x = qf2_python.identifier.get_active_interface(args.target, True)
+x = qf2_python.identifier.get_active_interface(args.target)
 
 while True:
     print
     print '----------------------------------', datetime.datetime.now(), '----------------------------------'
     x.print_monitors()
     time.sleep(1)
-    
+

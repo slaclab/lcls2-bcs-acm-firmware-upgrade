@@ -89,13 +89,15 @@ class cfg:
                                 self.__val = list([0] * 32)
                                 for i in range(0, 32):
                                         self.__val[i] = int(val[i])
+                                # PROM ordering is reversed
+                                self.__val.reverse()
                                 return                                
                         raise Exception('Invalid type assignment')
 
                 def __int__(self):
                         x = 0
                         for i in range(0, 32):
-                                x = x | (int(self.__val[i]) << 8 * i)
+                                x = x | (int(self.__val[31-i]) << 8 * i)
                         return x
 
                 def __get__(self, objtype=None):
@@ -109,7 +111,7 @@ class cfg:
                         s = str()
                         for i in range(0, 32):
                                 s += '{:02x}'.format(self.__val[i])
-                        return s[:-1]
+                        return s
 
         class IPV4_IP(object):
 
@@ -357,8 +359,8 @@ class cfg:
         def set_write_key(self, key, value):
                 # Just pass the underlying integer if the default is integer
                 if type(self.__write_cfg[key][2]) == int:
-                        if value[0:2] == '0x':
-                                self.__write_cfg[key][2] = int(value, 16)
+                        if type(value) == str:
+                                self.__write_cfg[key][2] = int(value[2:], 16)
                         else:
                                 self.__write_cfg[key][2] = int(value)
                         return
