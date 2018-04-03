@@ -113,16 +113,15 @@ def handle_data(c):
         # Multiply by 2 for TMS & TDI
         amount = num_bytes * 2
 
+        block = str()
         data = str()
 
         while amount != 0:
-            data += c.recv(amount)
-            amount -= len(data)
+            block = c.recv(amount)
+            amount -= len(block)
+            data += block
     
         data = bytearray(data)
-        #for i in data:
-        #    print hex(i),
-        #print
 
         # Only allow exiting the loop if the state is RTI and the IR has IDCODE by going through test_logic_reset
         seen_tlr = (seen_tlr or (jtag_state == jtag.states.TEST_LOGIC_RESET)) and (jtag_state != jtag.states.CAPTURE_DR) and (jtag_state != jtag.states.CAPTURE_IR)
