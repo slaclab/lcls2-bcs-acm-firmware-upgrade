@@ -731,55 +731,13 @@ class interface(cfg):
                         self.pca9534_write(chain, address, (self.pca9534_read_output(chain, address) & ~i))
 
                 self.pca9534_direction_set(chain, address, (self.pca9534_direction_get(chain, address) & ~i))
-                        
 
         def pca9534_direction_set(self, chain, address, direction):
                 self.i2c_controller_write(chain, 0x20 | address, PCA9534.DIRECTION, direction)
                 return
-
-        #address = ((0x20 | address) << 1)
-        #        address = int('{:08b}'.format(address)[::-1], 2)
-        #        command = int('{:08b}'.format(PCA9534.DIRECTION)[::-1], 2)
-        #        direction = int('{:08b}'.format(direction)[::-1], 2)
-
-                # Set direction bits
-        #        self.i2c_start()
-        #        self.i2c_write(address)
-        #        self.i2c_check_ack()
-        #        self.i2c_write(command)
-        #        self.i2c_check_ack()
-        #        self.i2c_write(direction)
-        #        self.i2c_check_ack()
-        #        self.i2c_stop()
                 
         def pca9534_direction_get(self, chain, address):
                 return self.i2c_controller_read(chain, 0x20 | address, PCA9534.DIRECTION)
-
-
-        #address_r = ((0x20 | address) << 1) | 1
-        #        addr = ((0x20 | address) << 1)
-        #        address_r = int('{:08b}'.format(address_r)[::-1], 2)
-        #        addr = int('{:08b}'.format(addr)[::-1], 2)
-        #        command = int('{:08b}'.format(PCA9534.DIRECTION)[::-1], 2)
-
-                # Set direction bits
-        #        self.i2c_start()
-
-        #        self.i2c_write(addr)
-        #        self.i2c_check_ack()
-        #        self.i2c_write(command)
-        #        self.i2c_check_ack()
-                
-        #        self.i2c_repeated_start()
-
-        #        self.i2c_write(address_r)
-        #        self.i2c_check_ack()
-        #        result = self.i2c_read()
-        #        self.i2c_clk(1)
-                
-        #        self.i2c_stop()
-
-        #        return result
 
         def pca9534_write(self, chain, address, value):
                 self.i2c_controller_write(chain, 0x20 | address, PCA9534.OUTPUT, value)
@@ -789,30 +747,6 @@ class interface(cfg):
 
         def pca9534_read_input(self, chain, address):
                 return self.i2c_controller_read(chain, 0x20 | address, PCA9534.INPUT)
-
-        #address_r = ((0x20 | address) << 1) | 1
-        #        addr = ((0x20 | address) << 1)
-        #        address_r = int('{:08b}'.format(address_r)[::-1], 2)
-        #        addr = int('{:08b}'.format(addr)[::-1], 2)
-        #        command = int('{:08b}'.format(PCA9534.INPUT)[::-1], 2)
-                
-         #       self.i2c_start()
-
-         #       self.i2c_write(addr)
-         #       self.i2c_check_ack()
-         #       self.i2c_write(command)
-         #       self.i2c_check_ack()
-                
-         #       self.i2c_repeated_start()
-                
-         #       self.i2c_write(address_r)
-         #       self.i2c_check_ack()
-         #       result = self.i2c_read()
-         #       self.i2c_clk(1)
-                
-         #       self.i2c_stop()
-                
-         #       return result
 
         def set_top_fmc_vadj_resistor(self, value):
                 self.max5387_write(0, 2, value)
@@ -1187,48 +1121,6 @@ class interface(cfg):
 
                 return True
 
-#       def ltc2990_i2c_write(self, address, command, data):
-#               address = 0x98 | ((address & 0x3) << 1)
-#               address = int('{:08b}'.format(address)[::-1], 2)
-#               command = int('{:08b}'.format(command)[::-1], 2)
-#               data = int('{:08b}'.format(data)[::-1], 2)
-#
-#               self.i2c_start()
-#
-#               self.i2c_write(address)
-#               self.i2c_check_ack()
-#               self.i2c_write(command)
-#               self.i2c_check_ack()
-#               self.i2c_write(data)
-#               self.i2c_check_ack()
-#
-#               self.i2c_stop()
-#
-#       def ltc2990_i2c_read(self, address, command):
-#               address = 0x98 |  ((address & 0x3) << 1)
-#               address_r = int(address) | 1
-#               address = int('{:08b}'.format(address)[::-1], 2)
-#               address_r = int('{:08b}'.format(address_r)[::-1], 2)
-#               command = int('{:08b}'.format(command)[::-1], 2)
-#
-#               self.i2c_start()
-#
-#               self.i2c_write(address)
-#               self.i2c_check_ack()
-#               self.i2c_write(command)
-#               self.i2c_check_ack()
-#
-#               self.i2c_repeated_start()
-#
-#               self.i2c_write(address_r)
-#               self.i2c_check_ack()
-#               result = self.i2c_read()
-#               self.i2c_clk(1)
-#
-#               self.i2c_stop()
-#
-#               return result
-
         def kintex_qsfp_1_get(self):
 
                 # Modsel the Kintex-7 QSFP1, disable the others
@@ -1423,49 +1315,6 @@ class interface(cfg):
         def si57X_b_disable(self):
                 self.set_byte(10, 0x0, 0x2)
 
-#       def trigger_monitor_v1v2v3v4(self, device):
-#               self.ltc2990_i2c_write(device, 1, 0xDF)
-#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
-#
-#       def trigger_monitor_v1v2tr2(self, device):
-#               self.ltc2990_i2c_write(device, 1, 0xD8)
-#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
-#
-#       def trigger_monitor_dv12dv34(self, device):
-#               self.ltc2990_i2c_write(device, 1, 0xDE)
-#               self.ltc2990_i2c_write(device, LTC2990.TRIGGER, 0)
-#
-#       def get_monitor(self, device):
-#
-#               while self.ltc2990_i2c_read(device, LTC2990.STATUS) & 0x1:
-#                       continue
-#
-#               #short_open1 = self.ltc2990_i2c_read(device, LTC2990.V1_MSB)
-#               #short_open1 = ((short_open1 & 0x40) >> 6) | ((short_open1 & 0x20) >> 5)
-#               #short_open2 = self.ltc2990_i2c_read(device, LTC2990.V3_MSB)
-#               #short_open2 = ((short_open2 & 0x40) >> 6) | ((short_open2 & 0x20) >> 5)
-#
-#               return [
-#                       (float((self.ltc2990_i2c_read(device, LTC2990.T_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.T_LSB)) * 0.0625) - 273.2,
-#                       2.5 + float((self.ltc2990_i2c_read(device, LTC2990.VCC_MSB) & 0x3F) * 256 + self.ltc2990_i2c_read(device, LTC2990.VCC_LSB)) * 0.00030518,
-#                       
-#                       # V1V2V3V4 conversions
-#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V1_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V1_LSB), 15)) * 0.00030518,
-#                       #float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V2_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V2_LSB), 15)) * 0.00030518,
-#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V3_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V3_LSB), 15)) * 0.00030518,
-#                       #float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB), 15)) * 0.00030518,
-#
-#                       # TR2 conversions
-#                       (float((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB)) * 0.0625) - 273.2,
-#                       0, #short_open1,
-#                       (float((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x1F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB)) * 0.0625) - 273.2, # * 1.004 * 2.3 / 2.0) - (273.2 / (1.004 * 3.0 * (2.3 / 2.0))),
-#                       0, #short_open2,
-#
-#                       # Current conversions                        
-#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V2_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V2_LSB), 15)) * (0.00001942 / 0.02),
-#                       float(conv_n((self.ltc2990_i2c_read(device, LTC2990.V4_MSB) & 0x7F) * 256 + self.ltc2990_i2c_read(device, LTC2990.V4_LSB), 15)) * (0.00001942 / 0.02),
-#
-#                       ]
 #               
 #       def get_humidity(self):
 #               command = 0xF5 # RH measure no I2C block
@@ -1501,8 +1350,6 @@ class interface(cfg):
 #               humidity = -6.0 + (125.0 * float(res1 * 256 + (res2 & 0xFC)) / 65536.0)
 #               print humidity
 #
-
-        #def read_ina226(self, address):
 
         def write_8b_adc128d818(self, chain, address, value):
                 addr = (0x1D << 1)
@@ -1878,10 +1725,6 @@ class interface(cfg):
                 # Get the monitoring data
                 data = self.get_bytes()
 
-                #for i in data:
-                #        print hex(i),
-                #print
-                
                 headphone_jack_sense = (int(data[97]) & 1)
                 is_qf2_pre = ((int(data[97] >> 1) & 1) ^ 1)
                 fan_tach = int(data[97] >> 2) & 1
@@ -1903,32 +1746,6 @@ class interface(cfg):
                 
                 fan_speed = (int(data[77]) << 8) + int(data[76])
                 
-                #z = [
-                #        float(),
-                #        ]
-
-                #x = [
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float()
-                #        ]
-
-                #y = [
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float(),
-                #        float()
-                #        ]
-
                 z = []
                 y = []
                 x = []
