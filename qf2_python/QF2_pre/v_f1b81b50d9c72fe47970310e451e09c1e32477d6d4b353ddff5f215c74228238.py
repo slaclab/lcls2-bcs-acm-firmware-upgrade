@@ -531,41 +531,44 @@ class interface(cfg):
                 self.I2CSock.bind(("0.0.0.0", 0))
                 self.I2CSock.settimeout(2)
 
-                # Disable monitoring
-                self.disable_monitoring()
-
-                # Wait 1s to ensure I2C bus is quiet
-                time.sleep(1)
-
-                try:
-                        # Pull the board ID
-                        cfg0 = self.atsha204_cfg_read(0)
-                        cfg1 = self.atsha204_cfg_read(1)
-                        cfg2 = self.atsha204_cfg_read(2)
-                        cfg3 = self.atsha204_cfg_read(3)
-                
-                        serial_number = 0
-                        serial_number |= (cfg3[0] << (8 * 8))
-                        serial_number |= (cfg2[3] << (8 * 7))
-                        serial_number |= (cfg2[2] << (8 * 6))
-                        serial_number |= (cfg2[1] << (8 * 5))
-                        serial_number |= (cfg2[0] << (8 * 4))
-                        serial_number |= (cfg0[3] << (8 * 3))
-                        serial_number |= (cfg0[2] << (8 * 2))
-                        serial_number |= (cfg0[1] << (8 * 1))
-                        serial_number |= cfg0[0]
-
-                        self.BOARD_UID = '{:018X}'.format(serial_number)
-                except:
-                        self.enable_monitoring()
-                        raise
-
-                # Enable monitoring
-                self.enable_monitoring()
-                
                 if verbose == True:
-                        print
-                        print('Board UID: '+self.BOARD_UID)
+
+                        # Disable monitoring
+                        self.disable_monitoring()
+
+                        # Wait 1s to ensure I2C bus is quiet
+                        time.sleep(1)
+
+                        try:
+                                # Pull the board ID
+                                self.atsha204_wake()
+                                cfg0 = self.atsha204_cfg_read(0)
+                                cfg1 = self.atsha204_cfg_read(1)
+                                cfg2 = self.atsha204_cfg_read(2)
+                                cfg3 = self.atsha204_cfg_read(3)
+                
+                                serial_number = 0
+                                serial_number |= (cfg3[0] << (8 * 8))
+                                serial_number |= (cfg2[3] << (8 * 7))
+                                serial_number |= (cfg2[2] << (8 * 6))
+                                serial_number |= (cfg2[1] << (8 * 5))
+                                serial_number |= (cfg2[0] << (8 * 4))
+                                serial_number |= (cfg0[3] << (8 * 3))
+                                serial_number |= (cfg0[2] << (8 * 2))
+                                serial_number |= (cfg0[1] << (8 * 1))
+                                serial_number |= cfg0[0]
+
+                                self.BOARD_UID = '{:018X}'.format(serial_number)
+                        except:
+                                self.enable_monitoring()
+                                raise
+
+                        # Enable monitoring
+                        self.enable_monitoring()
+                
+                        if verbose == True:
+                                print
+                                print('Board UID: '+self.BOARD_UID)
 
                 # Turn on TAS2505
                 #self.set_byte(1, 4, 4)
@@ -821,6 +824,8 @@ class interface(cfg):
                 addr = int('{:08b}'.format(0xC8)[::-1], 2)
                 addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
                 
+                self.i2c_chain_set(0x8)
+
                 self.i2c_start()
                 time.sleep(0.001) # Wake
                 self.i2c_stop()
@@ -909,7 +914,6 @@ class interface(cfg):
                 radd = int('{:08b}'.format(radd)[::-1], 2)
 
                 self.i2c_chain_set(0x8)
-                self.atsha204_wake()
 
                 self.i2c_start()
                 self.i2c_write(addr)
@@ -948,6 +952,10 @@ class interface(cfg):
                 self.i2c_clk(1)
                 self.i2c_stop()
                 
+                for i in v:
+                        print i,
+                print
+
                 for i in range(1, v[0]):
                         self.i2c_start()
                         self.i2c_write(addr_r)

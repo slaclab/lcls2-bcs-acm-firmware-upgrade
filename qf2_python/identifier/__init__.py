@@ -18,7 +18,7 @@ def __query_board(target, verbose=False):
     #data = str(bytes)
 
     UDPSock.sendto(bytes,(target,50000))
-    result = UDPSock.recv(1000)
+    result = UDPSock.recv(1400)
     UDPSock.close()
 
     r = bytearray(result)
@@ -26,8 +26,9 @@ def __query_board(target, verbose=False):
 
     if verbose == True:
         print('Board ID packet format: '+str(r[0]))
-        if r[0] > HIGHEST_VERSION:
-            raise Exception('ERROR - unrecognized board ID packet format (', r[0], ')')
+
+    if r[0] > HIGHEST_VERSION:
+        raise Exception('ERROR - unrecognized board ID packet format ('+str(r[0])+')')
 
     return r
 
