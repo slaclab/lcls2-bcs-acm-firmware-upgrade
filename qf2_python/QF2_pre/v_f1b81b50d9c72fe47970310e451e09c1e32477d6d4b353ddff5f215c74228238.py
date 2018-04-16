@@ -1033,150 +1033,46 @@ class interface(cfg):
                 self.i2c_controller_write(0x2, 0x28, 0x10 | resistor, value)
                 return
 
-                #self.i2c_chain_set(0x2)                
-        #addr = ((0x28 | address) << 1)
-        #        addr = int('{:08b}'.format(addr)[::-1], 2)
-         #       resistor = (0x10 | resistor)
-          #      resistor = int('{:08b}'.format(resistor)[::-1], 2)
-           #     value = int('{:08b}'.format(value)[::-1], 2)
-
-            #    # Set value bits
-             #   self.i2c_start()
-              #  self.i2c_write(addr)
-               # self.i2c_check_ack()
-             #   self.i2c_write(resistor)
-             #   self.i2c_check_ack()
-             #   self.i2c_write(value)
-             #   self.i2c_check_ack()
-             #   self.i2c_stop()
-
         def write_at24c32d_prom(self, prom_address, word_address, value):
-                addr = (prom_address << 1)
-                addr = int('{:08b}'.format(addr)[::-1], 2)
-                wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
-                wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
-                val = int('{:08b}'.format(value)[::-1], 2)
 
-        def write_m24c02_prom(self, prom_address, word_address, bottom_site, value):
-
+                # GA is always zero now, so address is always 0x50
                 if bottom_site == True:
-                        self.i2c_controller_write(1, prom_address, word_address, value)
+                        self.i2c_controller_write(1, 0x50, word_address, value, False, True)
                 else:
-                        self.i2c_controller_write(4, prom_address, word_address, value)
+                        self.i2c_controller_write(4, 0x50, word_address, value, False, True)
 
                 time.sleep(0.005)
                 
                 return
 
-        #addr = (prom_address << 1)
-        #        addr = int('{:08b}'.format(addr)[::-1], 2)
-         #       w = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
-          #      val = int('{:08b}'.format(value)[::-1], 2)
-#
- #               # Select chain
-  #              if bottom_site == True:
-   #                     self.i2c_chain_set(1)
- #            else:
-     #                   self.i2c_chain_set(4)
-#
-  #              self.i2c_start()
-#
-  #              self.i2c_write(addr)
- #               self.i2c_check_ack()
-    #            self.i2c_write(w)
-   #             self.i2c_check_ack()
-     #           self.i2c_write(val)
-      #          self.i2c_check_ack()
-#
- #               self.i2c_stop()              
+        def read_at24c32d_prom(self, word_address, bottom_site):
 
-
-        def read_m24c02_prom(self, prom_address, word_address, bottom_site):
-
+                # GA is always zero now, so address is always 0x50
                 if bottom_site == True:
-                        return self.i2c_controller_read(1, prom_address, word_address)
+                        return self.i2c_controller_read(1, 0x50, word_address, False, True)
                 else:
-                        return self.i2c_controller_read(4, prom_address, word_address)
+                        return self.i2c_controller_read(4, 0x50, word_address, False, True)
 
-               # address_r = (prom_address << 1) | 1
-               # addr = (prom_address << 1)
-               # address_r = int('{:08b}'.format(address_r)[::-1], 2)
-               # addr = int('{:08b}'.format(addr)[::-1], 2)
-               # w = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
+        def write_m24c02_prom(self, word_address, value, bottom_site):
+
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        self.i2c_controller_write(1, 0x50, word_address, value)
+                else:
+                        self.i2c_controller_write(4, 0x50, word_address, value)
+
+                time.sleep(0.005)
                 
-               # # Select chain
-               # if bottom_site == True:
-               #         self.i2c_chain_set(1)
-               # else:
-               #         self.i2c_chain_set(4)
-                        
-               # self.i2c_start()
-                        
-               # self.i2c_write(addr)
-               # self.i2c_check_ack()
-               # self.i2c_write(w)
-               # self.i2c_check_ack()
+                return
 
-               # self.i2c_repeated_start()
+        def read_m24c02_prom(self, word_address, bottom_site):
 
-        #self.i2c_write(address_r)
-        #        self.i2c_check_ack()
-        #        result = self.i2c_read()
-        #        self.i2c_clk(1)
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        return self.i2c_controller_read(1, 0x50, word_address)
+                else:
+                        return self.i2c_controller_read(4, 0x50, word_address)
 
-        #        self.i2c_stop()
-
-#                return result
-
-#       def write_at24c32d_prom(self, prom_address, word_address, value):
-#               addr = (prom_address << 1)
-#               addr = int('{:08b}'.format(addr)[::-1], 2)
-#               wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
-#               wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
-#               val = int('{:08b}'.format(value)[::-1], 2)
-#
-#               self.fmc_i2c_start()
-#
-#               self.fmc_i2c_write(addr)
-#               self.fmc_i2c_check_ack()
-#               self.fmc_i2c_write(wh)
-#               self.fmc_i2c_check_ack()
-#               self.fmc_i2c_write(wl)
-#               self.fmc_i2c_check_ack()
-#               self.fmc_i2c_write(val)
-#               self.fmc_i2c_check_ack()
-#
-#               self.fmc_i2c_stop()              
-#
-#               time.sleep(0.005)
-#
-#       def read_at24c32d_prom(self, prom_address, word_address):
-#               address_r = (prom_address << 1) | 1
-#               addr = (prom_address << 1)
-#               address_r = int('{:08b}'.format(address_r)[::-1], 2)
-#               addr = int('{:08b}'.format(addr)[::-1], 2)
-#               wh = int('{:08b}'.format((word_address >> 8) & 0xFF)[::-1], 2)
-#               wl = int('{:08b}'.format((word_address) & 0xFF)[::-1], 2)
-#
-#               self.fmc_i2c_start()
-#
-#               self.fmc_i2c_write(addr)
-#               self.fmc_i2c_check_ack()
-#               self.fmc_i2c_write(wh)
-#               self.fmc_i2c_check_ack()
-#               self.fmc_i2c_write(wl)
-#               self.fmc_i2c_check_ack()
-#
-#               self.fmc_i2c_repeated_start()
-#
-#               self.fmc_i2c_write(address_r)
-#               self.fmc_i2c_check_ack()
-#               result = self.fmc_i2c_read()
-#               self.fmc_i2c_clk(1)
-#
-#               self.fmc_i2c_stop()
-#
-#               return result
 #
 #       #def gtp_init(self):
 #       #        self.write_bytes[1] = 0xE
