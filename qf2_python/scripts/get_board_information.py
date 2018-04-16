@@ -9,3 +9,6 @@ parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output
 args = parser.parse_args()
 
 x = qf2_python.identifier.get_board_information(args.target, args.verbose)
+
+for i, j in sorted(x.items()):
+    print(i+' : '+j)

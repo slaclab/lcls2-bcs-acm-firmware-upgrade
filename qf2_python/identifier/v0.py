@@ -54,10 +54,6 @@ def get_board_information(r, verbose=False):
         'Active firmware' : active_firmware
         }
 
-    if verbose == True:
-        for key, value in ret.items():
-            print(key+': '+value)
-
     return ret
 
 def reboot_to_runtime(target, verbose=False, wait_for_reboot=False):
