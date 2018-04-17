@@ -274,22 +274,16 @@ class cfg:
 
         def set_write_key(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if type(self.__write_cfg[key][2]) == int:
-                        if value[0:2] == '0x':
-                                self.__write_cfg[key][2] = int(value, 16)
-                        else:
-                                self.__write_cfg[key][2] = int(value)
+                if (type(self.__write_cfg[key][2]) == int) or (type(self.__write_cfg[key][2]) == long):
+                        self.__write_cfg[key][2] = int(value, 0)
                         return
 
                 self.__write_cfg[key][2] = type(self.__write_cfg[key][2])(value)
 
         def set_network_key(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if type(self.__network_cfg[key][2]) == int:
-                        if value[0:2] == '0x':
-                                self.__network_cfg[key][2] = int(value, 16)
-                        else:
-                                self.__network_cfg[key][2] = int(value)
+                if (type(self.__network_cfg[key][2]) == int) or (type(self.__network_cfg[key][2]) == long):
+                        self.__network_cfg[key][2] = int(value, 0)
                         return
 
                 self.__network_cfg[key][2] = type(self.__network_cfg[key][2])(value)
@@ -364,7 +358,7 @@ class cfg:
                         num_bytes += 1
 
                 # Just pass the underlying integer if the default is integer
-                if type(target[key][2]) == int:
+                if (type(target[key][2]) == int) or (type(target[key][2]) == long):
                         target[key][2] = myi
                         return
 
@@ -447,7 +441,7 @@ class interface(cfg):
                 self.I2CSock.bind(("0.0.0.0", 0))
                 self.I2CSock.settimeout(2)
 
-                raise Exception('This is a placeholder for future use, it should not be needed at the moment.')
+                raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
         def set_byte(self, index, data, mask):
                 d = bytearray(cfg.write_length(self))

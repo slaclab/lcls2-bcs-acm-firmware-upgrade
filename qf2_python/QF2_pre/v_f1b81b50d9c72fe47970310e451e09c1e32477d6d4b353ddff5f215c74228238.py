@@ -358,22 +358,16 @@ class cfg:
 
         def set_write_key(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if type(self.__write_cfg[key][2]) == int:
-                        if type(value) == str:
-                                self.__write_cfg[key][2] = int(value[2:], 16)
-                        else:
-                                self.__write_cfg[key][2] = int(value)
+                if (type(self.__write_cfg[key][2]) == int) or (type(self.__write_cfg[key][2]) == long):
+                        self.__write_cfg[key][2] = int(value, 0)
                         return
 
                 self.__write_cfg[key][2] = type(self.__write_cfg[key][2])(value)
 
         def set_network_key(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if type(self.__network_cfg[key][2]) == int:
-                        if value[0:2] == '0x':
-                                self.__network_cfg[key][2] = int(value, 16)
-                        else:
-                                self.__network_cfg[key][2] = int(value)
+                if (type(self.__network_cfg[key][2]) == int) or (type(self.__network_cfg[key][2]) == long):
+                        self.__network_cfg[key][2] = int(value, 0)
                         return
 
                 self.__network_cfg[key][2] = type(self.__network_cfg[key][2])(value)
@@ -448,7 +442,7 @@ class cfg:
                         num_bytes += 1
 
                 # Just pass the underlying integer if the default is integer
-                if type(target[key][2]) == int:
+                if (type(target[key][2]) == int) or (type(target[key][2]) == long):
                         target[key][2] = myi
                         return
 
@@ -885,10 +879,6 @@ class interface(cfg):
                 v.append(self.i2c_read())
                 self.i2c_clk(1)
                 self.i2c_stop()
-                
-                for i in v:
-                        print i,
-                print
 
                 for i in range(1, v[0]):
                         self.i2c_start()
