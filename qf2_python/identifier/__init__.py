@@ -7,7 +7,7 @@ __all__ = [
 
 import socket
 
-HIGHEST_VERSION = 0
+HIGHEST_VERSION = 1
 
 def __query_board(target, verbose=False):
     UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

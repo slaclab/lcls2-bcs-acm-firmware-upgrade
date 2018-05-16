@@ -582,42 +582,45 @@ class interface(cfg):
 
                 #if verbose == True:
 
-                        # Disable monitoring
-                        #self.disable_monitoring()
+                # Disable monitoring
+                self.disable_monitoring()
 
-                        # Wait 1s to ensure I2C bus is quiet
-                        #time.sleep(1)
+                # Wait 1s to ensure I2C bus is quiet
+                time.sleep(1)
 
-                        #try:
+                while True:
+
+                        try:
                                 # Pull the board ID
-                        #        self.atsha204_wake()
-                        #        cfg0 = self.atsha204_cfg_read(0)
-                        #        cfg1 = self.atsha204_cfg_read(1)
-                        #        cfg2 = self.atsha204_cfg_read(2)
-                        #        cfg3 = self.atsha204_cfg_read(3)
-                
-                        #        serial_number = 0
-                        #        serial_number |= (cfg3[0] << (8 * 8))
-                        #        serial_number |= (cfg2[3] << (8 * 7))
-                        #        serial_number |= (cfg2[2] << (8 * 6))
-                        #        serial_number |= (cfg2[1] << (8 * 5))
-                        #        serial_number |= (cfg2[0] << (8 * 4))
-                        #        serial_number |= (cfg0[3] << (8 * 3))
-                        #        serial_number |= (cfg0[2] << (8 * 2))
-                        #        serial_number |= (cfg0[1] << (8 * 1))
-                        #        serial_number |= cfg0[0]
+                                cfg0 = self.atsha204_cfg_read(0)
+                                cfg2 = self.atsha204_cfg_read(2)
+                                cfg3 = self.atsha204_cfg_read(3)
 
-                        #        self.BOARD_UID = '{:018X}'.format(serial_number)
-                        #except:
-                        #        self.enable_monitoring()
-                        #        raise
+                                serial_number = 0
+                                serial_number |= (cfg3[0] << (8 * 8))
+                                serial_number |= (cfg2[3] << (8 * 7))
+                                serial_number |= (cfg2[2] << (8 * 6))
+                                serial_number |= (cfg2[1] << (8 * 5))
+                                serial_number |= (cfg2[0] << (8 * 4))
+                                serial_number |= (cfg0[3] << (8 * 3))
+                                serial_number |= (cfg0[2] << (8 * 2))
+                                serial_number |= (cfg0[1] << (8 * 1))
+                                serial_number |= cfg0[0]
 
-                        # Enable monitoring
-                        #self.enable_monitoring()
+                                self.BOARD_UID = '{:018X}'.format(serial_number)
+                                print
+                                print('Board UID: '+self.BOARD_UID)
+
+                        except:
+                                self.enable_monitoring()
+                                raise
+
+                # Enable monitoring
+                self.enable_monitoring()
                 
                         #if verbose == True:
-                       #         print
-                         #       print('Board UID: '+self.BOARD_UID)
+                print
+                print('Board UID: '+self.BOARD_UID)
 
                 # Turn on TAS2505
                 #self.set_byte(1, 4, 4)
@@ -883,47 +886,37 @@ class interface(cfg):
                 addr = int('{:08b}'.format(0xC8)[::-1], 2)
                 addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
                 
-                self.i2c_chain_set(0x8)
                 self.i2c_start()
-                time.sleep(0.001) # Wake
+                time.sleep(0.00006) # SDA low for at least 60us
                 self.i2c_stop()
-                self.i2c_start()
-                time.sleep(0.001) # Wake
-                self.i2c_stop()
+                time.sleep(0.0025) # Wait at least 2.5ms
+
+                # Should be awake now
 
                 self.i2c_start()
                 self.i2c_write(addr_r)
                 self.i2c_check_ack()
                 l =  self.i2c_read()
-                self.i2c_clk(1)
-                self.i2c_stop()
+                self.i2c_clk(0)
 
                 if l != 4:
+                        self.i2c_stop()
                         raise Exception('Failed to wake ATSHA204A')
 
-                self.i2c_start()
-                self.i2c_write(addr_r)
-                self.i2c_check_ack()
                 l = self.i2c_read()
-                self.i2c_clk(1)
-                self.i2c_stop()
+                self.i2c_clk(0)
 
                 if l != 0x11:
+                        self.i2c_stop()
                         raise Exception('Failed to wake ATSHA204A')
 
-                self.i2c_start()
-                self.i2c_write(addr_r)
-                self.i2c_check_ack()
                 l = self.i2c_read()
-                self.i2c_clk(1)
-                self.i2c_stop()
+                self.i2c_clk(0)
 
                 if l != 0x33:
+                        self.i2c_stop()
                         raise Exception('Failed to wake ATSHA204A')
 
-                self.i2c_start()
-                self.i2c_write(addr_r)
-                self.i2c_check_ack()
                 l = self.i2c_read()
                 self.i2c_clk(1)
                 self.i2c_stop()
@@ -934,6 +927,17 @@ class interface(cfg):
         def atsha204_sleep(self):
                 addr = int('{:08b}'.format(0xC8)[::-1], 2)
                 word = int('{:08b}'.format(0x01)[::-1], 2)
+
+                self.i2c_start()
+                self.i2c_write(addr)
+                self.i2c_check_ack()
+                self.i2c_write(word)
+                self.i2c_check_ack()
+                self.i2c_stop()
+
+        def atsha204_idle(self):
+                addr = int('{:08b}'.format(0xC8)[::-1], 2)
+                word = int('{:08b}'.format(0x02)[::-1], 2)
 
                 self.i2c_start()
                 self.i2c_write(addr)
@@ -969,11 +973,15 @@ class interface(cfg):
                 crcl = int('{:08b}'.format(crc & 0xFF)[::-1], 2)
                 crch = int('{:08b}'.format(crc >> 8)[::-1], 2)
 
-                print hex(crcl), hex(crch)
+                print hex(crc & 0xFF), hex(crc >>8)
 
                 radd = int('{:08b}'.format(radd)[::-1], 2)
 
+                # Set the chain
                 self.i2c_chain_set(0x8)
+
+                # Wake the device
+                self.atsha204_wake()
 
                 self.i2c_start()
                 self.i2c_write(addr)
@@ -995,11 +1003,7 @@ class interface(cfg):
                 self.i2c_write(crch) # crc msb
                 self.i2c_check_ack()
                 self.i2c_stop()
-                
-                #self.i2c_start()
-                #self.i2c_write(addr)
-                #self.i2c_check_ack()
-                
+
                 # wait texec (max) for read
                 time.sleep(0.004)
 
@@ -1009,21 +1013,22 @@ class interface(cfg):
                 self.i2c_write(addr_r)
                 self.i2c_check_ack()
                 v.append(self.i2c_read())
-                self.i2c_clk(1)
-                self.i2c_stop()
+                self.i2c_clk(0)
 
-                for i in range(1, v[0]):
-                        self.i2c_start()
-                        self.i2c_write(addr_r)
-                        self.i2c_check_ack()
+                for i in range(1, v[0]-1):
                         v.append(self.i2c_read())
-                        self.i2c_clk(1)
-                        self.i2c_stop()
+                        self.i2c_clk(0)
+
+                v.append(self.i2c_read())
+                self.i2c_clk(1) # NACK
+                self.i2c_stop()
 
                 if (self.crc16_arc(v[0:-2]) != ((v[-1] << 8) | v[-2])):
                         raise Exception('CRC error reading ATSHA204A')
 
-                # Put the device back to sleep
+                print len(v)
+
+                # Sleep the device
                 self.atsha204_sleep()
 
                 return v[1:5]
