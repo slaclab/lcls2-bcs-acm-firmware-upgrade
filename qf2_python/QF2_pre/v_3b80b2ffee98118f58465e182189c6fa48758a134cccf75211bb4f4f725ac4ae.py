@@ -275,25 +275,27 @@ class cfg:
                         self.print_read_cfg()
                         print('')
 
-                if self.__verbose == True:
-                        print('Querying board status...')
-                        print('')
+                # Check if we are running standalone or inherited
+                if 'get_bytes' in dir(self):
+                        if self.__verbose == True:
+                                print('Querying board status...')
+                                print('')
 
-                self.import_network_data()
+                        self.import_network_data()
 
-                if self.__verbose == True:
-                        print('Current network configuration is:')
-                        print('')
-                        self.print_network_cfg()
-                        print('')
-                        print('Current write configuration is:')
-                        print('')
-                        self.print_write_cfg()
-                        print('')
-                        print('Current read configuration is:')
-                        print('')
-                        self.print_read_cfg()
-                        print('')
+                        if self.__verbose == True:
+                                print('Current network configuration is:')
+                                print('')
+                                self.print_network_cfg()
+                                print('')
+                                print('Current write configuration is:')
+                                print('')
+                                self.print_write_cfg()
+                                print('')
+                                print('Current read configuration is:')
+                                print('')
+                                self.print_read_cfg()
+                                print('')
 
         def import_network_data(self):
 
