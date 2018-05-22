@@ -218,8 +218,8 @@ class cfg:
 
         def __init__(self, verbose):
                 self.__verbose = verbose
-                self.__WRITE_LENGTH = 63
-                self.__READ_LENGTH = 59
+                self.__WRITE_LENGTH = 24
+                self.__READ_LENGTH = 97
                 self.__NETWORK_LENGTH = 22
 
                 # Key : [Start (bits), Length (bits), Type / Default]
@@ -237,32 +237,60 @@ class cfg:
                 # Key : [Start (bits), Length (bits), Type / Default]
                 self.__write_cfg = {
 
-                        # SYS I2C DEBUG IGNORED
+                        'FAN_PWM_GRADIENT' : [32, 8,  int(0x09)],
+                        'FAN_PWM_STOP_TEMPERATURE' : [24, 8,  int(0)],
+                        'FAN_PWM_MINIMUM_TEMPERATURE' : [16, 8,  int(0x28)],
+                        'FAN_PWM_MINIMUM_DUTY_CYCLE' : [8, 8,  int(0x4d)],
 
-                        '__N_TAS_2505_RESET' : [10, 1, int(0)],
-
+                        '__N_TAS_2505_RESET' : [7, 1, int(0)],
+                        'MONITORING_ENABLE' : [6, 1, int(0)],
+                        'FLASH_READER_DISABLE' : [5, 1, int(0)],
                         'AUTOBOOT_TO_RUNTIME' : [4, 1, int(0)],
-
-                        'SYS_I2C_RESET' : [2, 1, int(1)],
-                        'SYS_I2C_SDA' : [1, 1, int(1)],
-                        'SYS_I2C_SCL' : [0, 1, int(1)]
+                        '__SYS_I2C_RESET' : [2, 1, int(1)],
+                        '__SYS_I2C_SDA' : [1, 1, int(1)],
+                        '__SYS_I2C_SCL' : [0, 1, int(1)]
 
                         }
                                         
                 # Key : [Start (bits), Length (bits), Type]
                 self.__read_cfg = {
 
-                        #TAS COUNT, CORRUPTED BITSTREAM, FLASH DEBUG
+                        '__LATCH_RNW' : [96*8+7, 1, int()],
+                        '__LATCH_R8N16' : [96*8+6, 1, int()],
+                        '__LATCH_D8N16' : [96*8+5, 1, int()],
+                        '__LATCH_SCL' : [96*8+2, 1, int()],
+                        '__LATCH_SDA' : [96*8+1, 1, int()],
+                        '__LATCH_SIR' : [96*8, 1, int()],
+                        '__LATCH_CHAIN' : [95*8, 8, int()],
+                        '__LATCH_SLAVE_ADDRESS' : [94*8, 8, int()],
+                        '__LATCH_READ_SLAVE_REGISTER' : [92*8, 16, int()],
+                        '__LATCH_WRITE_DATA' : [90*8, 16, int()],
 
-                        'ATSHA204_ERROR' : [51*8+4, 1, int()],
-                        'ATSHA204_DONE' : [51*8+3, 1, int()],
-                        '__FAN_TACH' : [51*8+2, 1, int()],
-                        '__N_IS_QF2P' : [51*8+1, 1, int()],
-                        '__JACK_SENSE' : [51*8, 1, int()],
+                        'FAN_PWM_CURRENT_DUTY_CYCLE' : [89*8, 8, int()],
 
-                        '__BOARD_UID' : [4*8, 72, int()],
-                        '__MDIO_EXTENDED_STATUS' : [2*8, 16, int()],
-                        '__MDIO_BASIC_STATUS' : [0, 16, int()],
+                        '__MDIO_EXTENDED_STATUS' : [87*8, 16, int()],
+                        '__MDIO_BASIC_STATUS' : [85*8, 16, int()],
+
+                        '__TAS_COUNT' : [80*8, 32, int()],
+
+                        'CONFIGURATION_DEFAULT' : [79*8, 1, int()],
+
+                        '__FLASH_READER_DATA_OUT_EMPTY' : [78*8+2, 1, int()],
+                        '__FLASH_READER_ERROR' : [78*8+1, 1, int()],
+                        '__FLASH_READER_DONE' : [78*8, 1, int()],
+
+                        '__CONTROLLER_SYS_I2C_READ_DATA' : [75*8, 16, int()],
+
+                        'I2C_ERROR_LATCH' : [74*8+7, 1, int()],
+                        'I2C_DONE_LATCH' : [74*8+6, 1, int()],
+                        'ATSHA204_ERROR' : [74*8+5, 1, int()],
+                        'ATSHA204_DONE' : [74*8+4, 1, int()],
+                        '__N_IS_QF2P' : [74*8+3, 1, int()],
+                        '__JACK_SENSE' : [74*8+2, 1, int()],
+                        '__SYS_I2C_SDA' : [74*8+1, 1, int()],
+                        '__SYS_I2C_SCL' : [74*8, 1, int()]
+
+                        # Left out monitoring for the minute
 
                         }
 
@@ -307,6 +335,10 @@ class cfg:
 
                 x = self.get_bytes()
                 
+                for i in x:
+                        print hex(i),
+                print
+
                 read_block = x[0:self.__READ_LENGTH]
                 write_block = x[self.__READ_LENGTH:self.__WRITE_LENGTH+self.__READ_LENGTH]
                 network_block = x[self.__READ_LENGTH+self.__WRITE_LENGTH:]
@@ -393,9 +425,9 @@ class cfg:
                 bit_length = int(value[1])
                 block = bytearray()
 
-                print key
-                print start_point
-                print bit_length
+                #print key
+                #print start_point
+                #print bit_length
                 
                 # Parse into an integer, then shift and mask
                 myi = 0
@@ -507,323 +539,122 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-                while True:
+                self.i2c_controller_read(0x2, 0x48, 0)
+                self.i2c_controller_read(0x2, 0x20, PCA9534.DIRECTION)
+                self.i2c_controller_read(0x80, 0x20, PCA9534.DIRECTION)
 
-                        try:
-                                # Pull the board ID
-                                cfg0 = self.atsha204_cfg_read(0)
-                                cfg2 = self.atsha204_cfg_read(2)
-                                cfg3 = self.atsha204_cfg_read(3)
+                for i in range (0, 6):
+                        self.i2c_controller_read(0x40, 0x40|i, 0x1, True)
 
-                                serial_number = 0
-                                serial_number |= (cfg3[0] << (8 * 8))
-                                serial_number |= (cfg2[3] << (8 * 7))
-                                serial_number |= (cfg2[2] << (8 * 6))
-                                serial_number |= (cfg2[1] << (8 * 5))
-                                serial_number |= (cfg2[0] << (8 * 4))
-                                serial_number |= (cfg0[3] << (8 * 3))
-                                serial_number |= (cfg0[2] << (8 * 2))
-                                serial_number |= (cfg0[1] << (8 * 1))
-                                serial_number |= cfg0[0]
+                for i in range (0, 4):
+                        if i != 1:
+                                self.i2c_controller_read(0x2, 0x40|i, 0x1, True)
 
-                                self.BOARD_UID = '{:018X}'.format(serial_number)
-                                print
-                                print('Board UID: '+self.BOARD_UID)
+                for i in range(0x20, 0x28):
+                        self.i2c_controller_read(0x2, 0x1D, i, True)
 
-                        except:
-                                raise
+                for i in range(0x20, 0x28):
+                        self.i2c_controller_read(0x40, 0x1D, i, True)
 
                 raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
-        def atsha204_wake(self):
-                addr = int('{:08b}'.format(0xC8)[::-1], 2)
-                addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
+        def i2c_controller_read(self, chain, address, register, data_16b=False, register_16b=False):
                 
-                self.i2c_start()
-                time.sleep(0.00006) # SDA low for at least 60us
-                self.i2c_stop()
-                time.sleep(0.0025) # Wait at least 2.5ms
+                # 7 byte command structure
+                d = bytearray(7)
 
-                # Should be awake now
-
-                self.i2c_start()
-                self.i2c_write(addr_r)
-                self.i2c_check_ack()
-                l =  self.i2c_read()
-                self.i2c_clk(0)
-
-                if l != 4:
-                        self.i2c_stop()
-                        raise Exception('Failed to wake ATSHA204A')
-
-                l = self.i2c_read()
-                self.i2c_clk(0)
-
-                if l != 0x11:
-                        self.i2c_stop()
-                        raise Exception('Failed to wake ATSHA204A')
-
-                l = self.i2c_read()
-                self.i2c_clk(0)
-
-                if l != 0x33:
-                        self.i2c_stop()
-                        raise Exception('Failed to wake ATSHA204A')
-
-                l = self.i2c_read()
-                self.i2c_clk(1)
-                self.i2c_stop()
-
-                if l != 0x43:
-                        raise Exception('Failed to wake ATSHA204A')
-
-        def atsha204_sleep(self):
-                addr = int('{:08b}'.format(0xC8)[::-1], 2)
-                word = int('{:08b}'.format(0x01)[::-1], 2)
-
-                self.i2c_start()
-                self.i2c_write(addr)
-                self.i2c_check_ack()
-                self.i2c_write(word)
-                self.i2c_check_ack()
-                self.i2c_stop()
-
-        def atsha204_idle(self):
-                addr = int('{:08b}'.format(0xC8)[::-1], 2)
-                word = int('{:08b}'.format(0x02)[::-1], 2)
-
-                self.i2c_start()
-                self.i2c_write(addr)
-                self.i2c_check_ack()
-                self.i2c_write(word)
-                self.i2c_check_ack()
-                self.i2c_stop()
-
-        def crc16_arc(self, data):
-                generator = 0x8005
-                crc = 0
-
-                for d in data:
-
-                        crc = crc ^ (int('{:08b}'.format(d)[::-1], 2) << 8)
-
-                        for i in range(0, 8):
-                                crc = crc << 1
-                                if ( (crc & 0x10000) != 0 ):
-                                        crc = (crc & 0xFFFF) ^ generator
-                
-                return crc
-
-        # read 0x02
-        def atsha204_cfg_read(self, radd):
-                addr = int('{:08b}'.format(0xC8)[::-1], 2)
-                addr_r = int('{:08b}'.format(0xC9)[::-1], 2)
-                word = int('{:08b}'.format(0x03)[::-1], 2)
-                count = int('{:08b}'.format(0x07)[::-1], 2)
-                cmd = int('{:08b}'.format(0x02)[::-1], 2)
-
-                crc = self.crc16_arc([0x07, 0x02, 0x00, radd, 0x00])                
-                crcl = int('{:08b}'.format(crc & 0xFF)[::-1], 2)
-                crch = int('{:08b}'.format(crc >> 8)[::-1], 2)
-
-                print hex(crc & 0xFF), hex(crc >>8)
-
-                radd = int('{:08b}'.format(radd)[::-1], 2)
-
-                # Set the chain
-                self.i2c_chain_set(0x8)
-
-                # Wake the device
-                self.atsha204_wake()
-
-                self.i2c_start()
-                self.i2c_write(addr)
-                self.i2c_check_ack()
-                self.i2c_write(word)
-                self.i2c_check_ack()
-                self.i2c_write(count) # count + crc(2) + opcode + param1 + param2(2)
-                self.i2c_check_ack()
-                self.i2c_write(cmd) # 0x02
-                self.i2c_check_ack()
-                self.i2c_write(0) # param1
-                self.i2c_check_ack()
-                self.i2c_write(radd) # param2 (addr)
-                self.i2c_check_ack()
-                self.i2c_write(0) # param2
-                self.i2c_check_ack()
-                self.i2c_write(crcl) # crc lsb
-                self.i2c_check_ack()
-                self.i2c_write(crch) # crc msb
-                self.i2c_check_ack()
-                self.i2c_stop()
-
-                # wait texec (max) for read
-                time.sleep(0.004)
-
-                # Read (must be done by now)
-                v = list()
-                self.i2c_start()
-                self.i2c_write(addr_r)
-                self.i2c_check_ack()
-                v.append(self.i2c_read())
-                self.i2c_clk(0)
-
-                for i in range(1, v[0]-1):
-                        v.append(self.i2c_read())
-                        self.i2c_clk(0)
-
-                v.append(self.i2c_read())
-                self.i2c_clk(1) # NACK
-                self.i2c_stop()
-
-                if (self.crc16_arc(v[0:-2]) != ((v[-1] << 8) | v[-2])):
-                        raise Exception('CRC error reading ATSHA204A')
-
-                print len(v)
-
-                # Sleep the device
-                self.atsha204_sleep()
-
-                return v[1:5]
-
-
-        def i2c_chain_set(self, value):
-                # Reset the mux first
-                self.set_byte(0, 0x3, 0x7)
-                self.set_byte(0, 0x7, 0x7)
-
-                address = 0xE0
-                address = int('{:08b}'.format(address)[::-1], 2)
-                value = int('{:08b}'.format(value)[::-1], 2)
-
-                self.i2c_start()
-
-                self.i2c_write(address)
-                self.i2c_check_ack()
-                self.i2c_write(value)
-                self.i2c_check_ack()
-
-                self.i2c_stop()
-               
-        def i2c_chain_get(self):
-                address = 0xE1
-                address = int('{:08b}'.format(address)[::-1], 2)
-
-                self.i2c_start()
-
-                self.i2c_write(address)
-                self.i2c_check_ack()
-                
-                result = self.i2c_read()
-                self.i2c_clk(1)
-                
-                self.i2c_stop()
-                
-                return result
-
-
-        def i2c_clk(self, bit):
-                
-                # Isolate reset bits with clock low and set data bit
-                self.set_byte(0, ((bit & 1) << 1), 0x3)
-                
-                # Set clock high
-                self.set_byte(0, 0x1, 0x1)
-
-                # Sample bit
-                result = int(self.get_byte(48) & 0x2) >> 1
-               
-                # Bring clock low
-                self.set_byte(0, 0, 0x1)
-
-                # Bring data low
-                self.set_byte(0, 0, 0x2)
-                
-                return result
-
-        def i2c_start(self):
-
-                # Bring clock and data high
-                self.set_byte(0, 0x3, 0x3)
-
-                # Bring data low
-                self.set_byte(0, 0, 0x2)
-
-                # Bring clock low
-                self.set_byte(0, 0, 0x1)
-
-        def i2c_repeated_start(self):
-
-                # Bring data high
-                self.set_byte(0, 0x2, 0x2)
-
-                # Bring clock high
-                self.set_byte(0, 0x1, 0x1)
-
-                # Bring data low
-                self.set_byte(0, 0, 0x2)
-
-                # Bring clock low
-                self.set_byte(0, 0, 0x1)
-
-        def i2c_stop(self):
-
-                # Bring clock high
-                self.set_byte(0, 0x1, 0x1)
-
-                # Bring data high
-                self.set_byte(0, 0x2, 0x2)
-              
-        def i2c_write(self, value):
-                
-                for i in range(0, 8):
-                        self.i2c_clk(value & 0x1)
-                        value = value >> 1
-
-        def i2c_read(self):
-                       
-                result = int()
-                for i in range(0, 8):
-                        bit = self.i2c_clk(1)
-                        result = (result << 1) | bit
-
-                return result
-
-        def i2c_check_ack(self, must_ack = True):
-                
-                if self.i2c_clk(1) == 1:
-                        if ( must_ack ):
-                                raise Exception('I2C acknowledge failed')
+                # Mode bits
+                if data_16b:
+                        if register_16b:
+                                d[0] = 0x1
                         else:
-                                return False
+                                d[0] = 0x3
+                else:
+                        if register_16b:
+                                d[0] = 0x5
+                        else:
+                                d[0] = 0x7
 
-                return True
+                d[1] = chain
+                d[2] = address << 1
+                d[3] = register & 0xFF
+                d[4] = (register >> 8) & 0xFF
+                d[5] = 0
+                d[6] = 0
 
+                #for i in d:
+                #        print hex(i)
 
+                # Send command
+                read_bytes = str()
 
+                while True:
+                        try:
+                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
+                                read_bytes = self.I2CSock.recv(1400)
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
 
+                res = bytearray(read_bytes)
 
+                if res[0] == 0x02:
+                        raise Exception('I2C acknowledge failed')
 
+                if data_16b:
+                        return ((int(res[2]) << 8) | int(res[1]))
+                
+                return int(res[1])
 
+        def i2c_controller_write(self, chain, address, register, data, data_16b=False, register_16b=False, ignore_ack=False):
+                
+                # 7 byte command structure
+                d = bytearray(7)
 
+                # Mode bits
+                if data_16b:
+                        if register_16b:
+                                d[0] = 0x0
+                        else:
+                                d[0] = 0x2
+                else:
+                        if register_16b:
+                                d[0] = 0x4
+                        else:
+                                d[0] = 0x6
 
+                d[1] = chain
+                d[2] = address << 1
+                d[3] = register & 0xFF
+                d[4] = (register >> 8) & 0xFF
+                d[5] = data & 0xFF
+                d[6] = (data >> 8) & 0xFF
 
+                # Send command
+                read_bytes = str()
 
+                while True:
+                        try:
+                                self.I2CSock.sendto(str(d),(self.host, self.i2c_port))
+                                read_bytes = self.I2CSock.recv(1400)
+                                if not read_bytes:
+                                        print('No data received')
+                                break
+                        except KeyboardInterrupt:
+                                print('Ctrl-C detected')
+                                exit(0)
+                        except:
+                                continue
 
+                res = bytearray(read_bytes)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                if (res[0] == 0x02) and (ignore_ack == False):
+                        raise Exception('I2C acknowledge failed')
 
         def set_byte(self, index, data, mask):
                 d = bytearray(cfg.write_length(self))
