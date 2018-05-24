@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 
-import time, sys, hashlib
+import time, sys, hashlib, constants
 from ..jtag import *
-
-# For the Cypress SL25FL-L, these are called 'sector' and 'block' instead
-SUBSECTOR_SIZE = 4096
-SECTOR_SIZE = 65536
-
-SPI_DOUT = 1
-SPI_DIN = 2
-SPI_CLK = 4
-SPI_CS_B = 8
 
 class Generic():
     RDID = 0x9F
@@ -406,16 +397,16 @@ class interface():
         data = xilinx_bitfile_parser.bitfile(name).data()
 
         # Pad the data to the block boundary
-        data += bytearray([0xFF]) * (SECTOR_SIZE - len(data) % SECTOR_SIZE)
+        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
 
         last_length = 0
         start_time = time.time()
-        num_blocks = len(data) / SECTOR_SIZE
+        num_blocks = len(data) / constants.SECTOR_SIZE
 
         for i in range(0, num_blocks):
 
             # Read the sector
-            pd = self.read_data((offset + i) * SECTOR_SIZE, SECTOR_SIZE)
+            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
             elapsed = time.time() - start_time
             left = elapsed * (num_blocks - i - 1) / (i + 1)
             total = elapsed + left
@@ -428,16 +419,16 @@ class interface():
 
             sector_update = False
             sector_erase = False
-            for j in range(0, SECTOR_SIZE):
+            for j in range(0, constants.SECTOR_SIZE):
 #                print hex(pd[j]), ',', hex(data[i * SECTOR_SIZE + j])
-                if pd[j] != data[i * SECTOR_SIZE + j]:
+                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
                     sector_update = True
                     break
 
             if not(sector_update):
                 continue
 
-            raise SPI_Base_Exception('Verifying bitfile failed at byte: ' + str(i * SECTOR_SIZE + j))
+            raise SPI_Base_Exception('Verifying bitfile failed at byte: ' + str(i * constants.SECTOR_SIZE + j))
 
         print
 
@@ -447,16 +438,16 @@ class interface():
         data = xilinx_bitfile_parser.bitfile(name).data()
 
         # Pad the data to the block boundary
-        data += bytearray([0xFF]) * (SECTOR_SIZE - len(data) % SECTOR_SIZE)
+        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
 
         last_length = 0
         start_time = time.time()
-        num_blocks = len(data) / SECTOR_SIZE
+        num_blocks = len(data) / constants.SECTOR_SIZE
 
         for i in range(0, num_blocks):
 
             # Read the sector
-            pd = self.read_data((offset + i) * SECTOR_SIZE, SECTOR_SIZE)
+            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
             elapsed = time.time() - start_time
             left = elapsed * (num_blocks - i - 1) / (i + 1)
             total = elapsed + left
@@ -470,8 +461,8 @@ class interface():
 
             sector_update = False
             sector_erase = False
-            for j in range(0, SECTOR_SIZE):
-                if pd[j] != data[i * SECTOR_SIZE + j]:
+            for j in range(0, constants.SECTOR_SIZE):
+                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
                     sector_update = True
                     break
 
@@ -481,27 +472,27 @@ class interface():
             # Only erase the sector if the data that's changed is currently not set to 0xFF
             sector_erase = False
             #sector_erase = True
-            for j in range(0, SECTOR_SIZE):
-                if pd[j] != data[i * SECTOR_SIZE + j]:
+            for j in range(0, constants.SECTOR_SIZE):
+                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
                     if pd[j] != 0xFF:
                         sector_erase = True
                         break
 
             # Erase if necessary
             if sector_erase:
-                self.sector_erase((offset + i) * SECTOR_SIZE)
+                self.sector_erase((offset + i) * constants.SECTOR_SIZE)
                 print 'ERASED',
 
             # Program the 256 byte blocks
-            for j in range(0, SECTOR_SIZE/256):
-                self.page_program(data[j * 256 + i * SECTOR_SIZE : (j+1) * 256 + i * SECTOR_SIZE], j * 256 + ((offset + i) * SECTOR_SIZE))
+            for j in range(0, constants.SECTOR_SIZE/256):
+                self.page_program(data[j * 256 + i * constants.SECTOR_SIZE : (j+1) * 256 + i * constants.SECTOR_SIZE], j * 256 + ((offset + i) * constants.SECTOR_SIZE))
 
             # Verify
-            pd = self.read_data((offset + i) * SECTOR_SIZE, SECTOR_SIZE)
-            for j in range(0, SECTOR_SIZE):
-                if pd[j] != data[i * SECTOR_SIZE + j]:
+            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
+            for j in range(0, constants.SECTOR_SIZE):
+                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
                     print
-                    raise SPI_Base_Exception('Page update' + str(i * SECTOR_SIZE + j) + 'failed')
+                    raise SPI_Base_Exception('Page update' + str(i * constants.SECTOR_SIZE + j) + 'failed')
 
             print 'UPDATED'
 

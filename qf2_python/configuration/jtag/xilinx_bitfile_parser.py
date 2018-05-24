@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time, sys, hashlib
+from qf2_python.configuration.spi import constants
 
 # Reverse-idcode lookup (bitfile names -> [mask, idcode])
 xilinx_idcode_bitfile_dictionary = {
@@ -158,6 +159,13 @@ class bitfile():
         m.update(self.__bitfile_data)
         return bytearray(m.digest())
 
+    def padded_hash(self):
+        m = hashlib.sha256()
+        data = self.__bitfile_data
+        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
+        m.update(data)
+        return bytearray(m.digest())
+    
     def data(self):
         return self.__bitfile_data
 

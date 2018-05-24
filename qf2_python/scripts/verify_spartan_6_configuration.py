@@ -24,8 +24,8 @@ if args.bootloader == True:
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
@@ -36,7 +36,7 @@ prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, inpu
 #    print('Scanning PROM bitstream and generating search hash')
 
 # Use the hash of the bitstream to determine the configuration
-#prom_hash = prom.read_hash(FIRMWARE_SECTOR_OFFSET * spi.SECTOR_SIZE, 23 * spi.SECTOR_SIZE)
+#prom_hash = prom.read_hash(FIRMWARE_SECTOR_OFFSET * spi.constants.SECTOR_SIZE, 23 * spi.constants.SECTOR_SIZE)
 
 # Convert the hash to text
 #s = str()
@@ -67,7 +67,8 @@ cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
 
 print('Importing stored Spartan-6 configuration settings...')
 
-cfg.import_prom_data(prom.read_data(CONFIG_ADDRESS, 256))
+if ( cfg.import_prom_data(prom.read_data(CONFIG_ADDRESS, 256)) == False ):
+    exit(1)
 
 print('')
 print('Network configuration is currently:')

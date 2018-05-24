@@ -1,631 +1,209 @@
 #!/bin/env python
 
 from socket import *
-import string, time, sys
+import string, time, sys, cfg as mycfg
 from datetime import datetime, timedelta
 
-class QSFP_INFO:
-        IDENTIFIER = {
-                1 : 'GBIC',
-                2 : 'Module / connector soldered to motherboard',
-                3 : 'SFP or SFP+',
-                4 : '300 pin XBI',
-                5 : 'XENPAK',
-                6 : 'XFP',
-                7 : 'XFF',
-                8 : 'XFP-E',
-                9 : 'XPAK',
-                10 : 'X2',
-                11 : 'DWDM-SFP',
-                12 : 'QSFP',
-                13 : 'QSFP+',
-                14 : 'CXP'
-                }
-
-        STATUS = {
-                0 : 'PAGED UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA READY',
-                1 : 'PAGED UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA NOT READY',
-                2 : 'PAGED UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA READY',
-                3 : 'PAGED UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA NOT READY',
-                4 : 'NO UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA READY',
-                5 : 'NO UPPER MEMORY, INTERRUPT ACTIVE, MEMORY DATA NOT READY',
-                6 : 'NO UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA READY',
-                7 : 'NO UPPER MEMORY, INTERRUPT INACTIVE, MEMORY DATA NOT READY',
-                }
-
-class SI570:
-        HSDIV_2_0_N1_6_2 = 7
-        N1_1_0_RFREQ_37_32 = 8
-        RFREQ_31_24 = 9
-        RFREQ_23_16 = 10
-        RFREQ_15_8 = 11
-        RFREQ_7_0 = 12
-        SETTINGS = 135
-        FREEZE_DCO = 137
-
-class PCA9534:
-	INPUT = 0
-	OUTPUT = 1
-	POLARITY = 2
-	DIRECTION = 3
-
-class LTC2990:
-	STATUS = 0
-	CONTROL = 1
-	TRIGGER = 2
-	T_MSB = 4
-	T_LSB = 5
-	V1_MSB = 6
-	V1_LSB = 7
-	V2_MSB = 8
-	V2_LSB = 9
-	V3_MSB = 10
-	V3_LSB = 11
-	V4_MSB = 12
-	V4_LSB = 13
-	VCC_MSB = 14
-	VCC_LSB = 15
-
-def conv_n(x, n):
-	if x > (2**(n-1) - 1):
-		x = x - 2**n
-	return x
-
-class cfg:
-
-        class SHA256(object):
-
-                def __init__(self, val):
-                        if type(val) == str:
-                                if (len(val) != 64):
-                                        raise Exception('Bad SHA256 hash argument')
-                                self.__val = list([0] * 32)
-                                for i in range(0, 32):
-                                        self.__val[i] = int(val[i*2:i*2+2], 16)
-                                return
-                        if type(val) == bytearray:
-                                if (len(val) != 32):
-                                        raise Exception('Bad SHA256 hash argument')
-                                self.__val = list([0] * 32)
-                                for i in range(0, 32):
-                                        self.__val[i] = int(val[i])
-                                # PROM ordering is reversed
-                                self.__val.reverse()
-                                return                                
-                        raise Exception('Invalid type assignment')
-
-                def __int__(self):
-                        x = 0
-                        for i in range(0, 32):
-                                x = x | (int(self.__val[31-i]) << 8 * i)
-                        return x
-
-                def __get__(self, objtype=None):
-                        return self.__val
-
-                def __set__(self, val):
-                        return
-        
-                # Pretty output
-                def __str__(self):
-                        s = str()
-                        for i in range(0, 32):
-                                s += '{:02x}'.format(self.__val[i])
-                        return s
-
-        class IPV4_IP(object):
-
-                def __init__(self, val):
-                        if type(val) == str:
-                                ip = val.split('.')
-                                if (len(ip) != 4):
-                                        raise Exception('Bad IPv4 address argument')
-                                x = 0
-                                for i in range(0, 4):
-                                        x = x | (int(ip[i]) << ((3-i)*8))
-                                val = x
-                        if type(val) == bytearray:
-                                if len(val) != 4:
-                                        raise Exception('Value is too large')
-                                x = 0
-                                for i in range(0, 4):
-                                        x = x | (int(val[i]) << (i*8))
-                                val = x
-                        if val > (2**32)-1:
-                                raise Exception('Value is too large')
-                        self.__val = val
-
-                def __int__(self):
-                        return self.__val
-
-                def __get__(self, objtype=None):
-                        return self.__val
-
-                def __set__(self, val):
-                        return
-        
-                # Pretty output
-                def __str__(self):
-                        s = str()
-                        for i in range(0, 4):
-                                s += '{:d}'.format((self.__val >> ((3-i) * 8)) & 0xFF) + '.'
-                        return s[:-1]
-
-        class IPV4_PORT(object):
-
-                def __init__(self, val):
-                        if type(val) == str:
-                                val = int(val)
-                        if type(val) == bytearray:
-                                if len(val) != 2:
-                                        raise Exception('Value is too large')
-                                x = 0
-                                for i in range(0, 2):
-                                        x = x | (int(val[i]) << (i*8))
-                                val = x
-                        if val > 2**16-1:
-                                raise Exception('Value is too large')
-                        self.__val = val
-
-                def __int__(self):
-                        return self.__val
-
-                def __get__(self, objtype=None):
-                        return self.__val
-
-                def __set__(self, val):
-                        return
-        
-                # Pretty output
-                def __str__(self):
-                        return str(self.__val)
-
-        class IPV4_MAC(object):
-
-                def __init__(self, val):
-                        if type(val) == str:
-                                mac = val.split(':')
-                                if (len(mac) != 6):
-                                        raise Exception('Bad MAC address argument')
-                                x = 0
-                                for i in range(0, 6):
-                                        x = x | (int(mac[i], 16) << ((5-i)*8))
-                                val = x
-                        if type(val) == bytearray:
-                                if len(val) != 6:
-                                        raise Exception('Value is too large')
-                                x = 0
-                                for i in range(0, 6):
-                                        x = x | (int(val[i]) << (i*8))
-                                val = x
-                        if val > 2**48-1:
-                                raise Exception('Value is too large')
-                        self.__val = val
-
-                def __int__(self):
-                        return self.__val
-
-                def __get__(self, objtype=None):
-                        return self.__val
-
-                def __set__(self, val):
-                        return
-        
-                # Pretty output
-                def __str__(self):
-                        s = str()
-                        for i in range(0, 6):
-                                s += '{:02X}'.format((self.__val >> ((5-i) * 8)) & 0xFF) + ':'
-                        return s[:-1]
+class cfg(mycfg.base):
 
         def __init__(self, verbose):
-                self.__verbose = verbose
-                self.__WRITE_LENGTH = 63
-                self.__READ_LENGTH = 109+(23*3)
-                self.__NETWORK_LENGTH = 22
+                mycfg.base.__init__(self,
+                                    verbose,
+                                    self.__write_bytes,
+                                    self.__network_bytes,
+                                    self.__read_bytes,
+                                    self.__write_cfg,
+                                    self.__network_cfg,
+                                    self.__read_cfg)
 
-                # Key : [Start (bits), Length (bits), Type / Default]
-                self.__network_cfg = {
+        __write_bytes = 63
+        __network_bytes = 22
+        __read_bytes = 109*(23*3)
 
-                        'IPV4_MULTICAST_MAC' : [128, 48, self.IPV4_MAC(0)],
-                        'IPV4_MULTICAST_IP' : [96, 32, self.IPV4_IP(0)],
-                        'IPV4_MULTICAST_PORT' : [80, 16, self.IPV4_PORT(0)],
+        # Key : [Start (bits), Length (bits), Type / Default]
+        __network_cfg = {
+                
+                'IPV4_MULTICAST_MAC' : [128, 48, mycfg.base.IPV4_MAC(0)],
+                'IPV4_MULTICAST_IP' : [96, 32, mycfg.base.IPV4_IP(0)],
+                'IPV4_MULTICAST_PORT' : [80, 16, mycfg.base.IPV4_PORT(0)],
 
-                        'IPV4_UNICAST_MAC' : [32, 48, self.IPV4_MAC(0xAABBCCDDEEFF)],
-                        'IPV4_UNICAST_IP' : [0, 32, self.IPV4_IP(0xC0A8017F)]
+                'IPV4_UNICAST_MAC' : [32, 48, mycfg.base.IPV4_MAC(0xAABBCCDDEEFF)],
+                'IPV4_UNICAST_IP' : [0, 32, mycfg.base.IPV4_IP(0xC0A8017F)]
 
-                        }
+        }
 
-                # Key : [Start (bits), Length (bits), Type / Default]
-                self.__write_cfg = {
+        # Key : [Start (bits), Length (bits), Type / Default]
+        __write_cfg = {
+                
+                'KINTEX_BOOT_SHA256' : [248, 256, mycfg.base.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
+                
+                'FAN_PWM_GRADIENT' : [184, 8, int(9)],
+                'FAN_PWM_STOP_TEMPERATURE' : [176, 8, int(0)],
+                'FAN_PWM_MINIMUM_TEMPERATURE' : [168, 8, int(0x28)],
+                'FAN_PWM_MINIMUM_DUTY_CYCLE' : [160, 8, int(0x4d)],
+                
+                'BOARD_SHUTDOWN_TEMPERATURE' : [152, 8, int(80)],
+                'KINTEX_SHUTDOWN_TEMPERATURE' : [144, 8, int(80)],
+                
+                'SI57X_B_NEW_RFREQ' : [104, 38, int(0x02BBEAD49B)],
+                'SI57X_B_NEW_N1' : [96, 7, int(3)],
+                'SI57X_B_NEW_HSDIV' : [88, 3, int(0)],
+                'SI57X_B_UPDATE' : [82, 1, int(1)],
+                'SI57X_B_OE' : [81, 1, int(0)],
+                'N_SI57X_B_CFG_ENABLE' : [80, 1, int(1)],
+                
+                'SI57X_A_NEW_RFREQ' : [40, 38, int(0x02BBEAD49B)],
+                'SI57X_A_NEW_N1' : [32, 7, int(3)],
+                'SI57X_A_NEW_HSDIV' : [24, 3, int(0)],
+                'SI57X_A_UPDATE' : [18, 1, int(1)],
+                'SI57X_A_OE' : [17, 1, int(0)],
+                'N_SI57X_A_CFG_ENABLE' : [16, 1, int(1)],
+                
+                '__N_TAS_2505_RESET' : [11, 1, int(0)],
+                'MONITORING_ENABLE' : [10, 1, int(0)],
+                'MAIN_POWER_ENABLE' : [9, 1, int(0)],
+                'POWER_BURST_MODE' : [8, 1, int(1)],
+                
+                '__SYS_I2C_RESET' : [2, 1, int(1)],
+                '__SYS_I2C_SDA' : [1, 1, int(1)],
+                '__SYS_I2C_SCL' : [0, 1, int(1)]
 
-                        'KINTEX_BOOT_SHA256' : [248, 256, self.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
-
-                        'FAN_PWM_GRADIENT' : [184, 8, int(64)],
-                        'FAN_PWM_STOP_TEMPERATURE' : [176, 8, int(64)],
-                        'FAN_PWM_MINIMUM_TEMPERATURE' : [168, 8, int(64)],
-                        'FAN_PWM_MINIMUM_DUTY_CYCLE' : [160, 8, int(64)],
-
-                        'BOARD_SHUTDOWN_TEMPERATURE' : [152, 8, int(64)],
-                        'KINTEX_SHUTDOWN_TEMPERATURE' : [144, 8, int(64)],
-
-                        'SI57X_B_NEW_RFREQ' : [104, 38, int(0x02BBEAD49B)],
-                        'SI57X_B_NEW_N1' : [96, 7, int(3)],
-                        'SI57X_B_NEW_HSDIV' : [88, 3, int(0)],
-                        'SI57X_B_UPDATE' : [82, 1, int(1)],
-                        'SI57X_B_OE' : [81, 1, int(0)],
-                        'N_SI57X_B_CFG_ENABLE' : [80, 1, int(1)],
-
-                        'SI57X_A_NEW_RFREQ' : [40, 38, int(0x02BBEAD49B)],
-                        'SI57X_A_NEW_N1' : [32, 7, int(3)],
-                        'SI57X_A_NEW_HSDIV' : [24, 3, int(0)],
-                        'SI57X_A_UPDATE' : [18, 1, int(1)],
-                        'SI57X_A_OE' : [17, 1, int(0)],
-                        'N_SI57X_A_CFG_ENABLE' : [16, 1, int(1)],
-                        
-                        'N_TAS_2505_RESET' : [11, 1, int(0)],
-                        'MONITORING_ENABLE' : [10, 1, int(0)],
-                        'MAIN_POWER_ENABLE' : [9, 1, int(0)],
-                        'POWER_BURST_MODE' : [8, 1, int(1)],
-
-                        'SYS_I2C_RESET' : [2, 1, int(1)],
-                        'SYS_I2C_SDA' : [1, 1, int(1)],
-                        'SYS_I2C_SCL' : [0, 1, int(1)]
-
-                        }
+        }
                                         
-                # Key : [Start (bits), Length (bits), Type]
-                self.__read_cfg = {
+        # Key : [Start (bits), Length (bits), Type]
+        __read_cfg = {
 
-                        'MDIO_EXTENDED_STATUS' : [608+(100*8), 16, int()],
-                        'MDIO_BASIC_STATUS' : [608+(98*8), 16, int()],
-                        'FAN_PWM_CURRENT_DUTY_CYCLE' : [608+(97*8), 8, int()],
-
-                        '__TAS_COUNT' : [608+(93*8), 32, int()],
-
-                        '__CORRUPTED_BITSTREAM_TABLE' : [609+(92*8), 1, int()],
-                        '__CONFIGURATION_DEFAULT' : [608+(92*8), 1, int()],
-
-                        '__FLASH_READER_DATA_OUT_EMPTY' : [610+(91*8), 1, int()],
-                        '__FLASH_READER_ERROR' : [609+(91*8), 1, int()],
-                        '__FLASH_READER_DONE' : [608+(91*8), 1, int()],
-
-                        '__ATSHA204A_ERROR' : [613+(90*8), 1, int()],
-                        '__ATSHA204A_DONE' : [612+(90*8), 1, int()],
-                        'MAIN_POWER_STATE' : [611+(90*8), 1, int()],
-                        '__FAN_TACH' : [610+(90*8), 1, int()],
-                        '__N_IS_QF2_PRE' : [609+(90*8), 1, int()],
-                        '__JACK_SENSE' : [608+(90*8), 1, int()],
-
-                        'CONTROLLER_I2C_READ_DATA' : [608+(88*8), 16, int()],
-                        
-                        'I2C_ERROR_LATCH' : [615+(87*8), 1, int()],
-                        'I2C_DONE_LATCH' : [614+(87*8), 1, int()],
-                        'BOARD_OT_SHUTDOWN_LATCH' : [613+(87*8), 1, int()],
-                        'KINTEX_OT_SHUTDOWN_LATCH' : [612+(87*8), 1, int()],
-                        '__SYS_I2C_SDA' : [609+(87*8), 1, int()],
-                        '__SYS_I2C_SCL' : [608+(87*8), 1, int()],
-
-                        'SI57X_B_CURRENT_RFREQ' : [608+(82*8), 38, int()],
-                        'SI57X_B_CURRENT_N1' : [608+(81*8), 7, int()],
-                        'SI57X_B_CURRENT_HSDIV' : [608+(80*8), 3, int()],
-                        'SI57X_B_ERROR' : [609+(79*8), 1, int()],
-                        'SI57X_B_DONE' : [608+(79*8), 1, int()],
-
-                        'SI57X_A_CURRENT_RFREQ' : [608+(74*8), 38, int()],
-                        'SI57X_A_CURRENT_N1' : [608+(73*8), 7, int()],
-                        'SI57X_A_CURRENT_HSDIV' : [608+(72*8), 3, int()],
-                        'SI57X_A_ERROR' : [609+(71*8), 1, int()],
-                        'SI57X_A_DONE' : [608+(71*8), 1, int()],
-
-                        'FAN_SPEED' : [608+(69*8), 16, int()],
-
-                        'KINTEX_QSFP_2_RX1_POWER' : [608+(67*8), 16, int()],
-                        'KINTEX_QSFP_2_RX2_POWER' : [608+(65*8), 16, int()],
-                        'KINTEX_QSFP_2_RX3_POWER' : [608+(63*8), 16, int()],
-                        'KINTEX_QSFP_2_RX4_POWER' : [608+(61*8), 16, int()],
-                        'KINTEX_QSFP_2_TX1_BIAS' : [608+(59*8), 16, int()],
-                        'KINTEX_QSFP_2_TX2_BIAS' : [608+(57*8), 16, int()],
-                        'KINTEX_QSFP_2_TX3_BIAS' : [608+(55*8), 16, int()],
-                        'KINTEX_QSFP_2_TX4_BIAS' : [608+(53*8), 16, int()],
-
-                        'KINTEX_QSFP_2_VOLTAGE' : [608+(51*8), 16, int()],
-                        'KINTEX_QSFP_2_TEMPERATURE' : [608+(49*8), 16, int()],
-                        'KINTEX_QSFP_2_TX_FAULT' : [608+(48*8), 4, int()],
-                        'KINTEX_QSFP_2_LOS' : [608+(47*8), 8, int()],
-                        'KINTEX_QSFP_2_PRESENT' : [608+(46*8), 1, int()],
-
-                        'KINTEX_QSFP_1_RX1_POWER' : [608+(44*8), 16, int()],
-                        'KINTEX_QSFP_1_RX2_POWER' : [608+(42*8), 16, int()],
-                        'KINTEX_QSFP_1_RX3_POWER' : [608+(40*8), 16, int()],
-                        'KINTEX_QSFP_1_RX4_POWER' : [608+(38*8), 16, int()],
-                        'KINTEX_QSFP_1_TX1_BIAS' : [608+(36*8), 16, int()],
-                        'KINTEX_QSFP_1_TX2_BIAS' : [608+(34*8), 16, int()],
-                        'KINTEX_QSFP_1_TX3_BIAS' : [608+(32*8), 16, int()],
-                        'KINTEX_QSFP_1_TX4_BIAS' : [608+(30*8), 16, int()],
-
-                        'KINTEX_QSFP_1_VOLTAGE' : [608+(28*8), 16, int()],
-                        'KINTEX_QSFP_1_TEMPERATURE' : [608+(26*8), 16, int()],
-                        'KINTEX_QSFP_1_TX_FAULT' : [608+(25*8), 4, int()],
-                        'KINTEX_QSFP_1_LOS' : [608+(24*8), 8, int()],
-                        'KINTEX_QSFP_1_PRESENT' : [608+(23*8), 1, int()],
-
-                        'SPARTAN_QSFP_RX1_POWER' : [608+(21*8), 16, int()],
-                        'SPARTAN_QSFP_RX2_POWER' : [608+(19*8), 16, int()],
-                        'SPARTAN_QSFP_RX3_POWER' : [608+(17*8), 16, int()],
-                        'SPARTAN_QSFP_RX4_POWER' : [608+(15*8), 16, int()],
-                        'SPARTAN_QSFP_TX1_BIAS' : [608+(13*8), 16, int()],
-                        'SPARTAN_QSFP_TX2_BIAS' : [608+(11*8), 16, int()],
-                        'SPARTAN_QSFP_TX3_BIAS' : [608+(9*8), 16, int()],
-                        'SPARTAN_QSFP_TX4_BIAS' : [608+(7*8), 16, int()],
-
-                        'SPARTAN_QSFP_VOLTAGE' : [608+(5*8), 16, int()],
-                        'SPARTAN_QSFP_TEMPERATURE' : [608+(3*8), 16, int()],
-                        'SPARTAN_QSFP_TX_FAULT' : [608+(2*8), 4, int()],
-                        'SPARTAN_QSFP_LOS' : [608+(1*8), 8, int()],
-                        'SPARTAN_QSFP_PRESENT' : [608, 1, int()],
-
-                        'INA226_9_1' : [592, 16, int()],
-                        'INA226_8_1' : [576, 16, int()],
-                        'INA226_7_1' : [560, 16, int()],
-                        'INA226_6_1' : [544, 16, int()],
-                        'INA226_5_1' : [528, 16, int()],
-                        'INA226_4_1' : [512, 16, int()],
-                        'INA226_3_1' : [496, 16, int()],
-                        'INA226_2_1' : [480, 16, int()],
-                        'INA226_1_1' : [464, 16, int()],
-                        'INA226_0_1' : [448, 16, int()],
-                        'INA226_9_0' : [432, 16, int()],
-                        'INA226_8_0' : [416, 16, int()],
-                        'INA226_7_0' : [400, 16, int()],
-                        'INA226_6_0' : [384, 16, int()],
-                        'INA226_5_0' : [368, 16, int()],
-                        'INA226_4_0' : [352, 16, int()],
-                        'INA226_3_0' : [336, 16, int()],
-                        'INA226_2_0' : [320, 16, int()],
-                        'INA226_1_0' : [304, 16, int()],
-                        'INA226_0_0' : [288, 16, int()],
-
-                        'VMON_1_7' : [272, 16, int()],
-                        'VMON_1_6' : [256, 16, int()],
-                        'VMON_1_5' : [240, 16, int()],
-                        'VMON_1_4' : [224, 16, int()],
-                        'VMON_1_3' : [208, 16, int()],
-                        'VMON_1_2' : [192, 16, int()],
-                        'VMON_1_1' : [176, 16, int()],
-                        'VMON_1_0' : [160, 16, int()],
-                        'VMON_0_7' : [144, 16, int()],
-                        'VMON_0_6' : [128, 16, int()],
-                        'VMON_0_5' : [112, 16, int()],
-                        'VMON_0_4' : [96, 16, int()],
-                        'VMON_0_3' : [80, 16, int()],
-                        'VMON_0_2' : [64, 16, int()],
-                        'VMON_0_1' : [48, 16, int()],
-                        'VMON_0_0' : [32, 16, int()],
-
-                        'BOARD_TEMPERATURE' : [16, 16, int()],
-                        'KINTEX_TEMPERATURE' : [0, 16, int()]
-
-                        }
-
-                if self.__verbose == True:
-                        print('')
-                        print('Initial default network configuration is:')
-                        print('')
-                        self.print_network_cfg()
-                        print('')
-                        print('Initial default write configuration is:')
-                        print('')
-                        self.print_write_cfg()
-                        print('')
-                        print('Initial default read configuration is:')
-                        print('')
-                        self.print_read_cfg()
-                        print('')
-
-                # Check if we are running standalone or inherited
-                if 'get_bytes' in dir(self):
-                        if self.__verbose == True:
-                                print('Querying board status...')
-                                print('')
-
-                        self.import_network_data()
-
-                        if self.__verbose == True:
-                                print('Current network configuration is:')
-                                print('')
-                                self.print_network_cfg()
-                                print('')
-                                print('Current write configuration is:')
-                                print('')
-                                self.print_write_cfg()
-                                print('')
-                                print('Current read configuration is:')
-                                print('')
-                                self.print_read_cfg()
-                                print('')
-
-        def import_network_data(self):
-
-                x = self.get_bytes()
+                'MDIO_EXTENDED_STATUS' : [608+(100*8), 16, int()],
+                'MDIO_BASIC_STATUS' : [608+(98*8), 16, int()],
+                'FAN_PWM_CURRENT_DUTY_CYCLE' : [608+(97*8), 8, int()],
                 
-                read_block = x[0:self.__READ_LENGTH]
-                write_block = x[self.__READ_LENGTH:self.__WRITE_LENGTH+self.__READ_LENGTH]
-                network_block = x[self.__READ_LENGTH+self.__WRITE_LENGTH:]
-
-                for key, value in self.__network_cfg.items():
-                        self.__import_cfg_value(key, self.__network_cfg, network_block)
-
-                for key, value in self.__read_cfg.items():
-                        self.__import_cfg_value(key, self.__read_cfg, read_block)
-
-                for key, value in self.__write_cfg.items():
-                        self.__import_cfg_value(key, self.__write_cfg, write_block)
-
-        def is_network_key(self, key):
-                return key in self.__network_cfg
-
-        def is_write_key(self, key):
-                return key in self.__write_cfg
-
-        def set_write_key(self, key, value):
-                # Just pass the underlying integer if the default is integer
-                if (type(self.__write_cfg[key][2]) == int) or (type(self.__write_cfg[key][2]) == long):
-                        self.__write_cfg[key][2] = int(value, 0)
-                        return
-
-                self.__write_cfg[key][2] = type(self.__write_cfg[key][2])(value)
-
-        def set_network_key(self, key, value):
-                # Just pass the underlying integer if the default is integer
-                if (type(self.__network_cfg[key][2]) == int) or (type(self.__network_cfg[key][2]) == long):
-                        self.__network_cfg[key][2] = int(value, 0)
-                        return
-
-                self.__network_cfg[key][2] = type(self.__network_cfg[key][2])(value)
-
-        def get_read_value(self, key):
-                return self.__read_cfg[key][2]
-
-        def print_network_cfg(self):
-                for key, value in sorted(self.__network_cfg.items()):
-                        print(key+' : '+str(value[2]))
-
-        def print_write_cfg(self):
-                for key, value in sorted(self.__write_cfg.items()):
-                        print(key+' : '+str(value[2]))
-
-        def print_read_cfg(self):
-                for key, value in sorted(self.__read_cfg.items()):
-                        print(key+' : '+str(value[2]))
-
-        def __export_cfg_value(self, value):
-                return int(value[2]) << value[0]
-
-        def export_prom_data(self):
-
-                result = bytearray(self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
-
-                total = 0
-                for key, value in self.__write_cfg.items():
-                        x = self.__export_cfg_value(value)
-                        total = total | x
-
-                for i in range(0, self.__WRITE_LENGTH):
-                        result[i] = total & 0xFF
-                        total = total >> 8
-
-                total = 0
-                for key, value in self.__network_cfg.items():
-                        x = self.__export_cfg_value(value)
-                        total = total | x
-
-                for i in range(0, self.__NETWORK_LENGTH):
-                        result[i + self.__WRITE_LENGTH] = total & 0xFF
-                        total = total >> 8
-
-                result.reverse()
-
-                v = self.fletcher_check(result)
-                result += v
-                result += bytearray([0xFF]) * (256 - len(result))
-
-                return result
-
-        def __import_cfg_value(self, key, target, data):
-                value = target[key]
-                start_point = int(value[0])
-                bit_length = int(value[1])
-                block = bytearray()
-
-                # Parse into an integer, then shift and mask
-                myi = 0
-                start = (start_point >> 3)
-                end = start + (bit_length >> 3) + 2
-                if end > len(data):
-                        end = len(data)
-                for i in range(start, end):
-                        myi = myi | (int(data[i]) << ((i-start)*8))
-
-                # Generate the mask
-                mask = 0
-                for i in range(0, bit_length):
-                        mask = (mask << 1) | 1
+                '__TAS_COUNT' : [608+(93*8), 32, int()],
                 
-                # Shift the data down to align and mask off
-                myi = (myi >> (start_point & 0x7)) & mask
-
-                # Convert the integer into a bytearray
-                num_bytes = (bit_length / 8)
-                if (bit_length & 0x7) != 0:
-                        num_bytes += 1
-
-                # Just pass the underlying integer if the default is integer
-                if (type(target[key][2]) == int) or (type(target[key][2]) == long):
-                        target[key][2] = myi
-                        return
-
-                # Otherwise pass a block
-                for i in range(0, num_bytes):
-                        block.append(myi & 0xFF)
-                        myi = myi >> 8
-
-                target[key][2] = type(target[key][2])(block)
-
-        def import_prom_data(self, data):
-
-                v = self.fletcher_check(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
-
-                if ( v != data[self.__WRITE_LENGTH + self.__NETWORK_LENGTH:self.__WRITE_LENGTH + self.__NETWORK_LENGTH+2] ):
-                        # Invalid checksum
-                        print('Imported PROM data checksum is invalid, configuration will not be imported')
-                        return False
-
-                # Reverse so ordering matches VHDL
-                rdata = data[0:self.__WRITE_LENGTH+self.__NETWORK_LENGTH]
-                rdata.reverse()
-
-                for key, value in self.__write_cfg.items():
-                        self.__import_cfg_value(key, self.__write_cfg, rdata[0:self.__WRITE_LENGTH])
-
-                # Import each value one by one from the PROM data
-                for key, value in self.__network_cfg.items():
-                        self.__import_cfg_value(key, self.__network_cfg, rdata[self.__WRITE_LENGTH:self.__NETWORK_LENGTH+self.__WRITE_LENGTH])
-
-                return True
-
-        def network_length(self):
-                return self.__NETWORK_LENGTH
-        def write_length(self):
-                return self.__WRITE_LENGTH
-        def read_length(self):
-                return self.__READ_LENGTH
-        def packet_receive_length(self):
-                return (self.__READ_LENGTH + self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
-
-        def fletcher(self, data):
-
-                sum1 = 0xAA
-                sum2 = 0x55
-
-                for i in data:
-                        sum1 = sum1 + int(i)
-                        sum2 = sum1 + sum2
-
-                sum1 = sum1 % 255
-                sum2 = sum2 % 255
-
-                return bytearray([sum1, sum2])
-
-        def fletcher_check(self, data):
+                '__CORRUPTED_BITSTREAM_TABLE' : [609+(92*8), 1, int()],
+                '__CONFIGURATION_DEFAULT' : [608+(92*8), 1, int()],
                 
-                v = self.fletcher(data)
-
-                sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
-                sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
-
-                return bytearray([sum1, sum2])
-
+                '__FLASH_READER_DATA_OUT_EMPTY' : [610+(91*8), 1, int()],
+                '__FLASH_READER_ERROR' : [609+(91*8), 1, int()],
+                '__FLASH_READER_DONE' : [608+(91*8), 1, int()],
+                
+                '__ATSHA204A_ERROR' : [613+(90*8), 1, int()],
+                '__ATSHA204A_DONE' : [612+(90*8), 1, int()],
+                'MAIN_POWER_STATE' : [611+(90*8), 1, int()],
+                '__FAN_TACH' : [610+(90*8), 1, int()],
+                '__N_IS_QF2_PRE' : [609+(90*8), 1, int()],
+                '__JACK_SENSE' : [608+(90*8), 1, int()],
+                
+                'CONTROLLER_I2C_READ_DATA' : [608+(88*8), 16, int()],
+                
+                'I2C_ERROR_LATCH' : [615+(87*8), 1, int()],
+                'I2C_DONE_LATCH' : [614+(87*8), 1, int()],
+                'BOARD_OT_SHUTDOWN_LATCH' : [613+(87*8), 1, int()],
+                'KINTEX_OT_SHUTDOWN_LATCH' : [612+(87*8), 1, int()],
+                '__SYS_I2C_SDA' : [609+(87*8), 1, int()],
+                '__SYS_I2C_SCL' : [608+(87*8), 1, int()],
+                
+                'SI57X_B_CURRENT_RFREQ' : [608+(82*8), 38, int()],
+                'SI57X_B_CURRENT_N1' : [608+(81*8), 7, int()],
+                'SI57X_B_CURRENT_HSDIV' : [608+(80*8), 3, int()],
+                'SI57X_B_ERROR' : [609+(79*8), 1, int()],
+                'SI57X_B_DONE' : [608+(79*8), 1, int()],
+                
+                'SI57X_A_CURRENT_RFREQ' : [608+(74*8), 38, int()],
+                'SI57X_A_CURRENT_N1' : [608+(73*8), 7, int()],
+                'SI57X_A_CURRENT_HSDIV' : [608+(72*8), 3, int()],
+                'SI57X_A_ERROR' : [609+(71*8), 1, int()],
+                'SI57X_A_DONE' : [608+(71*8), 1, int()],
+                
+                'FAN_SPEED' : [608+(69*8), 16, int()],
+                
+                'KINTEX_QSFP_2_RX1_POWER' : [608+(67*8), 16, int()],
+                'KINTEX_QSFP_2_RX2_POWER' : [608+(65*8), 16, int()],
+                'KINTEX_QSFP_2_RX3_POWER' : [608+(63*8), 16, int()],
+                'KINTEX_QSFP_2_RX4_POWER' : [608+(61*8), 16, int()],
+                'KINTEX_QSFP_2_TX1_BIAS' : [608+(59*8), 16, int()],
+                'KINTEX_QSFP_2_TX2_BIAS' : [608+(57*8), 16, int()],
+                'KINTEX_QSFP_2_TX3_BIAS' : [608+(55*8), 16, int()],
+                'KINTEX_QSFP_2_TX4_BIAS' : [608+(53*8), 16, int()],
+                
+                'KINTEX_QSFP_2_VOLTAGE' : [608+(51*8), 16, int()],
+                'KINTEX_QSFP_2_TEMPERATURE' : [608+(49*8), 16, int()],
+                'KINTEX_QSFP_2_TX_FAULT' : [608+(48*8), 4, int()],
+                'KINTEX_QSFP_2_LOS' : [608+(47*8), 8, int()],
+                'KINTEX_QSFP_2_PRESENT' : [608+(46*8), 1, int()],
+                
+                'KINTEX_QSFP_1_RX1_POWER' : [608+(44*8), 16, int()],
+                'KINTEX_QSFP_1_RX2_POWER' : [608+(42*8), 16, int()],
+                'KINTEX_QSFP_1_RX3_POWER' : [608+(40*8), 16, int()],
+                'KINTEX_QSFP_1_RX4_POWER' : [608+(38*8), 16, int()],
+                'KINTEX_QSFP_1_TX1_BIAS' : [608+(36*8), 16, int()],
+                'KINTEX_QSFP_1_TX2_BIAS' : [608+(34*8), 16, int()],
+                'KINTEX_QSFP_1_TX3_BIAS' : [608+(32*8), 16, int()],
+                'KINTEX_QSFP_1_TX4_BIAS' : [608+(30*8), 16, int()],
+                
+                'KINTEX_QSFP_1_VOLTAGE' : [608+(28*8), 16, int()],
+                'KINTEX_QSFP_1_TEMPERATURE' : [608+(26*8), 16, int()],
+                'KINTEX_QSFP_1_TX_FAULT' : [608+(25*8), 4, int()],
+                'KINTEX_QSFP_1_LOS' : [608+(24*8), 8, int()],
+                'KINTEX_QSFP_1_PRESENT' : [608+(23*8), 1, int()],
+                
+                'SPARTAN_QSFP_RX1_POWER' : [608+(21*8), 16, int()],
+                'SPARTAN_QSFP_RX2_POWER' : [608+(19*8), 16, int()],
+                'SPARTAN_QSFP_RX3_POWER' : [608+(17*8), 16, int()],
+                'SPARTAN_QSFP_RX4_POWER' : [608+(15*8), 16, int()],
+                'SPARTAN_QSFP_TX1_BIAS' : [608+(13*8), 16, int()],
+                'SPARTAN_QSFP_TX2_BIAS' : [608+(11*8), 16, int()],
+                'SPARTAN_QSFP_TX3_BIAS' : [608+(9*8), 16, int()],
+                'SPARTAN_QSFP_TX4_BIAS' : [608+(7*8), 16, int()],
+                
+                'SPARTAN_QSFP_VOLTAGE' : [608+(5*8), 16, int()],
+                'SPARTAN_QSFP_TEMPERATURE' : [608+(3*8), 16, int()],
+                'SPARTAN_QSFP_TX_FAULT' : [608+(2*8), 4, int()],
+                'SPARTAN_QSFP_LOS' : [608+(1*8), 8, int()],
+                'SPARTAN_QSFP_PRESENT' : [608, 1, int()],
+                
+                'INA226_9_1' : [592, 16, int()],
+                'INA226_8_1' : [576, 16, int()],
+                'INA226_7_1' : [560, 16, int()],
+                'INA226_6_1' : [544, 16, int()],
+                'INA226_5_1' : [528, 16, int()],
+                'INA226_4_1' : [512, 16, int()],
+                'INA226_3_1' : [496, 16, int()],
+                'INA226_2_1' : [480, 16, int()],
+                'INA226_1_1' : [464, 16, int()],
+                'INA226_0_1' : [448, 16, int()],
+                'INA226_9_0' : [432, 16, int()],
+                'INA226_8_0' : [416, 16, int()],
+                'INA226_7_0' : [400, 16, int()],
+                'INA226_6_0' : [384, 16, int()],
+                'INA226_5_0' : [368, 16, int()],
+                'INA226_4_0' : [352, 16, int()],
+                'INA226_3_0' : [336, 16, int()],
+                'INA226_2_0' : [320, 16, int()],
+                'INA226_1_0' : [304, 16, int()],
+                'INA226_0_0' : [288, 16, int()],
+                
+                'VMON_1_7' : [272, 16, int()],
+                'VMON_1_6' : [256, 16, int()],
+                'VMON_1_5' : [240, 16, int()],
+                'VMON_1_4' : [224, 16, int()],
+                'VMON_1_3' : [208, 16, int()],
+                'VMON_1_2' : [192, 16, int()],
+                'VMON_1_1' : [176, 16, int()],
+                'VMON_1_0' : [160, 16, int()],
+                'VMON_0_7' : [144, 16, int()],
+                'VMON_0_6' : [128, 16, int()],
+                'VMON_0_5' : [112, 16, int()],
+                'VMON_0_4' : [96, 16, int()],
+                'VMON_0_3' : [80, 16, int()],
+                'VMON_0_2' : [64, 16, int()],
+                'VMON_0_1' : [48, 16, int()],
+                'VMON_0_0' : [32, 16, int()],
+                
+                'BOARD_TEMPERATURE' : [16, 16, int()],
+                'KINTEX_TEMPERATURE' : [0, 16, int()]
+                
+        }
+        
 class interface(cfg):
 
         def __init__(self, host, verbose):
@@ -1950,10 +1528,10 @@ class interface(cfg):
                         print('\tTX2 bias:\t'+str(float(self.get_read_value('SPARTAN_QSFP_TX2_BIAS')) * 0.001)+'mA')
                         print('\tTX3 bias:\t'+str(float(self.get_read_value('SPARTAN_QSFP_TX3_BIAS')) * 0.001)+'mA')
                         print('\tTX4 bias:\t'+str(float(self.get_read_value('SPARTAN_QSFP_TX4_BIAS')) * 0.001)+'mA')
-                        print('\tRX1 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX1_POWER')) * 0.001)+'mW')
-                        print('\tRX2 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX2_POWER')) * 0.001)+'mW')
-                        print('\tRX3 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX3_POWER')) * 0.001)+'mW')
-                        print('\tRX4 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX4_POWER')) * 0.001)+'mW')
+                        print('\tRX1 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX1_POWER')) * 0.0001)+'mW')
+                        print('\tRX2 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX2_POWER')) * 0.0001)+'mW')
+                        print('\tRX3 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX3_POWER')) * 0.0001)+'mW')
+                        print('\tRX4 power:\t'+str(float(self.get_read_value('SPARTAN_QSFP_RX4_POWER')) * 0.0001)+'mW')
 
                 print('')
                 print('Kintex-7 QSFP 1 present:\t'+str(self.get_read_value('KINTEX_QSFP_1_PRESENT')))
@@ -1966,10 +1544,10 @@ class interface(cfg):
                         print('\tTX2 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_TX2_BIAS')) * 0.001)+'mA')
                         print('\tTX3 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_TX3_BIAS')) * 0.001)+'mA')
                         print('\tTX4 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_TX4_BIAS')) * 0.001)+'mA')
-                        print('\tRX1 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX1_POWER')) * 0.001)+'mW')
-                        print('\tRX2 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX2_POWER')) * 0.001)+'mW')
-                        print('\tRX3 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX3_POWER')) * 0.001)+'mW')
-                        print('\tRX4 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX4_POWER')) * 0.001)+'mW')
+                        print('\tRX1 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX1_POWER')) * 0.0001)+'mW')
+                        print('\tRX2 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX2_POWER')) * 0.0001)+'mW')
+                        print('\tRX3 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX3_POWER')) * 0.0001)+'mW')
+                        print('\tRX4 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_1_RX4_POWER')) * 0.0001)+'mW')
 
                 print('')
                 print('Kintex-7 QSFP 2 present:\t'+str(self.get_read_value('KINTEX_QSFP_2_PRESENT')))
@@ -1982,10 +1560,10 @@ class interface(cfg):
                         print('\tTX2 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_TX2_BIAS')) * 0.001)+'mA')
                         print('\tTX3 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_TX3_BIAS')) * 0.001)+'mA')
                         print('\tTX4 bias:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_TX4_BIAS')) * 0.001)+'mA')
-                        print('\tRX1 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX1_POWER')) * 0.001)+'mW')
-                        print('\tRX2 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX2_POWER')) * 0.001)+'mW')
-                        print('\tRX3 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX3_POWER')) * 0.001)+'mW')
-                        print('\tRX4 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX4_POWER')) * 0.001)+'mW')
+                        print('\tRX1 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX1_POWER')) * 0.0001)+'mW')
+                        print('\tRX2 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX2_POWER')) * 0.0001)+'mW')
+                        print('\tRX3 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX3_POWER')) * 0.0001)+'mW')
+                        print('\tRX4 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX4_POWER')) * 0.0001)+'mW')
 
         def reboot_to_runtime(self, wait_for_reboot=False):
                 x = bytearray([0x81])

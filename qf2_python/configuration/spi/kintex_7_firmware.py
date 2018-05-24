@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 from ..jtag import *
-import spi, time
+import spi, constants, time
 from datetime import datetime, timedelta
 
 KINTEX_IMAGE_TABLE_SECTOR = 57
-KINTEX_IMAGE_TABLE_ADDRESS = KINTEX_IMAGE_TABLE_SECTOR * spi.SECTOR_SIZE
+KINTEX_IMAGE_TABLE_ADDRESS = KINTEX_IMAGE_TABLE_SECTOR * constants.SECTOR_SIZE
 KINTEX_IMAGE_TABLE_ENTRY_SIZE = 56
 
 class interface():
@@ -17,13 +17,13 @@ class interface():
 
     def get_images(self):
 
-        data = self.__target.read_data(KINTEX_IMAGE_TABLE_ADDRESS, spi.SECTOR_SIZE)
+        data = self.__target.read_data(KINTEX_IMAGE_TABLE_ADDRESS, constants.SECTOR_SIZE)
 
         offset = 0
 
         result = list()
 
-        while (offset < spi.SECTOR_SIZE - KINTEX_IMAGE_TABLE_ENTRY_SIZE):
+        while (offset < constants.SECTOR_SIZE - KINTEX_IMAGE_TABLE_ENTRY_SIZE):
             
             entry = data[offset : offset + KINTEX_IMAGE_TABLE_ENTRY_SIZE]
 
@@ -169,9 +169,9 @@ class interface():
 
             for j in available_sectors:
 
-                position = i['address'] / spi.SECTOR_SIZE
-                length = i['length'] / spi.SECTOR_SIZE
-                if ( length % spi.SECTOR_SIZE != 0 ):
+                position = i['address'] / constants.SECTOR_SIZE
+                length = i['length'] / constants.SECTOR_SIZE
+                if ( length % constants.SECTOR_SIZE != 0 ):
                     length += 1
 
                 if ( (position >= j[0]) and (position < j[1]) ):
@@ -194,8 +194,8 @@ class interface():
                 
                     break
 
-        length = parser.length() / spi.SECTOR_SIZE
-        if ( parser.length() % spi.SECTOR_SIZE != 0 ):
+        length = parser.length() / constants.SECTOR_SIZE
+        if ( parser.length() % constants.SECTOR_SIZE != 0 ):
             length += 1
     
         print 'Sectors needed:',length
@@ -239,7 +239,7 @@ class interface():
 
         images.append({
                 'sha256' : parser.hash(),
-                'address' : location * spi.SECTOR_SIZE,
+                'address' : location * constants.SECTOR_SIZE,
                 'length' : parser.length(),
                 'build_date' : build_date,
                 'storage_date' : storage_date

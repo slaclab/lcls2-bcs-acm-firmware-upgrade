@@ -38,8 +38,8 @@ if args.bootloader == True:
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.SECTOR_SIZE
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
@@ -83,10 +83,10 @@ if args.defaults == False:
                     unknown_key = True
                 if cfg.is_network_key(i_k):
                     unknown_key = False
-                    cfg.set_network_key(i_k, i_v)
+                    cfg.set_network_value(i_k, i_v)
                 if cfg.is_write_key(i_k):
                     unknown_key = False
-                    cfg.set_write_key(i_k, i_v)
+                    cfg.set_write_value(i_k, i_v)
                 if unknown_key == True:
                     raise Exception('Unknown key '+i_k)
 
@@ -99,10 +99,10 @@ if args.defaults == False:
             unknown_key = True
             if cfg.is_network_key(i[0]):
                 unknown_key = False
-                cfg.set_network_key(i[0], i[1])
+                cfg.set_network_value(i[0], i[1])
             if cfg.is_write_key(i[0]):
                 unknown_key = False
-                cfg.set_write_key(i[0], i[1])
+                cfg.set_write_value(i[0], i[1])
             if unknown_key == True:
                 raise Exception('Unknown key '+i[0])
 
