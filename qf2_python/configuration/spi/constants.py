@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+SPI_DOUT = 1
+SPI_DIN = 2
+SPI_CLK = 4
+SPI_CS_B = 8
+SUBSECTOR_SIZE = 4096
+SECTOR_SIZE = 65536
+
