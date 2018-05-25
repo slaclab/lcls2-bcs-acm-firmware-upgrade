@@ -287,30 +287,36 @@ if args.nomigrate == False:
             new_cfg.print_write_cfg()
 
     new_prom_cfg = new_cfg.export_prom_data()
-    
-    if ( prev_prom_cfg == new_prom_cfg ):
-        print('')
-        print('PROM settings are identical - no migration required')
-        # Disconnect the PROM interface before doing a reboot
-        del prom
-        if args.reboot == True:
-            if args.bootloader == True:
-                print('Rebooting to new bootloader image')
-                qf2_python.identifier.reboot_to_bootloader(args.target, args.verbose)
-            else:
-                print('Rebooting to new runtime image')
-                qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
-        exit()
-        
-    print('Updating PROM settings...')
-    
-    prom.sector_erase(CONFIG_ADDRESS)
-    prom.page_program(new_prom_cfg, CONFIG_ADDRESS)
 
-    pd = prom.read_data(CONFIG_ADDRESS, 256)
+    print('')
+    if ( prev_hash == 0 ):
+
+        print('Updating PROM settings...')
     
-    if ( new_prom_cfg != pd ):
-        print 'Update failed'
+        prom.sector_erase(CONFIG_ADDRESS)
+        prom.page_program(new_prom_cfg, CONFIG_ADDRESS)
+        
+        pd = prom.read_data(CONFIG_ADDRESS, 256)
+            
+        if ( new_prom_cfg != pd ):
+            print('Update failed')
+
+    else:
+        if ( prev_prom_cfg != new_prom_cfg ):
+        
+            print('Updating PROM settings...')
+    
+            prom.sector_erase(CONFIG_ADDRESS)
+            prom.page_program(new_prom_cfg, CONFIG_ADDRESS)
+
+            pd = prom.read_data(CONFIG_ADDRESS, 256)
+    
+            if ( new_prom_cfg != pd ):
+                print 'Update failed'
+
+        else:
+
+            print('No settings update required - data is identical')
 
 # Disconnect the PROM interface before doing a reboot
 del prom

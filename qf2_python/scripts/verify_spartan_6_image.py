@@ -34,12 +34,12 @@ prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, inpu
 # If not bitfile provided for comparison, do an integrity check
 if args.bit == None:
     print 'No bitfile provided - performing PROM integrity check'
-    if ( helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET) == 0 ):
+    if ( helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET, args.verbose) == 0 ):
         exit(1)
     exit(0)
 else:
     print 'Bitfile provided - performing PROM integrity check'
-    if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, args.bit) == 0 ):
+    if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, args.bit, args.verbose) == 0 ):
         exit(1)
     exit(0)
 
