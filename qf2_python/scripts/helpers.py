@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-# Alternative way of dealing with python package semantics
-# Append package path if it isn't already known
-#if __name__ == '__main__' and __package__ is None:
-#    import sys, os.path as path
-#    print(path.dirname(path.dirname(path.abspath(__file__))))
-#    sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-
 import time, sys, argparse, hashlib
 from datetime import datetime, timedelta
 from ..configuration.jtag import *
@@ -49,6 +42,7 @@ def prom_integrity_check(prom, offset, verbose):
     if verbose == True:
         print 'PROM bitstream integrity BAD'
     return 0
+
 
 def prom_compare_check(prom, offset, bitfile, verbose):
 

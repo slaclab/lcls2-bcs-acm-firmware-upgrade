@@ -10,11 +10,6 @@ def my_exec_cfg(x, verbose=False):
     exec(x,globals(),ldict)
     return ldict['x'].cfg(verbose)
 
-SEQUENCER_PORT = 50003
-
-# Sector offset is +32 for runtime image
-FIRMWARE_SECTOR_OFFSET = 32
-
 parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
@@ -22,6 +17,7 @@ parser.add_argument('-n', '--nomigrate', action="store_true", default=False, hel
 parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+parser.add_argument('-f', '--force', action="store_true", default=False, help='Force update even if previous PROM data is unrecognized or corrupt')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
 
@@ -45,28 +41,33 @@ if args.lock == True:
     print('ERROR: This feature is not yet supported')
     exit(1)
 
+# Sector offset is +32 for runtime image
+FIRMWARE_SECTOR_OFFSET = 32
+
 # Chose firmware location
 if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
 
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
-SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=int(args.port), input_select=0, speed=0, noinit=True), args.verbose)
 
 # Do integrity check and check current firmware hash
 prev_hash = helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET, args.verbose)
+
+if (prev_hash == 0) and (args.force == False):
+    print('ERROR: Current PROM data failed integrity check. You must use \'--force\' to continue - will set PROM settings to defaults.')
+
+
+
+
 
 # Read the VCR and VECR
 if args.verbose == True:
     print('Loading bitfile: '+args.bit)
 
 bitfile = xilinx_bitfile_parser.bitfile(args.bit)
-
-if bitfile.padded_hash() == prev_hash:
-    print 'Bitfile is already stored in PROM'
-    #exit()
 
 if args.verbose == True:
     print('Design name: '+bitfile.design_name())
@@ -79,6 +80,11 @@ if args.verbose == True:
 if bitfile.device_name() != '6slx45tcsg324':
     print('ERROR: Bitfile device name is not a Spartan-6 FPGA')
     exit(1)
+
+if bitfile.padded_hash() == prev_hash:
+    print('Bitfile hash is already stored in PROM and integrity good. Checking PROM data for exact match...')
+    if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, bitfile, args.verbose) != 0 ):
+        exit(0)
 
 # Write the Spartan 6 bitfile at 64KB block address 0
 prom.program_bitfile(args.bit, FIRMWARE_SECTOR_OFFSET)
@@ -186,8 +192,6 @@ if args.nomigrate == False:
 
     new_cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x')
     
-    if prev_hash == 0:        
-        print('PROM did not contain a previous bitfile - setting configuration to defaults')
 
     if prev_hash != 0:
         
