@@ -48,15 +48,12 @@ prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, inpu
 # Check the stored SHA256 to see what configuration space we should be using
 pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
 
-print 'Stored SHA256:',
 s = str()
 for i in pd[0:32]:
     s += '{:02x}'.format(i)
-print s
+print('Stored SHA256: '+s)
 
-print('')
-print('Selecting matching configuration interface...')
-
+print('Selecting matching configuration interface')
 cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
 
 # TODO - Warn on mismatch with running firmware
@@ -65,14 +62,11 @@ cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
 pd = prom.read_data(CONFIG_ADDRESS, 256)
 
 if args.defaults == False:
-    print('')
-    print('Importing stored Spartan-6 configuration settings...')
+    print('Importing stored Spartan-6 configuration settings')
     cfg.import_prom_data(pd)
 
     if args.json != None:
-        print('')
-        print('Importing JSON file settings from '+args.json+'...')
-        print('')
+        print('Importing JSON file settings from '+args.json)
         import json
         with open(args.json) as json_data:
             d = json.load(json_data)
@@ -91,9 +85,7 @@ if args.defaults == False:
                     raise Exception('Unknown key '+i_k)
 
     if args.settings != None:
-        print('')
-        print('Adding command line settings...')
-        print('')
+        print('Adding command line settings')
         for i in args.settings[0]:
             print(i[0]+' : '+i[1])
             unknown_key = True
@@ -107,18 +99,15 @@ if args.defaults == False:
                 raise Exception('Unknown key '+i[0])
 
 if args.verbose == True:
-    print('')
-    print('Updated settings are...')
-    print('')
+    print('Updated settings are:')
     cfg.print_network_cfg()
     cfg.print_write_cfg()
 
-print('Exporting PROM settings...')
-
+print('Exporting PROM settings')
 x = cfg.export_prom_data()
 
 if ( x == pd ):
-    print 'Values already programmed'
+    print('Values already programmed')
     # Disconnect the PROM interface before doing a reboot
     del prom
     if args.reboot == True:
@@ -130,15 +119,10 @@ if ( x == pd ):
             qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
     exit()
 
-print('Updating PROM settings...')
+print('Updating PROM settings')
 
 prom.sector_erase(CONFIG_ADDRESS)
-prom.page_program(x, CONFIG_ADDRESS)
-
-pd = prom.read_data(CONFIG_ADDRESS, 256)
-
-if ( x != pd ):
-    print 'Update failed'
+prom.page_program(x, CONFIG_ADDRESS, True)
 
 # Disconnect the PROM interface before doing a reboot
 del prom

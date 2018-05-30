@@ -58,12 +58,8 @@ prev_hash = helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET, args.verb
 
 if (prev_hash == 0) and (args.force == False):
     print('ERROR: Current PROM data failed integrity check. You must use \'--force\' to continue - will set PROM settings to defaults.')
+    exit(1)
 
-
-
-
-
-# Read the VCR and VECR
 if args.verbose == True:
     print('Loading bitfile: '+args.bit)
 
@@ -82,116 +78,50 @@ if bitfile.device_name() != '6slx45tcsg324':
     exit(1)
 
 if bitfile.padded_hash() == prev_hash:
-    print('Bitfile hash is already stored in PROM and integrity good. Checking PROM data for exact match...')
-    if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, bitfile, args.verbose) != 0 ):
+    print('Bitfile hash is already stored in PROM and hash is valid. Comparing PROM data for exact match...')
+    if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, args.bit, args.verbose) != 0 ):
         exit(0)
+    print('Mismatch in PROM data - continuing')
 
-# Write the Spartan 6 bitfile at 64KB block address 0
+print('Programming image')
 prom.program_bitfile(args.bit, FIRMWARE_SECTOR_OFFSET)
 
-parser = xilinx_bitfile_parser.bitfile(args.bit)
+# Generate a firwmare ID block
+fw_id_data = helpers.generate_fw_id_data(args.bit)
 
-# Get the current date & time from NTP
-# Otherwise use local
-storage_date = 0
-        
-try:
-    import ntplib
-    try:
-        c = ntplib.NTPClient()
-        response = c.request('0.pool.ntp.org', version=3)
-        storage_date = int(response.tx_time)
-    except ntplib.NTPException:
-        print 'Timeout on NTP request, using local clock instead'
-        storage_date = int(time.time())
-except:
-    print 'ntplib does not appear to be installed, using local clock instead'
-    storage_date = int(time.time())            
+print('Erasing old firmware ID block')
+prom.sector_erase(FIRMWARE_ID_ADDRESS)
 
-# Extract the build date and time from the bitfile and encode it
-build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))
-    
-# Pad the data to the block boundary
-data = parser.data()
-data += bytearray([0xFF]) * (spi.constants.SECTOR_SIZE - len(data) % spi.constants.SECTOR_SIZE)
-
-# Calculate SHA256 of bitfile
-m = hashlib.sha256()
-m.update(data)
-sha256 = bytearray(m.digest())
-
-sha256.append((build_date >> 56) & 0xFF)
-sha256.append((build_date >> 48) & 0xFF)
-sha256.append((build_date >> 40) & 0xFF)
-sha256.append((build_date >> 32) & 0xFF)
-sha256.append((build_date >> 24) & 0xFF)
-sha256.append((build_date >> 16) & 0xFF)
-sha256.append((build_date >> 8) & 0xFF)
-sha256.append((build_date) & 0xFF)
-
-sha256.append((storage_date >> 56) & 0xFF)
-sha256.append((storage_date >> 48) & 0xFF)
-sha256.append((storage_date >> 40) & 0xFF)
-sha256.append((storage_date >> 32) & 0xFF)
-sha256.append((storage_date >> 24) & 0xFF)
-sha256.append((storage_date >> 16) & 0xFF)
-sha256.append((storage_date >> 8) & 0xFF)
-sha256.append((storage_date) & 0xFF)
-
-sha256 += bytearray([0xFF]) * (256 - len(sha256) % 256)
-
-# Compare the current data with the previous to see if we have to erase
-pd = prom.read_data(FIRMWARE_ID_ADDRESS, len(sha256))
-
-# Only check the first two, the third changes each time
-did_break = False
-for i in range(0, 40):
-    if ( sha256[i] != pd[i] ):
-        did_break = True
-        if ( pd[i] != 0xFF ):
-            # Erase the previous table
-            print('Erasing old firwmare ID')
-            prom.sector_erase(FIRMWARE_ID_ADDRESS)
-            break
-
-if did_break == True:
-    print('Updating firmware ID')
-    for i in range(0, len(sha256) / 256):
-        prom.page_program(sha256[i * 256 : (i+1) * 256], i * 256 + FIRMWARE_ID_ADDRESS)
-else:
-    print('Firmware ID matches bitfile')
-
-# Verify
-pd = prom.read_data(FIRMWARE_ID_ADDRESS, len(sha256))
-for i in range(0, 40):
-    if ( sha256[i] != pd[i] ):
-        print
-        raise SPI_Base_Exception('Firmware ID update byte', str(i), 'failed')
+print('Updating firmware ID block')
+for i in range(0, len(fw_id_data) / 256):
+    prom.page_program(fw_id_data[i * 256 : (i+1) * 256], i * 256 + FIRMWARE_ID_ADDRESS, True)
 
 s = str()
-for j in sha256[0:32]:
+for j in fw_id_data[0:32]:
     s += '{:02x}'.format(j)
 print('SHA256: '+s)
 
+build_date = 0
+for i in range(0, 8):
+    build_date += int(fw_id_data[32+i]) * 2**(56-i*8)
 print('Build timestamp: '+str(build_date)+' ('+str(datetime.utcfromtimestamp(build_date))+')')
 
 storage_date = 0
 for i in range(0, 8):
-    storage_date += int(pd[40+i]) * 2**(56-i*8)
+    storage_date += int(fw_id_data[40+i]) * 2**(56-i*8)
 print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
 
 if args.nomigrate == False:
 
     CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
     
-    print 'Migrating configuration to new firmware'
+    print('Migrating configuration to new firmware')
     
     s = str()
-    for i in sha256[0:32]:
+    for i in fw_id_data[0:32]:
         s += '{:02x}'.format(i)
 
     new_cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x')
-    
 
     if prev_hash != 0:
         
@@ -293,34 +223,14 @@ if args.nomigrate == False:
     new_prom_cfg = new_cfg.export_prom_data()
 
     print('')
-    if ( prev_hash == 0 ):
+    if ( (prev_hash != 0) and (prev_prom_cfg == new_prom_cfg) ):
+        print('No settings update required - data is identical')
 
+    else:
         print('Updating PROM settings...')
     
         prom.sector_erase(CONFIG_ADDRESS)
-        prom.page_program(new_prom_cfg, CONFIG_ADDRESS)
-        
-        pd = prom.read_data(CONFIG_ADDRESS, 256)
-            
-        if ( new_prom_cfg != pd ):
-            print('Update failed')
-
-    else:
-        if ( prev_prom_cfg != new_prom_cfg ):
-        
-            print('Updating PROM settings...')
-    
-            prom.sector_erase(CONFIG_ADDRESS)
-            prom.page_program(new_prom_cfg, CONFIG_ADDRESS)
-
-            pd = prom.read_data(CONFIG_ADDRESS, 256)
-    
-            if ( new_prom_cfg != pd ):
-                print 'Update failed'
-
-        else:
-
-            print('No settings update required - data is identical')
+        prom.page_program(new_prom_cfg, CONFIG_ADDRESS, True)
 
 # Disconnect the PROM interface before doing a reboot
 del prom

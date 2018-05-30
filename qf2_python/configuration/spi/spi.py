@@ -136,7 +136,7 @@ class SL25FLL():
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
             continue
 
-    def page_program(self, data, address):
+    def page_program(self, data, address, verify=False):
         if len(data) != 256:
             raise SPI_Base_Exception('Data is not size of page')
 
@@ -162,6 +162,12 @@ class SL25FLL():
         # Read the status register and wait for completion
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
             continue
+
+        if ( verify==True ):
+            compare_data = self.read_data(address, 256)
+            if compare_data != data:
+                raise SPI_Base_Exception('Write-verify failed')
+
 
 class N25Q():
     RDID = 0x9F
@@ -305,7 +311,7 @@ class N25Q():
             x = self.read_register(self.RDSR, 1)[0]
             y = self.read_register(self.RFSR, 1)[0]
 
-    def page_program(self, data, address):
+    def page_program(self, data, address, verify=False):
         if len(data) != 256:
             raise SPI_Base_Exception('Data is not size of page')
 
@@ -331,6 +337,11 @@ class N25Q():
         # Read the status register and wait for completion
         while self.read_register(self.RDSR, 1)[0] & 0x1:
             continue
+
+        if ( verify==True ):
+            compare_data = self.read_data(address, 256)
+            if compare_data != data:
+                raise SPI_Base_Exception('Write-verify failed')
 
 class SPI_Base_Exception(Exception):
     def __init__(self, value):
@@ -388,8 +399,8 @@ class interface():
     def subsector_erase(self, address):
         return self.__interface.subsector_erase(address)
 
-    def page_program(self, data, address):
-        return self.__interface.page_program(data, address)
+    def page_program(self, data, address, verify):
+        return self.__interface.page_program(data, address, verify)
 
     def verify_bitfile(self, name, offset):
         
@@ -410,17 +421,16 @@ class interface():
             elapsed = time.time() - start_time
             left = elapsed * (num_blocks - i - 1) / (i + 1)
             total = elapsed + left
-            output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+str(elapsed)+'s, Left: '+str(left)+'s, Total: '+str(total)+'s)'
+            output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+'{0:.2f}'.format(elapsed)+'s)'
             output = '{:<100}'.format(output)
             x = str('\b' * last_length)
-            print x, '\b'+output,
+            print(x+'\b'+output),
             sys.stdout.flush()
             last_length = len(output) + 1
 
             sector_update = False
             sector_erase = False
             for j in range(0, constants.SECTOR_SIZE):
-#                print hex(pd[j]), ',', hex(data[i * SECTOR_SIZE + j])
                 if pd[j] != data[i * constants.SECTOR_SIZE + j]:
                     sector_update = True
                     break
@@ -428,9 +438,10 @@ class interface():
             if not(sector_update):
                 continue
 
+            print('')
             raise SPI_Base_Exception('Verifying bitfile failed at byte: ' + str(i * constants.SECTOR_SIZE + j))
-
-        print
+        
+        print('')
 
     def program_bitfile(self, name, offset):
 
@@ -451,11 +462,11 @@ class interface():
             elapsed = time.time() - start_time
             left = elapsed * (num_blocks - i - 1) / (i + 1)
             total = elapsed + left
-            output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+str(elapsed)+'s, Left: '+str(left)+'s, Total: '+str(total)+'s)'
-            output = '{:<100}'.format(output)
+            output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+'{0:.2f}'.format(elapsed)+'s)'
+            output = '{:<50}'.format(output)
             x = str('\b' * last_length)
-            print x, '\b'+output,
-            #print output,
+            print(x+'\b'+output),
+            sys.stdout.flush()
             sys.stdout.flush()
             last_length = len(output) + 1
 
@@ -481,22 +492,22 @@ class interface():
             # Erase if necessary
             if sector_erase:
                 self.sector_erase((offset + i) * constants.SECTOR_SIZE)
-                print 'ERASED',
+                print('ERASED'),
 
             # Program the 256 byte blocks
             for j in range(0, constants.SECTOR_SIZE/256):
-                self.page_program(data[j * 256 + i * constants.SECTOR_SIZE : (j+1) * 256 + i * constants.SECTOR_SIZE], j * 256 + ((offset + i) * constants.SECTOR_SIZE))
+                self.page_program(data[j * 256 + i * constants.SECTOR_SIZE : (j+1) * 256 + i * constants.SECTOR_SIZE], j * 256 + ((offset + i) * constants.SECTOR_SIZE), True)
 
             # Verify
-            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
-            for j in range(0, constants.SECTOR_SIZE):
-                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
-                    print
-                    raise SPI_Base_Exception('Page update' + str(i * constants.SECTOR_SIZE + j) + 'failed')
+            #pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
+            #for j in range(0, constants.SECTOR_SIZE):
+            #    if pd[j] != data[i * constants.SECTOR_SIZE + j]:
+            #        print('')
+            #        raise SPI_Base_Exception('Page update' + str(i * constants.SECTOR_SIZE + j) + 'failed')
 
-            print 'UPDATED'
+            print('UPDATED')
 
-        print
+        print('')
 
     def read_hash(self, start_address, num_bytes):
         m = hashlib.sha256()
