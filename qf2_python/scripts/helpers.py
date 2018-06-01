@@ -13,7 +13,7 @@ def generate_fw_id_data(bitfile):
     # Get the current date & time from NTP
     # Otherwise use local
     storage_date = 0
-        
+
     try:
         import ntplib
         try:
@@ -25,12 +25,12 @@ def generate_fw_id_data(bitfile):
             storage_date = int(time.time())
     except:
         print 'ntplib does not appear to be installed, using local clock instead'
-        storage_date = int(time.time())            
+        storage_date = int(time.time())
 
     # Extract the build date and time from the bitfile and encode it
     build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))
 
-    # Get padded hash of bitfile data    
+    # Get padded hash of bitfile data
     sha256 = parser.padded_hash()
 
     # Append build date
