@@ -1383,16 +1383,16 @@ class interface(cfg):
                 #i2c_done_latch = int(data[115] >> 6) & 1
                 #board_ot_shutdown_latch = int(data[115] >> 5) & 1
                 #kintex_ot_shutdown_latch = int(data[115] >> 4) & 1
-                
+
                 print
-                print('Is QF2-pre: '+str(self.get_read_value('__N_IS_QF2_PRE') ^ 1))
-                print('Headphone jack present: '+str(self.get_read_value('__JACK_SENSE')))
-                print('Fan tach: '+str(self.get_read_value('__FAN_TACH')))
-                print('Main power state: '+str(self.get_read_value('MAIN_POWER_STATE')))
-                print('I2C done latch: '+str(self.get_read_value('I2C_DONE_LATCH')))
-                print('I2C error latch: '+str(self.get_read_value('I2C_ERROR_LATCH')))
-                print('Board OT shutdown latch: '+str(self.get_read_value('BOARD_OT_SHUTDOWN_LATCH')))
-                print('Kintex OT shutdown latch: '+str(self.get_read_value('KINTEX_OT_SHUTDOWN_LATCH')))
+                print('Is QF2-pre:\t\t\t'+str(self.get_read_value('__N_IS_QF2_PRE') ^ 1))
+                print('Headphone jack present:\t\t'+str(self.get_read_value('__JACK_SENSE')))
+                print('Fan tach:\t\t\t'+str(self.get_read_value('__FAN_TACH')))
+                print('Main power state:\t\t'+str(self.get_read_value('MAIN_POWER_STATE')))
+                print('I2C done latch:\t\t\t'+str(self.get_read_value('I2C_DONE_LATCH')))
+                print('I2C error latch:\t\t'+str(self.get_read_value('I2C_ERROR_LATCH')))
+                print('Board OT shutdown latch:\t'+str(self.get_read_value('BOARD_OT_SHUTDOWN_LATCH')))
+                print('Kintex OT shutdown latch:\t'+str(self.get_read_value('KINTEX_OT_SHUTDOWN_LATCH')))
 
                 z = []
                 y = []
@@ -1466,7 +1466,7 @@ class interface(cfg):
                         z.append(0.0)
                 else:
                         z.append(self.get_read_value('INA226_9_0') * 0.0000025)
-                        z.append(self.get_read_value('INA226_9_1') * 0.00125 * z[-1])                        
+                        z.append(self.get_read_value('INA226_9_1') * 0.00125 * z[-1])
 
                 x.append(float(2.56 * float(self.get_read_value('VMON_0_0')) / 65536.0))
                 x.append(float(2.56 * float(self.get_read_value('VMON_0_1')) / 65536.0))
@@ -1486,39 +1486,103 @@ class interface(cfg):
                 y.append(float(2.56 * float(self.get_read_value('VMON_1_6')) / 65536.0))
                 y.append(float(2.56 * float(self.get_read_value('VMON_1_7')) / 65536.0))
 
-                print('')
-                print('+12V:\t'+str(11.0 * y[0])+'V, '+str(z[18] / 0.004)+'A, '+str(z[19] / 0.004)+'W')
-                print('')
+                boot_1p2v = y[1]
+                k7_vccaux = y[2]
+                k7_vccint = y[3]
+                k7_mgtavtt = y[4]
+                k7_mgtavcc = y[5]
+                k7_mgtavccaux = y[6]
+                boot_3p3v = 2.0 * y[7]
 
-                print('+3.3V_BOOT:\t'+str(2.0 * y[7])+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
-                print('+1.2V_BOOT:\t'+str(y[1])+'V, '+str(z[16] / 0.01)+'A, '+str(z[17] / 0.01)+'W')
-                print('')
+                main_3p3v = 2.0 * x[5]
+                k7_a_2p5v = 2.0 * x[6]
+                k7_b_2p5v = 2.0 * x[7]
 
-                print('+1.0V_K7_VCCINT:\t'+str(y[3])+'V, '+str(z[10] / 0.004)+'A, '+str(z[11] / 0.004)+'W')
-                print('+1.8V_K7_VCCAUX:\t'+str(y[2])+'V, '+str(z[12] / 0.01)+'A, '+str(z[13] / 0.01)+'W')
-                print('K7_MGTAVTT:\t\t'+str(y[4])+'V')
-                print('K7_MGTAVCC:\t\t'+str(y[5])+'V, '+str(z[14] / 0.01)+'A, '+str(z[15] / 0.01)+'W')
-                print('K7_MGTAVCCAUX:\t\t'+str(y[6])+'V')
-                print('+2.5V_K7_A;\t\t'+str(2.0 * x[6])+'V')
-                print('+2.5V_K7_B:\t\t'+str(2.0 * x[7])+'V')
-                print('+3.3V_MAIN:\t\t'+str(2.0 * x[5])+'V, '+str(z[0] / 0.004)+'A, '+str(z[1] / 0.004)+'W')
-                print('')
-
-                print('+12V_FMC:\t'+str(11.0 * x[2])+'V, '+str(z[4] / 0.01)+'A, '+str(z[5] / 0.01)+'W')
-                print('+3.3V_FMC:\t'+str(2.0 * x[1])+'V, '+str(z[2] / 0.004)+'A, '+str(z[3] / 0.004)+'W')
-                print('VADJ_FMC_TOP:\t'+str(2.0 * x[0])+'V')
-                print('VADJ_FMC_BOT:\t'+str(x[3])+'V')
-                print('VADJ SUPPLY:\t'+str(z[6] / 0.01)+'A, '+str(z[7] / 0.01)+'W')
+                vadj_fmc_top = 2.0 * x[0]
+                vadj_fmc_bot = x[3]
 
                 print('')
-                print('LTM4628 temperature:\t'+str(150.0 - ((x[4] - 0.2) / 0.0023))+'C')
-                print('Board temperature:\t'+str(float(self.get_read_value('BOARD_TEMPERATURE') >> 4) * 0.0625)+'C')
-                print('Kintex-7 temperature:\t'+str(float(self.get_read_value('KINTEX_TEMPERATURE') >> 4) * 0.0625)+'C')
-                print('Fan speed:\t\t'+str(self.get_read_value('FAN_SPEED')*60)+' rpm')
-                print('Fan PWM duty cycle:\t'+str(self.get_read_value('FAN_PWM_CURRENT_DUTY_CYCLE')/2.55)+'%')
+                print('+12V:\t\t\t'+'{0:.3f}'.format(11.0 * y[0])+'\tV\t'+'{0:.3f}'.format(z[18] / 0.004)+'\tA\t'+'{0:.3f}'.format(z[19] / 0.004)+'\tW')
+                print('')
+
+                s = '+3.3V_BOOT:\t\t' + '{0:.3f}'.format(boot_3p3v) + '\tV\t' + '{0:.3f}'.format(z[8] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[9] / 0.01)+'\tW'
+                if ( (boot_3p3v > (3.3 * 1.03)) or (boot_3p3v < (3.3 * 0.97)) ):
+                        print('!!!!! +3.3V_BOOT:\t\t'+str(boot_3p3v)+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
+
+                s = '+1.2V_BOOT:\t\t' + '{0:.3f}'.format(boot_1p2v) + '\tV\t' + '{0:.3f}'.format(z[16] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[17] / 0.01) + '\tW'
+                if ( (boot_1p2v > (1.2 * 1.03)) or (boot_1p2v < (1.2 * 0.97)) ):
+                        s  = '!!!!! ' + s
+                print(s)
 
                 print('')
-                print('Spartan-6 QSFP present:\t'+str(self.get_read_value('SPARTAN_QSFP_PRESENT')))
+
+                s = '+1.0V_K7_VCCINT:\t' + '{0:.3f}'.format(k7_vccint) + '\tV\t' + '{0:.3f}'.format(z[10] / 0.004)+'\tA\t' + '{0:.3f}'.format(z[11] / 0.004)+'\tW'
+                if ( (k7_vccint > 1.03) or (k7_vccint < 0.97) ):
+                        s  = '!!!!! ' + s
+                print(s)
+
+                s = '+1.8V_K7_VCCAUX:\t' + '{0:.3f}'.format(k7_vccaux)+'\tV\t' + '{0:.3f}'.format(z[12] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[13] / 0.01)+'\tW'
+                if ( (k7_vccaux > (1.8 * 1.03)) or (k7_vccaux < (1.8 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+                        
+                s = 'K7_MGTAVTT:\t\t' + '{0:.3f}'.format(k7_mgtavtt) + '\tV'
+                if ( (k7_mgtavtt > (1.2 * 1.03)) or (k7_mgtavtt < (1.2 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = 'K7_MGTAVCC:\t\t' + '{0:.3f}'.format(k7_mgtavcc) + '\tV\t'+'{0:.3f}'.format(z[14] / 0.01) + '\tA\t'+'{0:.3f}'.format(z[15] / 0.01) + '\tW'
+                if ( (k7_mgtavcc > 1.03) or (k7_mgtavcc < 0.97) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = 'K7_MGTAVCCAUX:\t\t' + '{0:.3f}'.format(k7_mgtavccaux) + '\tV'
+                if ( (k7_mgtavccaux > (1.8 * 1.03)) or (k7_mgtavccaux < (1.8 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = '+2.5V_K7_A\t\t' + '{0:.3f}'.format(k7_a_2p5v) + '\tV'
+                if ( (k7_a_2p5v > (2.5 * 1.03)) or (k7_a_2p5v < (2.5 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = '+2.5V_K7_B\t\t' + '{0:.3f}'.format(k7_b_2p5v) + '\tV'
+                if ( (k7_b_2p5v > (2.5 * 1.03)) or (k7_b_2p5v < (2.5 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = '+3.3V_MAIN:\t\t'+'{0:.3f}'.format(main_3p3v)+'\tV\t'+'{0:.3f}'.format(z[0] / 0.004)+'\tA\t'+'{0:.3f}'.format(z[1] / 0.004)+'\tW'
+                if ( (main_3p3v > (3.3 * 1.03)) or (main_3p3v < (3.3 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                print('')
+
+                print('+12V_FMC:\t\t'+'{0:.3f}'.format(11.0 * x[2])+'\tV\t'+'{0:.3f}'.format(z[4] / 0.01)+'\tA\t'+'{0:.3f}'.format(z[5] / 0.01)+'\tW')
+                print('+3.3V_FMC:\t\t'+'{0:.3f}'.format(2.0 * x[1])+'\tV\t'+'{0:.3f}'.format(z[2] / 0.004)+'\tA\t'+'{0:.3f}'.format(z[3] / 0.004)+'\tW')
+
+		s = 'VADJ_FMC_TOP:\t\t' + '{0:.3f}'.format(vadj_fmc_top) + '\tV'
+                if ( (vadj_fmc_top > (2.5 * 1.03)) or (vadj_fmc_top < (2.5 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print(s)
+
+                s = 'VADJ_FMC_BOT:\t\t' + '{0:.3f}'.format(vadj_fmc_bot) + '\tV'
+                if ( (vadj_fmc_bot > (1.8 * 1.03)) or (vadj_fmc_bot < (1.8 * 0.97)) ):
+                        s = '!!!!! ' + s
+                print (s)
+                
+                print('VADJ SUPPLY:\t\t'+'{0:.3f}'.format(z[6] / 0.01)+'\tA\t'+'{0:.3f}'.format(z[7] / 0.01)+'\tW')
+
+                print('')
+                print('LTM4628 temperature:\t'+'{0:.2f}'.format(150.0 - ((x[4] - 0.2) / 0.0023))+'\tC')
+                print('Board temperature:\t'+'{0:.2f}'.format(float(self.get_read_value('BOARD_TEMPERATURE') >> 4) * 0.0625)+'\tC')
+                print('Kintex-7 temperature:\t'+'{0:.2f}'.format(float(self.get_read_value('KINTEX_TEMPERATURE') >> 4) * 0.0625)+'\tC')
+                print('')
+                print('Fan tach:\t\t'+str(self.get_read_value('FAN_SPEED')*60)+'\tPPM')
+                print('Fan PWM duty cycle:\t'+'{0:.2f}'.format(self.get_read_value('FAN_PWM_CURRENT_DUTY_CYCLE')/2.55)+'\t%')
+
+                print('')
+                print('Spartan-6 QSFP present:\t\t'+str(self.get_read_value('SPARTAN_QSFP_PRESENT')))
                 if ( self.get_read_value('SPARTAN_QSFP_PRESENT') == 1 ):
                         print('\tLOS:\t\t'+str(hex(self.get_read_value('SPARTAN_QSFP_LOS'))))
                         print('\tTX FAULT:\t'+str(hex(self.get_read_value('SPARTAN_QSFP_TX_FAULT'))))                        

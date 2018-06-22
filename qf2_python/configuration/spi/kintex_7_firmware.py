@@ -139,14 +139,14 @@ class interface():
 
         print 'Updating file table'
         for i in range(0, len(table) / 256):
-            self.__target.page_program(table[i * 256 : (i+1) * 256], i * 256 + KINTEX_IMAGE_TABLE_ADDRESS)
+            self.__target.page_program(table[i * 256 : (i+1) * 256], i * 256 + KINTEX_IMAGE_TABLE_ADDRESS, True)
 
         # Verify
-        pd = self.__target.read_data(KINTEX_IMAGE_TABLE_ADDRESS, len(table))
-        for i in range(0, len(pd)):
-            if ( table[i] != pd[i] ):
-                print
-                raise SPI_Base_Exception('Image table update byte', str(i), 'failed')
+        #pd = self.__target.read_data(KINTEX_IMAGE_TABLE_ADDRESS, len(table))
+        #for i in range(0, len(pd)):
+        #    if ( table[i] != pd[i] ):
+        #        print
+        #        raise SPI_Base_Exception('Image table update byte', str(i), 'failed')
 
     def add_image(self, name):
         
