@@ -18,7 +18,7 @@ class cfg(mycfg.base):
 
         __write_bytes = 63
         __network_bytes = 22
-        __read_bytes = 109*(23*3)
+        __read_bytes = 109+(23*3)
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
@@ -1507,7 +1507,8 @@ class interface(cfg):
 
                 s = '+3.3V_BOOT:\t\t' + '{0:.3f}'.format(boot_3p3v) + '\tV\t' + '{0:.3f}'.format(z[8] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[9] / 0.01)+'\tW'
                 if ( (boot_3p3v > (3.3 * 1.03)) or (boot_3p3v < (3.3 * 0.97)) ):
-                        print('!!!!! +3.3V_BOOT:\t\t'+str(boot_3p3v)+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
+                        s = '!!!!! ' + s
+                print (s)
 
                 s = '+1.2V_BOOT:\t\t' + '{0:.3f}'.format(boot_1p2v) + '\tV\t' + '{0:.3f}'.format(z[16] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[17] / 0.01) + '\tW'
                 if ( (boot_1p2v > (1.2 * 1.03)) or (boot_1p2v < (1.2 * 0.97)) ):
