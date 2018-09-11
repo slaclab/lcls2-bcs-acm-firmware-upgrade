@@ -2,6 +2,7 @@
 
 __all__ = [
     'scripts',
+    'tests',
     'configuration',
     'identifier',
     'BMB7_r1',
