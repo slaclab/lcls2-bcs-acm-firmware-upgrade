@@ -274,7 +274,7 @@ class base:
         def import_network_data(self):
 
                 x = self.get_bytes()
-                
+
                 read_block = x[0:self.__READ_LENGTH]
                 write_block = x[self.__READ_LENGTH:self.__WRITE_LENGTH+self.__READ_LENGTH]
                 network_block = x[self.__READ_LENGTH+self.__WRITE_LENGTH:]
