@@ -1641,7 +1641,7 @@ class interface(cfg):
 
                 # Wait two seconds for board to enter reset phase
                 time.sleep(2)
-                
+
                 # Loop wait for reboot
                 print('Waiting for board to reconnect...')
                 x = bytearray([0x0])
@@ -1678,7 +1678,7 @@ class interface(cfg):
 
                 # Wait two seconds for board to enter reset phase
                 time.sleep(2)
-                
+
                 # Loop wait for reboot
                 print('Waiting for board to reconnect...')
                 x = bytearray([0x0])

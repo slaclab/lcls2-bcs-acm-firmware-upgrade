@@ -17,12 +17,14 @@ class cfg(mycfg.base):
                                     self.__read_cfg)
 
         __write_bytes = 24
-        __network_bytes = 22
+        __network_bytes = 23
         __read_bytes = 97
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
-
+                
+                'NETWORK_INTERFACE' : [128+48, 8, mycfg.base.NETWORK_INTERFACE(0)],
+                
                 'IPV4_MULTICAST_MAC' : [128, 48, mycfg.base.IPV4_MAC(0)],
                 'IPV4_MULTICAST_IP' : [96, 32, mycfg.base.IPV4_IP(0)],
                 'IPV4_MULTICAST_PORT' : [80, 16, mycfg.base.IPV4_PORT(0)],
@@ -115,7 +117,7 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-                raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
+                #raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
         def i2c_controller_read(self, chain, address, register, data_16b=False, register_16b=False):
                 
@@ -264,6 +266,10 @@ class interface(cfg):
                 # TODO: Check sense resistor values
 
                 data = self.get_bytes()
+
+                self.import_network_data()
+                if ( self.get_write_value('MONITORING_ENABLE') == 0 ):
+                        raise Exception('Monitoring is currently disabled - data unavailable (must set MONITORING_ENABLE=1).')                
 
                 fan_duty_cycle = float(data[89])/2.55
                 fan_speed = (int(data[73]) << 8) + int(data[72])

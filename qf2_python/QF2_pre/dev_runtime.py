@@ -18,7 +18,7 @@ class cfg(mycfg.base):
 
         __write_bytes = 63
         __network_bytes = 22
-        __read_bytes = 109*(23*3)
+        __read_bytes = 117+(23*3)
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
@@ -72,6 +72,9 @@ class cfg(mycfg.base):
                                         
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
+
+                'SI57X_B_COUNT' : [608+(106*8), 32, int()],
+                'SI57X_A_COUNT' : [608+(102*8), 32, int()],
 
                 'MDIO_EXTENDED_STATUS' : [608+(100*8), 16, int()],
                 'MDIO_BASIC_STATUS' : [608+(98*8), 16, int()],
@@ -851,7 +854,27 @@ class interface(cfg):
 
                 return result
 
-        def si57X_b_get(self):
+        def si57X_a_is_enabled(self):
+                self.import_network_data()
+                if ( self.get_write_value('SI57X_A_OE') == 1 ):
+                        return True
+                return False
+
+        def si57X_b_is_enabled(self):
+                self.import_network_data()
+                if ( self.get_write_value('SI57X_B_OE') == 1 ):
+                        return True
+                return False
+        
+        def si57X_a_frequency(self):
+                self.import_network_data()
+                return 50000000.0 * float(2**24) / float(self.get_read_value('SI57X_A_COUNT'))
+
+        def si57X_b_frequency(self):
+                self.import_network_data()
+                return 50000000.0 * float(2**24) / float(self.get_read_value('SI57X_B_COUNT'))
+
+        def si57X_b_get_defaults(self):
 
                 # Put SI57X_B controller in reset, with update low
                 self.set_byte(10, 0x1, 0x5)
@@ -861,7 +884,7 @@ class interface(cfg):
 
                 # Wait until done or error
                 while True:
-                        x = self.get_byte(16)
+                        x = self.get_byte(155)
                         if x == 1:
                                 break
                         if x == 2:
@@ -871,16 +894,61 @@ class interface(cfg):
                 r = self.get_bytes()
 
                 return {
-                        'RFREQ' : (int(r[23]) << 32 |
-                                   int(r[22]) << 24 |
-                                   int(r[21]) << 16 |
-                                   int(r[20]) << 8 |
-                                   int(r[19])),
-                        'N1' : int(r[18]),
-                        'HSDIV' : int(r[17])
+                        'RFREQ' : (int(r[162]) << 32 |
+                                   int(r[161]) << 24 |
+                                   int(r[160]) << 16 |
+                                   int(r[159]) << 8 |
+                                   int(r[158])),
+                        'N1' : int(r[157]),
+                        'HSDIV' : int(r[156])
                         }
 
-        def si57X_a_get(self):
+
+        def si57X_b_set(self, a):
+                # Put SI57X_B controller in reset, with update high
+                self.set_byte(10, 0x5, 0x5)
+                
+                # Load new settings
+                self.set_byte(11, a['HSDIV'], 0xFF)
+                self.set_byte(12, a['N1'], 0xFF)
+                self.set_byte(13, a['RFREQ'] & 0xFF, 0xFF)
+                self.set_byte(14, (a['RFREQ'] >> 8) & 0xFF, 0xFF)
+                self.set_byte(15, (a['RFREQ'] >> 16) & 0xFF, 0xFF)
+                self.set_byte(16, (a['RFREQ'] >> 24) & 0xFF, 0xFF)
+                self.set_byte(17, (a['RFREQ'] >> 32) & 0xFF, 0xFF)
+
+                # Release controller from reset
+                self.set_byte(10, 0x0, 0x1)
+
+                # Wait until done or error
+                while True:
+                        x = self.get_byte(155)
+                        if x == 1:
+                                break
+                        if x == 2:
+                                raise Exception('SI57X_A I2C error')
+
+                # Verify the values
+                # Read the data
+                r = self.get_bytes()
+                x = {
+                        'RFREQ' : (int(r[162]) << 32 |
+                                   int(r[161]) << 24 |
+                                   int(r[160]) << 16 |
+                                   int(r[159]) << 8 |
+                                   int(r[158])),
+                        'N1' : int(r[157]),
+                        'HSDIV' : int(r[156])
+                        }
+
+                if x['HSDIV'] != a['HSDIV']:
+                        raise Exception('SI57X_A frequency update failed')
+                if x['N1'] != a['N1']:
+                        raise Exception('SI57X_A frequency update failed')
+                if x['RFREQ'] != a['RFREQ']:
+                        raise Exception('SI57X_A frequency update failed')
+        
+        def si57X_a_get_defaults(self):
 
                 # Put SI57X_A controller in reset, with update low
                 self.set_byte(2, 0x1, 0x5)
@@ -890,7 +958,7 @@ class interface(cfg):
 
                 # Wait until done or error
                 while True:
-                        x = self.get_byte(8)
+                        x = self.get_byte(147)
                         if x == 1:
                                 break
                         if x == 2:
@@ -900,13 +968,13 @@ class interface(cfg):
                 r = self.get_bytes()
 
                 return {
-                        'RFREQ' : (int(r[15]) << 32 |
-                                   int(r[14]) << 24 |
-                                   int(r[13]) << 16 |
-                                   int(r[12]) << 8 |
-                                   int(r[11])),
-                        'N1' : int(r[10]),
-                        'HSDIV' : int(r[9])
+                        'RFREQ' : (int(r[154]) << 32 |
+                                   int(r[153]) << 24 |
+                                   int(r[152]) << 16 |
+                                   int(r[151]) << 8 |
+                                   int(r[150])),
+                        'N1' : int(r[149]),
+                        'HSDIV' : int(r[148])
                         }
 
         def si57X_a_set(self, a):
@@ -927,7 +995,7 @@ class interface(cfg):
 
                 # Wait until done or error
                 while True:
-                        x = self.get_byte(8)
+                        x = self.get_byte(147)
                         if x == 1:
                                 break
                         if x == 2:
@@ -937,13 +1005,13 @@ class interface(cfg):
                 # Read the data
                 r = self.get_bytes()
                 x = {
-                        'RFREQ' : (int(r[15]) << 32 |
-                                   int(r[14]) << 24 |
-                                   int(r[13]) << 16 |
-                                   int(r[12]) << 8 |
-                                   int(r[11])),
-                        'N1' : int(r[10]),
-                        'HSDIV' : int(r[9])
+                        'RFREQ' : (int(r[154]) << 32 |
+                                   int(r[153]) << 24 |
+                                   int(r[152]) << 16 |
+                                   int(r[151]) << 8 |
+                                   int(r[150])),
+                        'N1' : int(r[149]),
+                        'HSDIV' : int(r[148])
                         }
 
                 if x['HSDIV'] != a['HSDIV']:
@@ -1375,6 +1443,9 @@ class interface(cfg):
                 # Get the monitoring data
                 self.import_network_data()
 
+                if ( self.get_write_value('MONITORING_ENABLE') == 0 ):
+                        raise Exception('Monitoring is currently disabled - data unavailable (must set MONITORING_ENABLE=1).')
+                        
                 #headphone_jack_sense = self.get_read_value('__JACK_SENSE')
                 #is_qf2_pre = ((int(data[118] >> 1) & 1) ^ 1)
                 #fan_tach = int(data[118] >> 2) & 1
@@ -1383,7 +1454,7 @@ class interface(cfg):
                 #i2c_done_latch = int(data[115] >> 6) & 1
                 #board_ot_shutdown_latch = int(data[115] >> 5) & 1
                 #kintex_ot_shutdown_latch = int(data[115] >> 4) & 1
-                
+
                 print
                 print('Is QF2-pre:\t\t\t'+str(self.get_read_value('__N_IS_QF2_PRE') ^ 1))
                 print('Headphone jack present:\t\t'+str(self.get_read_value('__JACK_SENSE')))
@@ -1507,7 +1578,8 @@ class interface(cfg):
 
                 s = '+3.3V_BOOT:\t\t' + '{0:.3f}'.format(boot_3p3v) + '\tV\t' + '{0:.3f}'.format(z[8] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[9] / 0.01)+'\tW'
                 if ( (boot_3p3v > (3.3 * 1.03)) or (boot_3p3v < (3.3 * 0.97)) ):
-                        print('!!!!! +3.3V_BOOT:\t\t'+str(boot_3p3v)+'V, '+str(z[8] / 0.01)+'A, '+str(z[9] / 0.01)+'W')
+                        s = '!!!!! ' + s
+                print (s)
 
                 s = '+1.2V_BOOT:\t\t' + '{0:.3f}'.format(boot_1p2v) + '\tV\t' + '{0:.3f}'.format(z[16] / 0.01) + '\tA\t' + '{0:.3f}'.format(z[17] / 0.01) + '\tW'
                 if ( (boot_1p2v > (1.2 * 1.03)) or (boot_1p2v < (1.2 * 0.97)) ):

@@ -183,6 +183,36 @@ class base:
                 def __str__(self):
                         return str(self.__val)
 
+        class NETWORK_INTERFACE(object):
+
+                def __init__(self, val):
+                        if type(val) == str:
+                                val = int(val)
+                        if type(val) == bytearray:
+                                if len(val) != 1:
+                                        raise Exception('Value is too large')
+                                x = int(val[0])
+                                val = x
+                        if (type(val) == int) or (type(val) == long):
+                                if val > 4:
+                                        raise Exception('Value is too large')
+                                self.__val = val
+                                return
+                        self.__val = val.__val
+
+                def __int__(self):
+                        return self.__val
+
+                def __get__(self, objtype=None):
+                        return self.__val
+
+                def __set__(self, val):
+                        return
+        
+                # Pretty output
+                def __str__(self):
+                        return str(self.__val)
+                
         class IPV4_MAC(object):
 
                 def __init__(self, val):
