@@ -1646,7 +1646,7 @@ class interface(cfg):
                 print('VADJ SUPPLY:\t\t'+'{0:.3f}'.format(z[6] / 0.01)+'\tA\t'+'{0:.3f}'.format(z[7] / 0.01)+'\tW')
 
                 print('')
-                print('LTM4628 temperature:\t'+'{0:.2f}'.format(150.0 - ((x[4] - 0.2) / 0.0023))+'\tC')
+                print('LTM4628 temperature:\t'+'{0:.2f}'.format(25.0 - ((x[4] - 0.5) / 0.0023))+'\tC')
                 print('Board temperature:\t'+'{0:.2f}'.format(float(self.get_read_value('BOARD_TEMPERATURE') >> 4) * 0.0625)+'\tC')
                 print('Kintex-7 temperature:\t'+'{0:.2f}'.format(float(self.get_read_value('KINTEX_TEMPERATURE') >> 4) * 0.0625)+'\tC')
                 print('')

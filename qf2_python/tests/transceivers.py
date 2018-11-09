@@ -9,6 +9,7 @@ parser.add_argument('-f', '--freq', default='125', help='Reference frequency in 
 parser.add_argument('-q', '--qpll', action="store_true", default=False, help='Use QPLL')
 parser.add_argument('-p', '--prbs', action="store_true", default=False, help='PRBS-7')
 parser.add_argument('-r', '--rate', help='Line rate in Gb/s')
+parser.add_argument('-s', '--ref_clk_src', default='125', help='Reference clock source (SI57X_A/SI57X_B/125/EXT)')
 parser.add_argument('-e', '--use_rx_buffer', action="store_true", default=False, help='Use RX elastic buffer')
 parser.add_argument('-d', '--duration', default='0', help='Duration of test in seconds')
 args = parser.parse_args()
@@ -590,6 +591,18 @@ else:
 
 # Get an interface
 x = kintex_interface.interface(args.target)
+
+# Set ref clk routing settings to match selected clock source
+if args.ref_clk_src == "SI57X_A":
+    x.gt_clock_select(0x19) # Local 0 for quad 0, north 0 for quad 1
+elif args.ref_clk_src == "SI57X_B":
+    x.gt_clock_select(0x22) # Local 1 for quad 0, north 1 for quad 1
+elif args.ref_clk_src == "125":
+    x.gt_clock_select(0x0D) # Local 0 for quad 1, south 0 for quad 0
+elif args.ref_clk_src == "EXT":
+    x.gt_clock_select(0x16) # Local 1 for quad 1, south 1 for quad 0 (untested)
+else:
+    raise Exception('Invalid setting \''+str(args.ref_clk_source)+'\' for args.ref_clk_source')
 
 # Turn on the transceivers
 x.gt_tx_power_up()

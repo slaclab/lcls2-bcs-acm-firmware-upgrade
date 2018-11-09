@@ -213,6 +213,10 @@ class interface():
                         self.set_byte(i + 97, ((m >> (i * 8)) & 0xFF), 0xFF)
                         self.set_byte(i + 103, (d >> (i * 8)) & 0xFF, 0xFF)
 
+        def gt_clock_select(self, value):
+                # Set ref_clk_sel pins for two quads
+                self.set_byte(67, value, 0x3F)
+                
         def gt_reset(self):
                 # Pulse reset
                 self.set_byte(68, 3, 3)
