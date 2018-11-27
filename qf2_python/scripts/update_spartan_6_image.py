@@ -14,7 +14,6 @@ parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
 parser.add_argument('-n', '--nomigrate', action="store_true", default=False, help='Don\'t migrate configuration when updating firmware')
-parser.add_argument('-l', '--lock', action="store_true", default=False, help='Lock bootloader')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 parser.add_argument('-f', '--force', action="store_true", default=False, help='Force update even if previous PROM data is unrecognized or corrupt')
@@ -29,17 +28,6 @@ if args.bit == None:
     else:
         args.bit = 'firmwares/spartan_runtime.bit'
     print('Bitfile argument was not provided, assuming default from firmwares directory ('+args.bit+')')
-
-# Check that the lock is only applied to the bootloader
-if args.lock == True:
-    if args.bootloader == False:
-        print('ERROR: Lock argument can only be used for the bootloader')
-        exit(1)
-
-# Currently disabled
-if args.lock == True:
-    print('ERROR: This feature is not yet supported')
-    exit(1)
 
 # Sector offset is +32 for runtime image
 FIRMWARE_SECTOR_OFFSET = 32
@@ -225,7 +213,6 @@ if args.nomigrate == False:
     print('')
     if ( (prev_hash != 0) and (prev_prom_cfg == new_prom_cfg) ):
         print('No settings update required - data is identical')
-
     else:
         print('Updating PROM settings...')
     

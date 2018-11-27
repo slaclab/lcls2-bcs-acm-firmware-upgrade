@@ -23,7 +23,6 @@ class Generic():
 # Instructions
 class SL25FLL():
     RDID = 0x9F
-    #SR1NV?
     RDSR1 = 0x05
     RDSR2 = 0x07
     RDCR1 = 0x35
@@ -32,7 +31,6 @@ class SL25FLL():
 
     WRAR = 0x71
     WREN = 0x06
-    #WRENV = 0x50
     EN4BYTEADDR = 0xB7
     EX4BYTEADDR = 0xE9
     FAST_READ = 0x0B
@@ -44,20 +42,79 @@ class SL25FLL():
     def __init__(self, target, verbose=False):
         self.__target = target
         self.__verbose = verbose
-        self.__dummy_cycles = 8
- 
-        # Set the volatile dummy cycles register and disable wrapping
-        self.write_register(self.WREN)
-        self.write_register(self.WRAR, bytearray([0x80, 0x00, 0x04, 0x10 | self.__dummy_cycles]))
-        #cr3 = self.read_register(self.RDCR3, 1)[0]
 
-        # Set 4 byte addressing mode
+        # Check if PROM is locked
+        self.__locked = (self.read_register(self.RDSR1, 1)[0] >> 7)
+
+        if (self.__locked == 0) and (self.read_register(self.RDCR3, 1)[0] != 0x11):
+           
+            # Changed dummy cycles to 1 to avoid conflict with firmware settings
+            # If PROM is locked, this must match with firmware as the core
+            # in the Spartan won't be able to change the setting on the fly.
+            #self.__dummy_cycles = 1
+
+            if verbose==True:
+                print('Setting CR3NV to 0x11')
+
+            # Update CR3NV to 0x11
+            self.write_register(self.WREN)
+            self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x04, 0x11]))
+
+            while self.read_register(self.RDSR1, 1)[0] & 0x1:
+                continue
+
+            if self.read_register(self.RDCR3, 1)[0] != 0x11:
+                raise SPI_Base_Exception('Could not set CR3NV to 0x11.')
+
+        # Read CR3 register and assign dummy cycle value
+        self.__dummy_cycles = self.read_register(self.RDCR3, 1)[0] & 0xF
+
+        # Go to 4 byte address mode
         self.write_register(self.EN4BYTEADDR)
 
     def __del__(self):
         # Ensure we return to 3-byte address mode in case someone is doing e.g. multiboot
         # because the Xilinx FPGAs are too stupid to not reinitialise the PROM before use
         self.write_register(self.EX4BYTEADDR)
+
+    def lock(self):
+
+        # Make sure CMP is == 0 (i.e. CR1NV is in default state of all zeros)
+        self.write_register(self.WREN)
+        self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x00, 0x02, 0x00]))
+
+        while self.read_register(self.RDSR1, 1)[0] & 0x1:
+            continue
+
+        if self.read_register(self.RDCR1, 1)[0] != 0:
+            raise SPI_Base_Exception('Could not set CR1NV to 0x00. Have you put a jumper on the write protect header?')
+
+        # Set the protection bit (volatile - experimental!)
+        # TBPROT=1, BP=0110, == 32 lowest sectors (Spartan bootloader + cfg + a few extra sectors for future use)
+        self.write_register(self.WREN)
+        self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x00, 0x00, 0xD8]))
+
+        while self.read_register(self.RDSR1, 1)[0] & 0x1:
+            continue
+
+        if self.read_register(self.RDSR1, 1)[0] != 0xD8:
+            raise SPI_Base_Exception('Could not set SR1NV to 0xD8. Have you put a jumper on the write protect header?')
+
+        self.__locked = 1
+
+    def unlock(self):
+
+        # Release the lock - clear SR1NV
+        self.write_register(self.WREN)
+        self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x00, 0x00, 0x00]))
+
+        while self.read_register(self.RDSR1, 1)[0] & 0x1:
+            continue
+
+        if self.read_register(self.RDSR1, 1)[0] != 0x00:
+            raise SPI_Base_Exception('Could not set SR1NV to 0x00. Have you put a jumper on the write protect header?')
+
+        self.__locked = 0
 
     def write_register(self, instruction, value = bytearray([])):
         # MSB first
@@ -104,6 +161,8 @@ class SL25FLL():
         return result
 
     def chip_erase(self, address):
+        #if self.__locked == 1:
+        #    raise SPI_Base_Exception('PROM is currently locked')
 
         # Write enable
         self.write_register(self.WREN)
@@ -111,9 +170,12 @@ class SL25FLL():
 
         # Read the status register and wait for completion
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
+            print self.read_register(self.RDSR1, 1)[0]
             continue
 
     def sector_erase(self, address):
+        #if self.__locked == 1:
+        #    raise SPI_Base_Exception('PROM is currently locked')
 
         # Write enable
         self.write_register(self.WREN)
@@ -137,6 +199,9 @@ class SL25FLL():
             continue
 
     def page_program(self, data, address, verify=False):
+        #if self.__locked == 1:
+        #    raise SPI_Base_Exception('PROM is currently locked')
+
         if len(data) != 256:
             raise SPI_Base_Exception('Data is not size of page')
 
@@ -383,6 +448,12 @@ class interface():
 
     def prom_size(self):
         return self.__prom_size
+
+    def lock(self):
+        return self.__interface.lock()
+
+    def unlock(self):
+        return self.__interface.unlock()
 
     def write_register(self, instruction, value = bytearray([])):
         return self.__interface.write_register(instruction, value)
