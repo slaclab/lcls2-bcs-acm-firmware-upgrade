@@ -1,14 +1,16 @@
 #!/bin/env python
 
-import qf2_pre_spartan_bootloader as board
-import argparse, time, datetime
+import argparse, time, ctypes
+import qf2_python.identifier
+#import argparse, time, datetime
 
-parser = argparse.ArgumentParser(description='Display QF2-pre monitors', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Test TAS2505 audio driver', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 # Start the class
-x = board.interface(args.target)
+x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 
 print 'Testing TAS2505 audio amplifier...'
 x.tas2505_enable()
@@ -53,7 +55,7 @@ x.tas2505_write(0x1A, 0x82)
 x.tas2505_write(0x34, 0x10)
 
 # Codec interface control, word length = 16b, BCLK & WCLK inputs, LJ mode
-x.tas2505_write(0x1B, 0xC0) #
+x.tas2505_write(0x1B, 0xC0)
 # Data slot offset 00
 x.tas2505_write(0x1C, 0)
 # DAC instruction programming PRB #2 for mono routing. Type interpolation (x8) & 3 programmable biquads
@@ -75,7 +77,7 @@ x.tas2505_write(0x09, 0x20)
 # Unmute HP with 0dB gain
 x.tas2505_write(0x10, 0x00)
 # SPK attn gain set to not blow the speaker up
-x.tas2505_write(0x2E, 0xFF) #0x30)
+x.tas2505_write(0x2E, 0x40)
 # SPK driver gain = 6dB
 x.tas2505_write(0x30, 0x10)
 # SPK powered up
@@ -91,13 +93,9 @@ x.tas2505_write(0x40, 0x04)
 
 # Wait for the integrator to stabilise
 time.sleep(2)
-print 'Current BCLK frequency estimate:',str(x.tas2505_debug())+'MHz'
+print 'Current BCLK frequency estimate:',str(x.tas2505_osc_frequency())+'MHz'
 time.sleep(0.1)
 
-
-
-
-
-
-
+# Drive the audio buffer
+x.tas2505_audio_test()
 

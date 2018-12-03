@@ -1,7 +1,8 @@
 #!/bin/env python
 
 from socket import *
-import string, time, sys, cfg as mycfg
+from math import *
+import string, time, sys, cfg as mycfg, ctypes
 from datetime import datetime, timedelta
 
 class cfg(mycfg.base):
@@ -42,7 +43,7 @@ class cfg(mycfg.base):
                 'FAN_PWM_MINIMUM_TEMPERATURE' : [16, 8,  int(0x28)],
                 'FAN_PWM_MINIMUM_DUTY_CYCLE' : [8, 8,  int(0x4d)],
 
-                '__N_TAS_2505_RESET' : [7, 1, int(0)],
+                '__N_TAS2505_RESET' : [7, 1, int(0)],
                 'MONITORING_ENABLE' : [6, 1, int(0)],
                 'FLASH_READER_DISABLE' : [5, 1, int(0)],
                 'AUTOBOOT_TO_RUNTIME' : [4, 1, int(0)],
@@ -71,7 +72,7 @@ class cfg(mycfg.base):
                 '__MDIO_EXTENDED_STATUS' : [87*8, 16, int()],
                 '__MDIO_BASIC_STATUS' : [85*8, 16, int()],
                 
-                '__TAS_COUNT' : [80*8, 32, int()],
+                '__TAS2505_COUNT' : [80*8, 32, int()],
                 
                 'CONFIGURATION_DEFAULT' : [79*8, 1, int()],
                 
@@ -102,6 +103,7 @@ class interface(cfg):
                 self.__host = host
                 self.__port = 50001
                 self.__i2c_port = 50002
+                self.__audio_port = 50004
                 self.BOARD_UID = str()
 
                 # Interface socket
@@ -114,10 +116,114 @@ class interface(cfg):
                 self.I2CSock.bind(("0.0.0.0", 0))
                 self.I2CSock.settimeout(2)
 
+                # Audio socket
+                self.AudioSock = socket(AF_INET,SOCK_DGRAM)
+                self.AudioSock.bind(("0.0.0.0", 0))
+                self.AudioSock.settimeout(2)
+
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
                 #raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
+
+        # Speaker development code
+        def tas2505_enable(self):
+                self.set_byte(0, 0x80, 0x80)
+
+        def tas2505_disable(self):
+                self.set_byte(0, 0x0, 0x80)
+
+        def tas2505_write(self, address, value):
+                # Setting the chain to 0 selects the audio amplifier
+                self.i2c_controller_write(0, 0x18, address, value)
+
+        def tas2505_osc_frequency(self):
+                self.import_network_data()
+                # Value in MHz
+                return float(self.get_read_value('__TAS2505_COUNT')) / 2000000.0
+
+        def tas2505_audio_test(self):
+
+
+
+                print sin(2.0 * pi)
+
+                
+                exit()
+                
+                        
+                
+                # Triangle wave at concert A4 (~440Hz)
+                coeff_table = [0, 2057, 4106, 6139, 8148, 10125, 12062, 13951, 15785, 17557, 19259, 20886, 22430, 23886, 25247, 26509, 27666, 28713, 29648, 30465, 31163, 31737, 32186, 32508, 32702, 32767, 32702, 32508, 32186, 31737, 31163, 30465, 29648, 28713, 27666, 26509, 25247, 23886, 22430, 20886, 19259, 17557, 15785, 13951, 12062, 10125, 8148, 6139, 4106, 2057, 0, -2057, -4106, -6139, -8148, -10125, -12062, -13951, -15785, -17557, -19259, -20886, -22430, -23886, -25247, -26509, -27666, -28713, -29648, -30465, -31163, -31737, -32186, -32508, -32702, -32767, -32702, -32508, -32186, -31737, -31163, -30465, -29648, -28713, -27666, -26509, -25247, -23886, -22430, -20886, -19259, -17557, -15785, -13951, -12062, -10125, -8148, -6139, -4106, -2057]
+
+                # 500-sample audio block
+                d = bytearray(1000)
+
+                # Copy coefficients
+                for j in range(0, 5):
+                        for i in range(0, 100):
+                                d[1+i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value >> 8
+                                d[i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value & 0xFF
+
+                for i in range(0, 500):
+                        print ctypes.c_short((int(d[i*2]) << 8) + int(d[i*2+1])).value
+                        
+                        #d.reverse()
+                
+                # Send the audio
+                audio_used = 0
+                while True:
+
+                        # Hack to keep the buffer roughly full
+                        if (audio_used > 200):
+                                time.sleep(0.04)
+                                audio_used = audio_used - 1
+                                
+                        self.AudioSock.sendto(str(d),(self.__host, self.__audio_port))
+                        audio_used = bytearray(self.AudioSock.recv(1000))[0]
+                        print audio_used
+                        if not audio_used:
+                                print('No data received')
+
+        def write_at24c32d_prom(self, prom_address, word_address, value):
+
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        self.i2c_controller_write(1, 0x50, word_address, value, False, True)
+                else:
+                        self.i2c_controller_write(4, 0x50, word_address, value, False, True)
+
+                time.sleep(0.005)
+                
+                return
+
+        def read_at24c32d_prom(self, word_address, bottom_site):
+
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        return self.i2c_controller_read(1, 0x50, word_address, False, True)
+                else:
+                        return self.i2c_controller_read(4, 0x50, word_address, False, True)
+
+        def write_m24c02_prom(self, word_address, value, bottom_site):
+
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        self.i2c_controller_write(1, 0x50, word_address, value)
+                else:
+                        self.i2c_controller_write(4, 0x50, word_address, value)
+
+                time.sleep(0.005)
+                
+                return
+
+        def read_m24c02_prom(self, word_address, bottom_site):
+
+                # GA is always zero now, so address is always 0x50
+                if bottom_site == True:
+                        return self.i2c_controller_read(1, 0x50, word_address)
+                else:
+                        return self.i2c_controller_read(4, 0x50, word_address)
 
         def i2c_controller_read(self, chain, address, register, data_16b=False, register_16b=False):
                 
@@ -142,9 +248,6 @@ class interface(cfg):
                 d[4] = (register >> 8) & 0xFF
                 d[5] = 0
                 d[6] = 0
-
-                #for i in d:
-                #        print hex(i)
 
                 # Send command
                 read_bytes = str()
@@ -201,7 +304,7 @@ class interface(cfg):
 
                 while True:
                         try:
-                                self.I2CSock.sendto(str(d),(self.host, self.i2c_port))
+                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
                                 read_bytes = self.I2CSock.recv(1400)
                                 if not read_bytes:
                                         print('No data received')
