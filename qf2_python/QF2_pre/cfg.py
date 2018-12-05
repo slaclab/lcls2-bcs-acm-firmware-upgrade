@@ -1,5 +1,7 @@
 #!/bin/env python
 
+import sys
+
 class QSFP_INFO:
         IDENTIFIER = {
                 1 : 'GBIC',
@@ -128,11 +130,18 @@ class base:
                                 for i in range(0, 4):
                                         x = x | (int(val[i]) << (i*8))
                                 val = x
-                        if (type(val) == int) or (type(val) == long):
-                                if val > (2**32)-1:
-                                        raise Exception('Value is too large')
-                                self.__val = val
-                                return
+                        if sys.version_info < (3,):
+                                if (type(val) == int) or (type(val) == long):
+                                        if val > (2**32)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
+                        else:
+                                if type(val) == int:
+                                        if val > (2**32)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
                         self.__val = val.__val
                         
                 def __int__(self):
@@ -163,11 +172,18 @@ class base:
                                 for i in range(0, 2):
                                         x = x | (int(val[i]) << (i*8))
                                 val = x
-                        if (type(val) == int) or (type(val) == long):
-                                if val > (2**16)-1:
-                                        raise Exception('Value is too large')
-                                self.__val = val
-                                return
+                        if sys.version_info < (3,):
+                                if (type(val) == int) or (type(val) == long):
+                                        if val > (2**16)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
+                        else:
+                                if type(val) == int:
+                                        if val > (2**16)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
                         self.__val = val.__val
 
                 def __int__(self):
@@ -193,11 +209,18 @@ class base:
                                         raise Exception('Value is too large')
                                 x = int(val[0])
                                 val = x
-                        if (type(val) == int) or (type(val) == long):
-                                if val > 4:
-                                        raise Exception('Value is too large')
-                                self.__val = val
-                                return
+                        if sys.version_info < (3,):
+                                if (type(val) == int) or (type(val) == long):
+                                        if val > 4:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
+                        else:
+                                if type(val) == int:
+                                        if val > 4:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
                         self.__val = val.__val
 
                 def __int__(self):
@@ -231,11 +254,18 @@ class base:
                                 for i in range(0, 6):
                                         x = x | (int(val[i]) << (i*8))
                                 val = x
-                        if (type(val) == int) or (type(val) == long):
-                                if val > (2**48)-1:
-                                        raise Exception('Value is too large')
-                                self.__val = val
-                                return
+                        if sys.version_info < (3,):
+                                if (type(val) == int) or (type(val) == long):
+                                        if val > (2**48)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
+                        else:
+                                if type(val) == int:
+                                        if val > (2**48)-1:
+                                                raise Exception('Value is too large')
+                                        self.__val = val
+                                        return
                         self.__val = val.__val
 
                 def __int__(self):
@@ -344,22 +374,35 @@ class base:
 
         def set_write_value(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if (type(self.__write_cfg[key][2]) == int) or (type(self.__write_cfg[key][2]) == long):
-                        if type(value) == int:
-                                self.__write_cfg[key][2] = value
-                        elif type(value) == long:
-                                self.__write_cfg[key][2] = value
-                        else:
-                                self.__write_cfg[key][2] = int(value, 0)
-                        return
+                if sys.version_info < (3,):
+                        if (type(self.__write_cfg[key][2]) == int) or (type(self.__write_cfg[key][2]) == long):
+                                if type(value) == int:
+                                        self.__write_cfg[key][2] = value
+                                elif type(value) == long:
+                                        self.__write_cfg[key][2] = value
+                                else:
+                                        self.__write_cfg[key][2] = int(value, 0)
+                                return
+                else:
+                        if type(self.__write_cfg[key][2]) == int:
+                                if type(value) == int:
+                                        self.__write_cfg[key][2] = value
+                                else:
+                                        self.__write_cfg[key][2] = int(value, 0)
+                                return
                         
                 self.__write_cfg[key][2] = type(self.__write_cfg[key][2])(value)
                 
         def set_network_value(self, key, value):
                 # Just pass the underlying integer if the default is integer
-                if (type(self.__network_cfg[key][2]) == int) or (type(self.__network_cfg[key][2]) == long):
-                        self.__network_cfg[key][2] = int(value, 0)
-                        return
+                if sys.version_info < (3,):
+                        if (type(self.__network_cfg[key][2]) == int) or (type(self.__network_cfg[key][2]) == long):
+                                self.__network_cfg[key][2] = int(value, 0)
+                                return
+                else:
+                        if type(self.__network_cfg[key][2]) == int:
+                                self.__network_cfg[key][2] = int(value, 0)
+                                return
 
                 self.__network_cfg[key][2] = type(self.__network_cfg[key][2])(value)
 
@@ -441,14 +484,19 @@ class base:
                 myi = (myi >> (start_point & 0x7)) & mask
 
                 # Convert the integer into a bytearray
-                num_bytes = (bit_length / 8)
+                num_bytes = int(bit_length / 8)
                 if (bit_length & 0x7) != 0:
                         num_bytes += 1
 
                 # Just pass the underlying integer if the default is integer
-                if (type(target[key][2]) == int) or (type(target[key][2]) == long):
-                        target[key][2] = myi
-                        return
+                if sys.version_info < (3,):
+                        if (type(target[key][2]) == int) or (type(target[key][2]) == long):
+                                target[key][2] = myi
+                                return
+                else:
+                        if type(target[key][2]) == int:
+                                target[key][2] = myi
+                                return
 
                 # Otherwise pass a block
                 for i in range(0, num_bytes):

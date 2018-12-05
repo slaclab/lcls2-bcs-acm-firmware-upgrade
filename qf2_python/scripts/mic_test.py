@@ -4,7 +4,7 @@ import argparse, time, ctypes
 import qf2_python.identifier
 #import argparse, time, datetime
 
-parser = argparse.ArgumentParser(description='Test TAS2505 audio driver', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Test microphone', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
@@ -12,7 +12,7 @@ args = parser.parse_args()
 # Start the class
 x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 
-print('Testing TAS2505 audio amplifier...')
+print('Initializing audio subsystem...')
 x.tas2505_enable()
 
 # Assert software reset
@@ -94,8 +94,9 @@ x.tas2505_write(0x40, 0x04)
 
 # Wait for the integrator to stabilise
 time.sleep(2)
-print('Current BCLK frequency estimate: '+str(x.tas2505_osc_frequency())+'MHz')
+print('Current reference frequency estimate: '+str(x.tas2505_osc_frequency())+'MHz')
 time.sleep(0.1)
 
-# Drive the audio buffer
-x.tas2505_audio_test('/home/jaj99/git-projects/qf2-pre/users/qf2_python/scripts/test_sample.wav')
+# Run the microphone test
+print('Testing microphone...')
+x.mic_test()

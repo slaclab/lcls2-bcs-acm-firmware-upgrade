@@ -1,8 +1,12 @@
 #!/bin/env python
 
+from numpy import int32, int64, array
+import wave, pyaudio
+
+from . import cfg as mycfg
 from socket import *
 from math import *
-import string, time, sys, cfg as mycfg, ctypes
+import string, time, sys, ctypes
 from datetime import datetime, timedelta
 
 class cfg(mycfg.base):
@@ -80,6 +84,8 @@ class cfg(mycfg.base):
                 '__FLASH_READER_ERROR' : [78*8+1, 1, int()],
                 '__FLASH_READER_DONE' : [78*8, 1, int()],
                 
+                '__ICAP_LAST_BOOT_DATA' : [77*8, 8, int()],
+
                 '__CONTROLLER_SYS_I2C_READ_DATA' : [75*8, 16, int()],
                 
                 'I2C_ERROR_LATCH' : [74*8+7, 1, int()],
@@ -142,48 +148,109 @@ class interface(cfg):
                 # Value in MHz
                 return float(self.get_read_value('__TAS2505_COUNT')) / 2000000.0
 
-        def tas2505_audio_test(self):
-
-
-
-                print sin(2.0 * pi)
-
+        def tas2505_audio_test(self, fname):
                 
-                exit()
-                
-                        
-                
-                # Triangle wave at concert A4 (~440Hz)
-                coeff_table = [0, 2057, 4106, 6139, 8148, 10125, 12062, 13951, 15785, 17557, 19259, 20886, 22430, 23886, 25247, 26509, 27666, 28713, 29648, 30465, 31163, 31737, 32186, 32508, 32702, 32767, 32702, 32508, 32186, 31737, 31163, 30465, 29648, 28713, 27666, 26509, 25247, 23886, 22430, 20886, 19259, 17557, 15785, 13951, 12062, 10125, 8148, 6139, 4106, 2057, 0, -2057, -4106, -6139, -8148, -10125, -12062, -13951, -15785, -17557, -19259, -20886, -22430, -23886, -25247, -26509, -27666, -28713, -29648, -30465, -31163, -31737, -32186, -32508, -32702, -32767, -32702, -32508, -32186, -31737, -31163, -30465, -29648, -28713, -27666, -26509, -25247, -23886, -22430, -20886, -19259, -17557, -15785, -13951, -12062, -10125, -8148, -6139, -4106, -2057]
+                sample = wave.open(fname)
 
+                if sample.getsampwidth() != 2:
+                        raise Exception('Audio bit depth isn\'t 16-bit')
+                if sample.getcomptype() != 'NONE':
+                        raise Exception('Audio compression isn\'t supported')
+                if sample.getframerate() != 44100:
+                        raise Exception('Audio sample rate isn\'t 44.1kHz')
+
+                # Just copy entire audio sample into memory
+                audio_data = bytearray(sample.readframes(sample.getnframes()))
+
+                #p = pyaudio.PyAudio()
+                #for x in range(p.get_device_count()):
+                #        for y in [p.get_device_info_by_index(x)]:
+                #                print '\n'.join([y['name']])
+
+                #stream = p.open(format=p.get_format_from_width(sample.getsampwidth()),
+                #                channels=sample.getnchannels(),
+                #                rate=sample.getframerate(),
+                #output=True)
+
+                #posn = 0
+                #while (posn < len(audio_data)):
+                #        stream.write(audio_data[posn:posn+1000])
+                #        posn += 1000
+
+                #stream.stop_stream()
+                #stream.close()
+
+                #p.terminate()
+
+                #exit()
+
+                # Convert to 16-bit signed. If data is stereo, pre-mix it.
+                merged_data = list()
+                if sample.getnchannels() == 2:
+                        for i in range(0, len(audio_data) / 4):
+                                left = ctypes.c_short((int(audio_data[i*4+1]) << 8) + int(audio_data[i*4])).value
+                                right = ctypes.c_short((int(audio_data[i*4+3]) << 8) + int(audio_data[i*4+2])).value
+                                merged_data.append((left + right) / 2)
+                else:
+                        for i in range(0, len(audio_data) / 2):
+                                channel = (int(audio_data[i*2]) << 8) + int(audio_data[i*2+1])
+                                merged_data.append(channel)
+
+                # Normalize the data
+                maximum = 0
+                for i in merged_data:
+                        if i < 0:
+                                if -i > maximum:
+                                        maximum = -i
+                        elif i > maximum:
+                                maximum = i
+                
+                for i in range(0, len(merged_data)):
+                        merged_data[i] = (merged_data[i] * 32767) / maximum
+
+                coeff_table = list()
+
+                # A4 (~440Hz) sine wave
+                for i in range(0, 100):
+                        coeff_table.append(int(32767.0 * sin(2.0 * pi * float(i) / 100.0)))
+                
                 # 500-sample audio block
-                d = bytearray(1000)
+                d = bytearray(len(merged_data)*2)
+                posn = 0
 
                 # Copy coefficients
-                for j in range(0, 5):
-                        for i in range(0, 100):
-                                d[1+i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value >> 8
-                                d[i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value & 0xFF
+                #for j in range(0, 5):
+                #        for i in range(0, 100):
+                #               d[1+i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value >> 8
+                #               d[i * 2 + j * 200] = ctypes.c_ushort(coeff_table[i]).value & 0xFF
 
-                for i in range(0, 500):
-                        print ctypes.c_short((int(d[i*2]) << 8) + int(d[i*2+1])).value
-                        
-                        #d.reverse()
-                
-                # Send the audio
+                for i in range(0, len(merged_data)):
+                        d[i*2] = ctypes.c_ushort(merged_data[i]).value >> 8
+                        d[1+i*2] = ctypes.c_ushort(merged_data[i]).value & 0xFF
+
+                # Send the audio, continuous repeat
                 audio_used = 0
+                last_length = 0
                 while True:
+                        posn = 0
+                        while posn < len(d):
+                        
+                                # Hack to keep the buffer roughly full, not really the correct way to approach this
+                                if (audio_used > 200):
+                                        time.sleep(0.04)
+                                        audio_used = audio_used - 1
+                        
+                                self.AudioSock.sendto(d[posn:posn+1000],(self.__host, self.__audio_port))
+                                audio_used = bytearray(self.AudioSock.recv(1000))[0]
+                                s = str('\b' * last_length)
+                                output = 'Buffer status: '+'{0:.2f}'.format(100.0 * float(audio_used) / 255.0) + '%'
+                                print(s+'\b'+output),
+                                sys.stdout.flush()
+                                last_length = len(output)+1
+                                if not audio_used:
+                                        print('No data received')
 
-                        # Hack to keep the buffer roughly full
-                        if (audio_used > 200):
-                                time.sleep(0.04)
-                                audio_used = audio_used - 1
-                                
-                        self.AudioSock.sendto(str(d),(self.__host, self.__audio_port))
-                        audio_used = bytearray(self.AudioSock.recv(1000))[0]
-                        print audio_used
-                        if not audio_used:
-                                print('No data received')
+                                posn += 1000
 
         def write_at24c32d_prom(self, prom_address, word_address, value):
 
@@ -252,18 +319,17 @@ class interface(cfg):
                 # Send command
                 read_bytes = str()
 
-                while True:
-                        try:
-                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
-                                read_bytes = self.I2CSock.recv(1400)
-                                if not read_bytes:
-                                        print('No data received')
-                                break
-                        except KeyboardInterrupt:
-                                print('Ctrl-C detected')
-                                exit(0)
-                        except:
-                                continue
+                try:
+                        self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
+                        read_bytes = self.I2CSock.recv(1400)
+                        if not read_bytes:
+                                print('No data received')
+                #        break
+                except KeyboardInterrupt:
+                        print('Ctrl-C detected')
+                        exit(0)
+                #except:
+                #                continue
 
                 res = bytearray(read_bytes)
 
@@ -302,18 +368,18 @@ class interface(cfg):
                 # Send command
                 read_bytes = str()
 
-                while True:
-                        try:
-                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
-                                read_bytes = self.I2CSock.recv(1400)
-                                if not read_bytes:
-                                        print('No data received')
-                                break
-                        except KeyboardInterrupt:
-                                print('Ctrl-C detected')
-                                exit(0)
-                        except:
-                                continue
+                #while True:
+                try:
+                        self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
+                        read_bytes = self.I2CSock.recv(1400)
+                        if not read_bytes:
+                                print('No data received')
+                                #break
+                except KeyboardInterrupt:
+                        print('Ctrl-C detected')
+                        exit(0)
+                #        except:
+                #                continue
 
                 res = bytearray(read_bytes)
 
@@ -339,6 +405,7 @@ class interface(cfg):
                 return self.send_receive(d, m)
 
         def send_receive(self, data, mask):
+
                 data.reverse()
                 mask.reverse()
                 rbytes = bytearray()
@@ -346,18 +413,18 @@ class interface(cfg):
                 
                 read_bytes = str()
 
-                while True:
-                        try:
-                                self.UDPSock.sendto(str(rbytes),(self.__host, self.__port))
-                                read_bytes = self.UDPSock.recv(cfg.packet_receive_length(self))
-                                if not read_bytes:
-                                        print('No data received')
-                                break
-                        except KeyboardInterrupt:
-                                print('Ctrl-C detected')
-                                exit(0)
-                        except:
-                                continue
+#                while True:
+                try:
+                        self.UDPSock.sendto(rbytes,(self.__host, self.__port))
+                        read_bytes = self.UDPSock.recv(cfg.packet_receive_length(self))
+                        if not read_bytes:
+                                print('No data received')
+                        #break
+                except KeyboardInterrupt:
+                        print('Ctrl-C detected')
+                        exit(0)
+                        #except:
+                        #        continue
 
                 res = bytearray(read_bytes)
                 res.reverse()
