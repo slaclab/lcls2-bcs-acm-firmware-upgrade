@@ -6,6 +6,7 @@ import qf2_python.identifier
 
 parser = argparse.ArgumentParser(description='Test TAS2505 audio driver', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+parser.add_argument('-f', '--file', default='mic_demo.wav', help='Output file name for recorded audio')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
@@ -98,4 +99,6 @@ print('Current BCLK frequency estimate: '+str(x.tas2505_osc_frequency())+'MHz')
 time.sleep(0.1)
 
 # Drive the audio buffer
-x.tas2505_audio_test('/home/jaj99/git-projects/qf2-pre/users/qf2_python/scripts/test_sample.wav')
+#x.tas2505_audio_test(args.file)
+
+x.speech_out_test('ip 192.168.1.127')

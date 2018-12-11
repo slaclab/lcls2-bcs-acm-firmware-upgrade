@@ -1,11 +1,15 @@
 #!/bin/env python
 
+from math import *
+
 import argparse, time, ctypes
 import qf2_python.identifier
 #import argparse, time, datetime
 
 parser = argparse.ArgumentParser(description='Test microphone', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+parser.add_argument('-f', '--file', default='mic_demo.wav', help='Output file name for recorded audio')
+parser.add_argument('-l', '--length', default=5, type=int, help='Length of recording')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
@@ -99,4 +103,5 @@ time.sleep(0.1)
 
 # Run the microphone test
 print('Testing microphone...')
-x.mic_test()
+x.mic_demo(args.file, args.length)
+
