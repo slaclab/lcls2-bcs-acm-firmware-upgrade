@@ -90,7 +90,7 @@ class cfg(mycfg.base):
 
         __write_bytes = 24
         __network_bytes = 23
-        __read_bytes = 97
+        __read_bytes = 100
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
@@ -109,6 +109,20 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type / Default]
         __write_cfg = {
 
+                '__ICAP_WRITE_DATA' : [64, 16, int(0)],
+                '__ICAP_ENABLE' : [59, 1, int(0)],
+                '__ICAP_WRITE' : [58, 1, int(0)],
+                '__ICAP_CE' : [57, 1, int(0)],
+                '__ICAP_CLK' : [56, 1, int(0)],
+                
+                '__SD_DAT' : [50, 4, int(0)],
+                '__SD_CMD' : [49, 1, int(0)],
+                '__SD_CLK' : [48, 1, int(0)],
+
+                '__SD_T_DAT' : [42, 4, int(0)],
+                '__SD_T_CMD' : [41, 1, int(0)],
+                '__SD_T_CLK' : [40, 1, int(0)],
+
                 'FAN_PWM_GRADIENT' : [32, 8,  int(0x09)],
                 'FAN_PWM_STOP_TEMPERATURE' : [24, 8,  int(0)],
                 'FAN_PWM_MINIMUM_TEMPERATURE' : [16, 8,  int(0x28)],
@@ -126,6 +140,11 @@ class cfg(mycfg.base):
                                         
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
+
+                '__ICAP_READ_DATA' : [98*8, 16, int()],
+                
+                '__SD_DAT' : [97*8+1, 4, int()],
+                '__SD_CMD' : [97*8, 1, int()],
 
                 '__LATCH_RNW' : [96*8+7, 1, int()],
                 '__LATCH_R8N16' : [96*8+6, 1, int()],
@@ -205,6 +224,127 @@ class interface(cfg):
 
                 #raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
+        def icap_write(self, data):
+                # enable, write, ce, clk
+
+                # Initialize clk, ce & write
+                self.set_byte(7, 0x6, 0x7)
+                
+                # Enable the ICAP debug interface
+                self.set_byte(7, 0x8, 0x08)
+
+                # Chip select, write
+                # Write, then ce, to avoid abort
+                self.set_byte(7, 0x0, 0x4)
+                self.set_byte(7, 0x0, 0x2)
+
+                # Synchronize
+                for i in [0xFFFF, 0xFFFF, 0xAA99, 0x5566, 0x2000]:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 1, 1)
+                        self.set_byte(7, 0, 1)
+                
+                # Write the block
+                for i in data:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 1, 1)
+                        self.set_byte(7, 0, 1)
+
+                # Desync and two NOPs
+                # Flushes the pipeline
+                for i in [0x30A1, 0x000D, 0x2000, 0x2000]:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 1, 1)
+                        self.set_byte(7, 0, 1)
+                        
+                # Deassert CE
+                self.set_byte(7, 0x2, 0x2)
+                self.set_byte(7, 1, 1)
+                self.set_byte(7, 0, 1)
+                        
+                # Disable the ICAP debug interface
+                self.set_byte(7, 0x0, 0x08)
+
+        def icap_read(self, data):
+
+                # Initialize clk, ce & write
+                self.set_byte(7, 0x6, 0x7)
+                
+                # Enable the ICAP debug interface
+                self.set_byte(7, 0x8, 0x08)
+
+                # Chip select, write
+                # Write, then ce, to avoid abort
+                self.set_byte(7, 0x0, 0x4)
+                self.set_byte(7, 0x0, 0x2)
+                
+                # Write the block
+                for i in [0xFFFF, 0xFFFF, 0xAA99, 0x5566, 0x2000]:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 1, 1)
+                        self.set_byte(7, 0, 1)
+
+                # Write the read command
+                self.set_byte(8, data & 0xFF, 0xFF)
+                self.set_byte(9, (data >> 8) & 0xFF, 0xFF)
+                self.set_byte(7, 1, 1)
+                self.set_byte(7, 0, 1)
+
+                for i in [0x2000, 0x2000, 0x2000, 0x2000]:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 1, 1)
+                        self.set_byte(7, 0, 1)
+
+                # Deassert ce (synchronous to clk)
+                self.set_byte(7, 0x2, 0x2)
+                self.set_byte(7, 1, 1)
+                self.set_byte(7, 0, 1)
+                        
+                # Switch to read (synchronous to clk)
+                self.set_byte(7, 0x4, 0x4)
+                self.set_byte(7, 0, 0x2)
+                self.set_byte(7, 1, 0x1)
+                self.set_byte(7, 0, 0x1)
+
+                # Clock once
+                self.set_byte(7, 1, 0x1)
+                self.set_byte(7, 0, 0x1)
+
+                self.import_network_data()
+                result = self.get_read_value('__ICAP_READ_DATA')
+
+                # Raise chip select
+                self.set_byte(7, 0x2, 0x2)
+                self.set_byte(7, 1, 1)
+                self.set_byte(7, 0, 1)
+                        
+                # Chip select, write
+                # Write, then ce, to avoid abort
+                self.set_byte(7, 0x0, 0x4)
+                self.set_byte(7, 0x0, 0x2)
+
+                # Desync
+                for i in [0x30A1, 0x000D, 0x2000, 0x2000]:
+                        self.set_byte(8, i & 0xFF, 0xFF)
+                        self.set_byte(9, (i >> 8) & 0xFF, 0xFF)
+                        self.set_byte(7, 0, 0x1)
+                        self.set_byte(7, 0x1, 0x1)
+
+                # Raise chip select
+                self.set_byte(7, 0x2, 0x2)
+                self.set_byte(7, 1, 1)
+                self.set_byte(7, 0, 1)
+
+                # Disable the ICAP debug interface
+                self.set_byte(7, 0x0, 0x08)
+
+                return result
+                
         # Microphone development code
         def mic_demo(self, fname, length):
 
