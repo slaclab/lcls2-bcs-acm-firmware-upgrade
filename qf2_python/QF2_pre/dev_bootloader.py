@@ -10,6 +10,56 @@ from math import *
 import string, time, sys, ctypes
 from datetime import datetime, timedelta
 
+# SD decode structures
+class SD_CSD:
+
+        offsets = {
+                'CSD_STRUCTURE' : [126, 2],
+                'TACC' : [112, 8],
+                'NSAC' : [104, 8],
+                'TRAN_SPEED' : [96, 8],
+                'CCC' : [84, 12],
+                'READ_BL_LEN' : [80, 4],
+                'READ_BL_PARTIAL' : [79, 1],
+                'WRITE_BLK_MISALIGN' : [78, 1],
+                'READ_BLK_MISALIGN' : [77, 1],
+                'DSR_IMP' : [76, 1],
+                'C_SIZE' : [48, 22],
+                'ERASE_BLK_EN' : [46, 1],
+                'SECTOR_SIZE' : [39, 7],
+                'WP_GRP_SIZE' : [32, 7],
+                'WP_GRP_ENABLE' : [31, 1],
+                'R2W_FACTOR' : [26, 3],
+                'WRITE_BL_LEN' : [22, 4],
+                'WRITE_BL_PARTIAL' : [21, 1],
+                'FILE_FORMAT_GRP' : [15, 1],
+                'COPY' : [14, 1],
+                'PERM_WRITE_PROTECT' : [13, 1],
+                'TMP_WRITE_PROTECT' : [12, 1],
+                'FILE_FORMAT' : [10, 2]
+                }
+
+        def bits_to_mask(self, bits):
+                result = 0
+                for i in range(0, bits):
+                        result = (result << 1) | 1
+                return result
+        
+        def decode(self, data):
+                result = dict()
+
+                csd_type = (data >> 126) & 0x3
+
+                if csd_type == 0:
+                        raise Exception('Standard capacity SD cards (< 2GB) are not supported')
+                elif csd_type == 1:
+                        for key, value in self.offsets.items():
+                                result[key] = (data >> value[0]) & self.bits_to_mask(value[1])                                
+                else:
+                        raise Exception('CSD structure unrecognized')
+
+                return result
+
 # Set this for a reasonable speed
 morse_wpm_multiplier = 200
 morse_inter_mark_gap = 1 * morse_wpm_multiplier
@@ -224,6 +274,179 @@ class interface(cfg):
 
                 #raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
+        def sd_init(self):
+
+                # Initialize the clock, release tristate
+                self.set_byte(6, 0, 1)
+                self.set_byte(5, 1, 1)
+
+                # Clock 74 times
+                for i in range(0, 74):
+                        self.set_byte(6, 1, 1)
+                        self.set_byte(6, 0, 1)
+
+                # CMD0
+                self.sd_cmd(0x4000000000)
+
+                # CMD8
+                print hex(self.sd_cmd_with_result(0x4800000100, 48))
+
+                # IDLE -> RDY
+                
+                # CMD55
+                self.sd_cmd_with_result(0x7700000000, 48)
+                # ACMD41 (3.2-3.3V)
+                self.sd_cmd_with_result(0x6950100000, 48)
+
+                # Call again to confirm init
+                
+                # CMD55
+                self.sd_cmd_with_result(0x7700000000, 48)
+                # ACMD41 (3.2-3.3V)
+                self.sd_cmd_with_result(0x6950100000, 48)
+
+                # CMD11 - don't expect result
+                #self.sd_cmd(0x4B00000000)
+                
+                # RDY -> IDENT
+                
+                # CMD2
+                self.sd_cmd_with_result(0x4200000000, 136)
+
+                # IDENT -> STDBY
+                
+                # CMD3
+                rca = self.sd_cmd_with_result(0x4300000000, 48)
+
+                # Extract RCA
+                rca = (rca >> 24) & 0xFFFF
+                
+                # CMD9 (Read CSD)
+                csd = self.sd_cmd_with_result((0x4900000000) | (rca << 16), 136)
+                csd = SD_CSD().decode(csd)
+
+                if csd['TRAN_SPEED'] == 0x32:
+                        print('Transfer speed: 12.5MB/s')
+                elif csd['TRAN_SPEED'] == 0x5A:
+                        print('Transfer speed: 25MB/s')
+                else:
+                        print('Transfer speed unrecognized')                        
+                        
+                print('Capacity: '+'{0:.2f}'.format(csd['C_SIZE']*512.0/(1024.0*1024.0))+'GB')
+#'{0:.2f}'.format(
+
+                # CMD10 (Read CID)
+                cid = self.sd_cmd_with_result((0x4A00000000) | (rca << 16), 136)
+
+                # CMD7 (Go from standby to transfer state)
+                print hex(self.sd_cmd_with_result((0x4700000000) | (rca << 16), 48))
+
+                # If card is locked. require CMD42 before ACMD6 instead of CMD55...
+                # CMD55
+                print 'cmd55'
+                print hex(self.sd_cmd_with_result(0x7700000000, 48))
+                # ACMD6 (Move to 4-bit data bus)
+                print hex(self.sd_cmd_with_result(0x4600000002, 48))
+                
+                
+                
+        def sd_cmd(self, cmd):
+
+                # Start
+                self.sd_clk(0, None)
+                self.sd_clk(1, None)
+
+                # CMD is 38-bit
+                for i in range(0, 38):
+                        self.sd_clk(cmd >> (37-i), None)
+
+                # CRC
+                crc = self.sd_crc7(cmd)
+
+                # CRC-7
+                for i in range(0, 7):
+                        self.sd_clk(crc >> (6-i), None)
+
+                # End
+                self.sd_clk(1, None)
+
+                # Clock 8 times
+                for i in range(0, 8):
+                        self.sd_clk(None, None)
+
+        def sd_cmd_with_result(self, cmd, rlen):
+
+                # Start
+                self.sd_clk(0, None)
+                self.sd_clk(1, None)
+
+                # CMD is 38-bit
+                for i in range(0, 38):
+                        self.sd_clk(cmd >> (37-i), None)
+
+                # CRC
+                crc = self.sd_crc7(cmd)
+
+                # CRC-7
+                for i in range(0, 7):
+                        self.sd_clk(crc >> (6-i), None)
+
+                # End
+                self.sd_clk(1, None)
+
+                # Find start bit of result
+                while self.sd_clk(None, None)[0] == 1:
+                        continue
+
+                # Get result
+                result = 0
+                for i in range(0, rlen-1):
+                        result = (result << 1) | self.sd_clk(None, None)[0]
+
+                # Clock 8 times
+                for i in range(0, 8):
+                        self.sd_clk(None, None)
+                        
+                return result
+                
+        def sd_crc7(self, cmd):
+
+                crc = 0
+                
+                for i in range(0, 40):
+                        inv = ((cmd >> (39-i)) & 1) ^ ((crc >> 6) & 1)
+                        crc = (((crc ^ (inv << 2)) << 1) | inv) & 0x7F
+
+                return crc
+                        
+        def sd_clk(self, cmd, dat):
+
+                if cmd == None:
+                        # Tristate cmd
+                        self.set_byte(5, 0, 2)
+                else:
+                        # Set dat
+                        self.set_byte(6, (cmd & 1) << 1, 2)
+                        # Release tristate
+                        self.set_byte(5, 2, 2)
+
+                if dat == None:
+                        # Tristate dat
+                        self.set_byte(5, 0, 0x3C)
+                else:
+                        # Set dat
+                        self.set_byte(6, (dat & 0xF) << 2, 0x3C)
+                        # Release tristate
+                        self.set_byte(5, 0x3C, 0x3C)
+
+                # Clock
+                self.set_byte(6, 1, 1)
+                self.set_byte(6, 0, 1)
+
+                self.import_network_data()
+                return [self.get_read_value('__SD_CMD'),
+                        self.get_read_value('__SD_DAT')]
+                
         def icap_write(self, data):
                 # enable, write, ce, clk
 
