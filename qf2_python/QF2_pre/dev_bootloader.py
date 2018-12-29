@@ -11,6 +11,45 @@ import string, time, sys, ctypes
 from datetime import datetime, timedelta
 
 # SD decode structures
+class SD_SWITCH_FUNCTION_STATUS:
+
+        offsets = {
+                'MAX_CURRENT' : [496, 16],
+                'SUPPORT_BITS_6' : [480, 16],
+                'SUPPORT_BITS_5' : [464, 16],
+                'SUPPORT_BITS_4' : [448, 16],
+                'SUPPORT_BITS_3' : [432, 16],
+                'SUPPORT_BITS_2' : [416, 16],
+                'SUPPORT_BITS_1' : [400, 16],
+                'FUNCTION_BITS_6' : [396, 4],
+                'FUNCTION_BITS_5' : [392, 4],
+                'FUNCTION_BITS_4' : [388, 4],
+                'FUNCTION_BITS_3' : [384, 4],
+                'FUNCTION_BITS_2' : [380, 4],
+                'FUNCTION_BITS_1' : [376, 4],
+                'DATA_STRUCTURE_VERSION' : [368, 8],
+                'BUSY_STATUS_6' : [352, 16],
+                'BUSY_STATUS_5' : [336, 16],
+                'BUSY_STATUS_4' : [320, 16],
+                'BUSY_STATUS_3' : [304, 16],
+                'BUSY_STATUS_2' : [288, 16],
+                'BUSY_STATUS_1' : [272, 16]
+                }
+
+        def bits_to_mask(self, bits):
+                result = 0
+                for i in range(0, bits):
+                        result = (result << 1) | 1
+                return result
+        
+        def decode(self, data):
+                result = dict()
+
+                for key, value in self.offsets.items():
+                        result[key] = (data >> value[0]) & self.bits_to_mask(value[1])                                
+
+                return result
+        
 class SD_CSD:
 
         offsets = {
@@ -289,21 +328,22 @@ class interface(cfg):
                 self.sd_cmd(0x4000000000)
 
                 # CMD8
-                print hex(self.sd_cmd_with_result(0x4800000100, 48))
+                self.sd_cmd_with_response(0x4800000100, 48)
 
                 # IDLE -> RDY
-                
-                # CMD55
-                self.sd_cmd_with_result(0x7700000000, 48)
-                # ACMD41 (3.2-3.3V)
-                self.sd_cmd_with_result(0x6950100000, 48)
 
-                # Call again to confirm init
-                
-                # CMD55
-                self.sd_cmd_with_result(0x7700000000, 48)
-                # ACMD41 (3.2-3.3V)
-                self.sd_cmd_with_result(0x6950100000, 48)
+                while True:
+
+                        # CMD55
+                        self.sd_cmd_with_response(0x7700000000, 48)
+                        # ACMD41 (3.2-3.3V)
+                        res = self.sd_cmd_with_response(0x6950FF8000, 48)
+
+                        # Exit on busy
+                        if ( (res>>39) & 1 ) == 1:
+                                break
+
+                        time.sleep(0.001)
 
                 # CMD11 - don't expect result
                 #self.sd_cmd(0x4B00000000)
@@ -311,18 +351,19 @@ class interface(cfg):
                 # RDY -> IDENT
                 
                 # CMD2
-                self.sd_cmd_with_result(0x4200000000, 136)
+                self.sd_cmd_with_response(0x4200000000, 136)
 
                 # IDENT -> STDBY
                 
                 # CMD3
-                rca = self.sd_cmd_with_result(0x4300000000, 48)
+                rca = self.sd_cmd_with_response(0x4300000000, 48)
 
                 # Extract RCA
                 rca = (rca >> 24) & 0xFFFF
+                self.__sd_rca = rca
                 
                 # CMD9 (Read CSD)
-                csd = self.sd_cmd_with_result((0x4900000000) | (rca << 16), 136)
+                csd = self.sd_cmd_with_response((0x4900000000) | (rca << 16), 136)
                 csd = SD_CSD().decode(csd)
 
                 if csd['TRAN_SPEED'] == 0x32:
@@ -330,25 +371,291 @@ class interface(cfg):
                 elif csd['TRAN_SPEED'] == 0x5A:
                         print('Transfer speed: 25MB/s')
                 else:
-                        print('Transfer speed unrecognized')                        
+                        raise Exception('Transfer speed unrecognized')                     
                         
                 print('Capacity: '+'{0:.2f}'.format(csd['C_SIZE']*512.0/(1024.0*1024.0))+'GB')
-#'{0:.2f}'.format(
+
+                #for key, value in sorted(csd.items()):
+                #        print key, value
 
                 # CMD10 (Read CID)
-                cid = self.sd_cmd_with_result((0x4A00000000) | (rca << 16), 136)
+                cid = self.sd_cmd_with_response((0x4A00000000) | (rca << 16), 136)
 
                 # CMD7 (Go from standby to transfer state)
-                print hex(self.sd_cmd_with_result((0x4700000000) | (rca << 16), 48))
+                self.sd_cmd_with_response((0x4700000000) | (rca << 16), 48)
 
                 # If card is locked. require CMD42 before ACMD6 instead of CMD55...
+
+                # Switch to 4-bit data mode
                 # CMD55
-                print 'cmd55'
-                print hex(self.sd_cmd_with_result(0x7700000000, 48))
+                self.sd_cmd_with_response(0x7700000000 | (rca << 16), 48)
                 # ACMD6 (Move to 4-bit data bus)
-                print hex(self.sd_cmd_with_result(0x4600000002, 48))
+                self.sd_cmd_with_response(0x4600000002, 48)
+
+                # Switch to high speed mode)
+                self.sd_switch_to_hs_mode()
+
+                # Read block 0 data
+                self.sd_read_data(0)
+
+                block = bytearray()
+                for i in range(0, 512):
+                        block.append(i&0xFF)
+                        
+                self.sd_write_data(0, block)
                 
+        def sd_switch_to_hs_mode(self):
+
+                cmd = 0x4680FFFFF1 | (self.__sd_rca << 16)
                 
+                # Start
+                self.sd_clk(0, None)
+                self.sd_clk(1, None)
+
+                # CMD is 38-bit
+                for i in range(0, 38):
+                        self.sd_clk(cmd >> (37-i), None)
+
+                # CRC
+                crc = self.sd_crc7(cmd)
+
+                # CRC-7
+                for i in range(0, 7):
+                        self.sd_clk(crc >> (6-i), None)
+
+                # End
+                self.sd_clk(1, None)
+
+                # Find start bit of result
+                while self.sd_clk(None, None)[0] == 1:
+                        continue
+
+                # Get response
+                response = 0
+                data_header = 0
+                data_start = False
+                data_count = 0
+                for i in range(0, 47):
+                        cd = self.sd_clk(None, None)
+                        response = (response << 1) | cd[0]
+                        if ( data_start == False ):
+                                if cd[1] == 0:
+                                        data_start = True
+                        else:
+                                data_header = (data_header << 4) | cd[1]
+                                data_count = data_count + 1
+                        
+                #print data_count
+                #print
+
+                while data_count != 128:
+                        cd = self.sd_clk(None, None)                        
+                        data_header = (data_header << 4) | cd[1]
+                        data_count = data_count + 1
+
+                crc = self.sd_crc16(data_header, 128)
+                #for i in crc:
+                #        print hex(i),
+                #print
+
+                crc_0 = 0
+                crc_1 = 0
+                crc_2 = 0
+                crc_3 = 0
+
+                for i in range(0, 16):
+                        tmp = self.sd_clk(None, None)[1]
+                        crc_0 = (crc_0 << 1) | (tmp & 1)
+                        crc_1 = (crc_1 << 1) | ((tmp >> 1) & 1)
+                        crc_2 = (crc_2 << 1) | ((tmp >> 2) & 1)
+                        crc_3 = (crc_3 << 1) | ((tmp >> 3) & 1)
+
+                #print hex(crc_0), hex(crc_1), hex(crc_2), hex(crc_3)
+                #print
+
+                if crc_0 != crc[0]:
+                        raise Exception('CRC mismatch on SD DAT0')
+                if crc_1 != crc[1]:
+                        raise Exception('CRC mismatch on SD DAT1')
+                if crc_2 != crc[2]:
+                        raise Exception('CRC mismatch on SD DAT2')
+                if crc_3 != crc[3]:
+                        raise Exception('CRC mismatch on SD DAT3')
+
+                # Final clock (should be 0xF)
+                self.sd_clk(None, None)[1]
+                        
+                sfs = SD_SWITCH_FUNCTION_STATUS().decode(data_header)
+
+                if sfs['FUNCTION_BITS_1'] != 1:
+                        raise Exception('Could not switch to HS mode')
+                
+                # Clock 8 times
+                for i in range(0, 8):
+                        self.sd_clk(None, None)
+                        
+                return response
+
+        def sd_write_data(self, address, data):
+
+                if len(data) != 512:
+                        raise Exception('Data size is incorrect (should be 512 bytes)')
+                
+                # CMD24
+                cmd = 0x5800000000 | address
+                
+                # Start
+                self.sd_clk(0, None)
+                self.sd_clk(1, None)
+
+                # CMD is 38-bit
+                for i in range(0, 38):
+                        self.sd_clk(cmd >> (37-i), None)
+
+                # CRC
+                crc = self.sd_crc7(cmd)
+
+                # CRC-7
+                for i in range(0, 7):
+                        self.sd_clk(crc >> (6-i), None)
+
+                # End
+                self.sd_clk(1, None)
+
+                # Find start bit of result
+                while self.sd_clk(None, None)[0] == 1:
+                        continue
+
+                # Get response
+                response = 0
+                for i in range(0, 47):
+                        cd = self.sd_clk(None, None)
+                        response = (response << 1) | cd[0]
+
+                print hex(response)
+
+                exit()
+
+                block = int()
+                for i in data:
+                        block = (block << 4) | (i & 0xF)
+                        block = (block << 4) | ((i>>4) & 0xF)
+                
+                crc = self.sd_crc16(data_header, 1024)
+                for i in crc:
+                        print hex(i),
+                print
+
+                crc_0 = 0
+                crc_1 = 0
+                crc_2 = 0
+                crc_3 = 0
+
+                for i in range(0, 16):
+                        tmp = self.sd_clk(None, None)[1]
+                        crc_0 = (crc_0 << 1) | (tmp & 1)
+                        crc_1 = (crc_1 << 1) | ((tmp >> 1) & 1)
+                        crc_2 = (crc_2 << 1) | ((tmp >> 2) & 1)
+                        crc_3 = (crc_3 << 1) | ((tmp >> 3) & 1)
+
+                print hex(crc_0), hex(crc_1), hex(crc_2), hex(crc_3)
+                print
+
+                # Final clock (should be 0xF)
+                self.sd_clk(None, None)[1]
+
+                # Clock 8 times
+                for i in range(0, 8):
+                        self.sd_clk(None, None)
+                        
+        def sd_read_data(self, address):
+
+                # CMD17
+                cmd = 0x5100000000 | address
+                
+                # Start
+                self.sd_clk(0, None)
+                self.sd_clk(1, None)
+
+                # CMD is 38-bit
+                for i in range(0, 38):
+                        self.sd_clk(cmd >> (37-i), None)
+
+                # CRC
+                crc = self.sd_crc7(cmd)
+
+                # CRC-7
+                for i in range(0, 7):
+                        self.sd_clk(crc >> (6-i), None)
+
+                # End
+                self.sd_clk(1, None)
+
+                # Find start bit of result
+                while self.sd_clk(None, None)[0] == 1:
+                        continue
+
+                # Get response
+                response = 0
+                data_header = 0
+                data_start = False
+                data_count = 0
+                for i in range(0, 47):
+                        cd = self.sd_clk(None, None)
+                        response = (response << 1) | cd[0]
+                        if ( data_start == False ):
+                                if cd[1] == 0:
+                                        data_start = True
+                        else:
+                                data_header = (data_header << 4) | cd[1]
+                                data_count = data_count + 1
+                                #if cd[1] != 0:
+                                #        print data_count, hex(cd[1])
+                        
+                while data_count != 1024:
+                        cd = self.sd_clk(None, None)                        
+                        data_header = (data_header << 4) | cd[1]
+                        data_count = data_count + 1
+                        #if cd[1] != 0:
+                        #        print data_count, hex(cd[1])
+
+                crc = self.sd_crc16(data_header, 1024)
+                #for i in crc:
+                #        print hex(i),
+                #print
+
+                crc_0 = 0
+                crc_1 = 0
+                crc_2 = 0
+                crc_3 = 0
+
+                for i in range(0, 16):
+                        tmp = self.sd_clk(None, None)[1]
+                        crc_0 = (crc_0 << 1) | (tmp & 1)
+                        crc_1 = (crc_1 << 1) | ((tmp >> 1) & 1)
+                        crc_2 = (crc_2 << 1) | ((tmp >> 2) & 1)
+                        crc_3 = (crc_3 << 1) | ((tmp >> 3) & 1)
+
+                if crc_0 != crc[0]:
+                        raise Exception('CRC mismatch on SD DAT0')
+                if crc_1 != crc[1]:
+                        raise Exception('CRC mismatch on SD DAT1')
+                if crc_2 != crc[2]:
+                        raise Exception('CRC mismatch on SD DAT2')
+                if crc_3 != crc[3]:
+                        raise Exception('CRC mismatch on SD DAT3')
+                        
+                #print hex(crc_0), hex(crc_1), hex(crc_2), hex(crc_3)
+                #print
+
+                # Final clock (should be 0xF)
+                self.sd_clk(None, None)[1]
+
+                # Clock 8 times
+                for i in range(0, 8):
+                        self.sd_clk(None, None)
+                        
+                return response
                 
         def sd_cmd(self, cmd):
 
@@ -374,7 +681,7 @@ class interface(cfg):
                 for i in range(0, 8):
                         self.sd_clk(None, None)
 
-        def sd_cmd_with_result(self, cmd, rlen):
+        def sd_cmd_with_response(self, cmd, rlen):
 
                 # Start
                 self.sd_clk(0, None)
@@ -418,7 +725,32 @@ class interface(cfg):
                         crc = (((crc ^ (inv << 2)) << 1) | inv) & 0x7F
 
                 return crc
+
+        def sd_crc16(self, data, num_nibbles):
+
+                # CRC16 is calculated per bus lane, so the calculation has to be split into four
+
+                crc_0 = 0
+                crc_1 = 0
+                crc_2 = 0
+                crc_3 = 0
+
+                for i in range(0, num_nibbles):
                         
+                        inv = ((data >> (num_nibbles*4-1-i*4)) & 1) ^ ((crc_3 >> 15) & 1)
+                        crc_3 = (( ( crc_3 ^ ((inv << 4)|(inv << 11)) ) << 1) | inv) & 0xFFFF
+
+                        inv = ((data >> (num_nibbles*4-2-i*4)) & 1) ^ ((crc_2 >> 15) & 1)
+                        crc_2 = (( ( crc_2 ^ ((inv << 4)|(inv << 11)) ) << 1) | inv) & 0xFFFF
+
+                        inv = ((data >> (num_nibbles*4-3-i*4)) & 1) ^ ((crc_1 >> 15) & 1)
+                        crc_1 = (( ( crc_1 ^ ((inv << 4)|(inv << 11)) ) << 1) | inv) & 0xFFFF
+
+                        inv = ((data >> (num_nibbles*4-4-i*4)) & 1) ^ ((crc_0 >> 15) & 1)
+                        crc_0 = (( ( crc_0 ^ ((inv << 4)|(inv << 11)) ) << 1) | inv) & 0xFFFF
+                        
+                return [crc_0, crc_1, crc_2, crc_3]
+        
         def sd_clk(self, cmd, dat):
 
                 if cmd == None:
