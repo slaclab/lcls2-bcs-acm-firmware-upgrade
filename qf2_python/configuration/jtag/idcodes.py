@@ -68,10 +68,25 @@ xilinx_idcodes = [
     (0x0401D093, 0x0FFFFFFF, 'Xilinx Spartan 6 LX150', 6),
     (0x0403D093, 0x0FFFFFFF, 'Xilinx Spartan 6 LX150T', 6),
 
-    # Xilinx Arctix 7
+    # Xilinx Spartan 7
 
-    (0x03631093, 0x0FFFFFFF, 'Xilinx Arctix 7 100T', 6),
-    (0x03636093, 0x0FFFFFFF, 'Xilinx Arctix 7 200T', 6),
+    (0x03622093, 0x0FFFFFFF, 'Xilinx Spartan 7 6', 6),
+    (0x03620093, 0x0FFFFFFF, 'Xilinx Spartan 7 15', 6),
+    (0x037C4093, 0x0FFFFFFF, 'Xilinx Spartan 7 25', 6),
+    (0x0362F093, 0x0FFFFFFF, 'Xilinx Spartan 7 50', 6),
+    (0x037C8093, 0x0FFFFFFF, 'Xilinx Spartan 7 75', 6),
+    (0x037C7093, 0x0FFFFFFF, 'Xilinx Spartan 7 100', 6),
+
+    # Xilinx Artix 7
+
+    (0x037C3093, 0x0FFFFFFF, 'Xilinx Artix 7 12T', 6),
+    (0x0362E093, 0x0FFFFFFF, 'Xilinx Artix 7 15T', 6),
+    (0x037C2093, 0x0FFFFFFF, 'Xilinx Artix 7 25T', 6),
+    (0x0362D093, 0x0FFFFFFF, 'Xilinx Artix 7 35T', 6),
+    (0x0362C093, 0x0FFFFFFF, 'Xilinx Artix 7 50T', 6),
+    (0x03632093, 0x0FFFFFFF, 'Xilinx Artix 7 75T', 6),
+    (0x03631093, 0x0FFFFFFF, 'Xilinx Artix 7 100T', 6),
+    (0x03636093, 0x0FFFFFFF, 'Xilinx Artix 7 200T', 6),
 
     # Xilinx Kintex 7
 
