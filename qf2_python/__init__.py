@@ -5,6 +5,7 @@ __all__ = [
     'tests',
     'configuration',
     'identifier',
-    'BMB7_r1',
+    #'BMB7_r1',
+    'MORF',
     'QF2_pre',
     ]

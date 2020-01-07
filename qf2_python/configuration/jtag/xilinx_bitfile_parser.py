@@ -27,6 +27,9 @@ xilinx_idcode_bitfile_dictionary = {
     # Xilinx Virtex 5
     '5vsx95tff1136' : [0x0FFFFFFF, 0x02ECE093],
 
+    # Xilinx Artix 7
+    '7a12tcpg238' : [0x0FFFFFFF, 0x037C3093],
+    
     # Xilinx Kintex 7
     '7k160tffg676' : [0x0FFFFFFF, 0x0364C093],
 
