@@ -30,17 +30,23 @@ reboot_to_bootloader = [
     0x000E   # ICAP reboot
     ]
 
-# Read GENERAL5
-read_general5 = 0x2AE1
-
-# Read STAT
-read_stat = 0x2901
-
 # Write scratchpad register (GENERAL5)
 write_scratchpad = [
     0x32E1,
     0xABCD
     ]
+
+# READ 1 word template
+READ_ONE = 0x2801
+
+# Read CRC
+read_crc = READ_ONE | 0
+
+# Read STAT (6'h8)
+read_stat = READ_ONE | (0x8 << 5)
+
+# Read GENERAL5 (6'h17)
+read_general5 = READ_ONE | (0x17 << 5)
 
 parser = argparse.ArgumentParser(description='Test ICAP interface', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
@@ -55,3 +61,4 @@ x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 
 # Do an ICAP transaction
 print hex(x.icap_read(read_general5))
+#print hex(x.icap_read(read_stat))

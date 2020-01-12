@@ -230,6 +230,9 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
+                # HACK: Turn on the Kintex communication
+                self.set_byte(0, 0x10, 0x10)
+
         def enable_monitoring(self):
                 self.set_byte(1, 4, 4)
         def disable_monitoring(self):
