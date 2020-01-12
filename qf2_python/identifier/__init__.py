@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 __all__ = [
-    'interface',
     'v0',
+    'v1',
+    'v2',
     ]
 
 import socket
 
-HIGHEST_VERSION = 1
+HIGHEST_VERSION = 2
 
 def __query_board(target, verbose=False):
     UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

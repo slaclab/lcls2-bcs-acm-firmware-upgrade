@@ -1,5 +1,11 @@
 #!/bin/env python
 
+# Minor and major version matching
+MAJOR_VERSION   = 0x00 # '?.xx+x'
+MINOR_VERSION_1 = 0x07 # 'x.?x+x'
+MINOR_VERSION_2 = 0x00 # 'x.x?+x'
+MINOR_VERSION_3 = 0x00 # 'x.xx+?'
+
 from socket import *
 import string, time, sys, cfg as mycfg
 from datetime import datetime, timedelta
