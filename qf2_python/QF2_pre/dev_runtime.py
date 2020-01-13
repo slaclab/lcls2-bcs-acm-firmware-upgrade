@@ -23,11 +23,13 @@ class cfg(mycfg.base):
                                     self.__read_cfg)
 
         __write_bytes = 63
-        __network_bytes = 22
-        __read_bytes = 117+(23*3)
+        __network_bytes = 23
+        __read_bytes = 117+(23*3)+2*3
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
+
+                'NETWORK_INTERFACE' : [128+48, 8, mycfg.base.NETWORK_INTERFACE(0)],
                 
                 'IPV4_MULTICAST_MAC' : [128, 48, mycfg.base.IPV4_MAC(0)],
                 'IPV4_MULTICAST_IP' : [96, 32, mycfg.base.IPV4_IP(0)],
@@ -78,6 +80,11 @@ class cfg(mycfg.base):
                                         
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
+
+                'LATCHED_DEBUG_RX_10B_DATA' : [608+(114*8), 10, int()],
+                'LATCHED_DEBUG_RX_HS' : [608+(113*8), 8, int()],               
+                'DEBUG_RX_10B_DATA' : [608+(111*8), 10, int()],
+                'DEBUG_RX_HS' : [608+(110*8), 8, int()],               
 
                 'SI57X_B_COUNT' : [608+(106*8), 32, int()],
                 'SI57X_A_COUNT' : [608+(102*8), 32, int()],
@@ -235,9 +242,6 @@ class interface(cfg):
 
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
-
-                # HACK: Turn on the Kintex communication
-                self.set_byte(0, 0x10, 0x10)
 
         def enable_monitoring(self):
                 self.set_byte(1, 4, 4)

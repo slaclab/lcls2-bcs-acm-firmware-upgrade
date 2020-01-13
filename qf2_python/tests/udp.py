@@ -51,7 +51,7 @@ while (1):
 
 	rbytes = bytearray(data2)
 	if ( len(rbytes) != size ):
-		print "Incorrect data volume received"
+		print "Incorrect data volume received - expected " + str(size) + " but received " + str(len(rbytes))
 		break
 
 	if ( bytes[0:size] != rbytes ):
