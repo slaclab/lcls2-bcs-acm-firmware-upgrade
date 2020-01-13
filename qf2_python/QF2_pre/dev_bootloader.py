@@ -1,5 +1,11 @@
 #!/bin/env python
 
+# Minor and major version matching
+MAJOR_VERSION   = 0x00 # '?.xx+x'
+MINOR_VERSION_1 = 0x07 # 'x.?x+x'
+MINOR_VERSION_2 = 0x00 # 'x.x?+x'
+MINOR_VERSION_3 = 0x00 # 'x.xx+?'
+
 from numpy import int32, int64, array, average
 import wave, pyaudio
 import matplotlib.pyplot as plt
@@ -278,10 +284,14 @@ class cfg(mycfg.base):
 
 class interface(cfg):
 
-        def __init__(self, host, verbose):
+        def __init__(
+                        self,
+                        target,
+                        verbose
+        ):
 
                 # Settings
-                self.__host = host
+                self.__target = target
                 self.__port = 50001
                 self.__i2c_port = 50002
                 self.__audio_port = 50004
@@ -911,7 +921,7 @@ class interface(cfg):
                 print 'Flushing buffer'
                 while True:
                         # Send a short packet to trigger a microphone data dump
-                        self.MicSock.sendto('0',(self.__host, self.__mic_port))
+                        self.MicSock.sendto('0',(self.__target, self.__mic_port))
                         next_data = bytearray(self.MicSock.recv(1400))
                         #print len(next_data)
                         if len(next_data) < 512:
@@ -923,7 +933,7 @@ class interface(cfg):
                 raw_mic_data = bytearray()
                 while data_collected < (length * 44100 * 8):
                         
-                        self.MicSock.sendto('0',(self.__host, self.__mic_port))
+                        self.MicSock.sendto('0',(self.__target, self.__mic_port))
                         next_data = bytearray(self.MicSock.recv(1400))
                         #next_data.reverse()
                         s = str('\b' * last_length)
@@ -1150,7 +1160,7 @@ class interface(cfg):
                                 time.sleep(0.04)
                                 audio_used = audio_used - 1
                         
-                        self.AudioSock.sendto(d[posn:posn+1000],(self.__host, self.__audio_port))
+                        self.AudioSock.sendto(d[posn:posn+1000],(self.__target, self.__audio_port))
                         audio_used = bytearray(self.AudioSock.recv(1000))[0]
                         s = str('\b' * last_length)
                         output = 'Buffer status: '+'{0:.2f}'.format(100.0 * float(audio_used) / 255.0) + '%'
@@ -1258,7 +1268,7 @@ class interface(cfg):
                                         time.sleep(0.04)
                                         audio_used = audio_used - 1
                         
-                                self.AudioSock.sendto(d[posn:posn+1000],(self.__host, self.__audio_port))
+                                self.AudioSock.sendto(d[posn:posn+1000],(self.__target, self.__audio_port))
                                 audio_used = bytearray(self.AudioSock.recv(1000))[0]
                                 s = str('\b' * last_length)
                                 output = 'Buffer status: '+'{0:.2f}'.format(100.0 * float(audio_used) / 255.0) + '%'
@@ -1333,7 +1343,7 @@ class interface(cfg):
                                         time.sleep(0.04)
                                         audio_used = audio_used - 1
                         
-                                self.AudioSock.sendto(d[posn:posn+1000],(self.__host, self.__audio_port))
+                                self.AudioSock.sendto(d[posn:posn+1000],(self.__target, self.__audio_port))
                                 audio_used = bytearray(self.AudioSock.recv(1000))[0]
                                 s = str('\b' * last_length)
                                 output = 'Buffer status: '+'{0:.2f}'.format(100.0 * float(audio_used) / 255.0) + '%'
@@ -1415,7 +1425,7 @@ class interface(cfg):
                 read_bytes = str()
 
                 try:
-                        self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
+                        self.I2CSock.sendto(d,(self.__target, self.__i2c_port))
                         read_bytes = self.I2CSock.recv(1400)
                         if not read_bytes:
                                 print('No data received')
@@ -1465,7 +1475,7 @@ class interface(cfg):
 
                 #while True:
                 try:
-                        self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
+                        self.I2CSock.sendto(d,(self.__target, self.__i2c_port))
                         read_bytes = self.I2CSock.recv(1400)
                         if not read_bytes:
                                 print('No data received')
@@ -1510,7 +1520,7 @@ class interface(cfg):
 
 #                while True:
                 try:
-                        self.UDPSock.sendto(rbytes,(self.__host, self.__port))
+                        self.UDPSock.sendto(rbytes,(self.__target, self.__port))
                         read_bytes = self.UDPSock.recv(cfg.packet_receive_length(self))
                         if not read_bytes:
                                 print('No data received')
@@ -1592,7 +1602,7 @@ class interface(cfg):
         def reboot_to_runtime(self, wait_for_reboot=False):
                 x = bytearray([0x81])
                 TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.sendto(x,(self.__host,50000))
+                TempSock.sendto(x,(self.__target,50000))
                 TempSock.close()
 
                 if wait_for_reboot == False:
@@ -1611,7 +1621,7 @@ class interface(cfg):
                 count = 0
                 for count in range(0, 15):
                         try:
-                                TempSock.sendto(x,(self.__host, 50000))
+                                TempSock.sendto(x,(self.__target, 50000))
                                 TempSock.recv(1000)
                                 break
                         except KeyboardInterrupt:
@@ -1629,7 +1639,7 @@ class interface(cfg):
         def reboot_to_bootloader(self, wait_for_reboot=False):
                 x = bytearray([0x01])
                 TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.sendto(x,(self.__host,50000))
+                TempSock.sendto(x,(self.__target,50000))
                 TempSock.close()
 
                 if wait_for_reboot == False:
@@ -1648,7 +1658,7 @@ class interface(cfg):
                 count = 0
                 for count in range(0, 15):
                         try:
-                                TempSock.sendto(x,(self.__host, 50000))
+                                TempSock.sendto(x,(self.__target, 50000))
                                 TempSock.recv(1000)
                                 break
                         except KeyboardInterrupt:
