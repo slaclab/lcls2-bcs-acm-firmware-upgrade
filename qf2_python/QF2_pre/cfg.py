@@ -466,6 +466,9 @@ class base:
                 bit_length = int(value[1])
                 block = bytearray()
 
+                #print key
+                #print bit_length
+
                 # Parse into an integer, then shift and mask
                 myi = 0
                 start = (start_point >> 3)

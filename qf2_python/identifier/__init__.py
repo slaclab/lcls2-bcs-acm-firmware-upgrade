@@ -40,10 +40,15 @@ def reboot_to_runtime(target, verbose=False):
     # Decide on packet version interface to use and import the associated module
     ldict = locals()
     exec('import qf2_python.identifier.v'+str(r[0])+' as x')
-    x = ldict['x'].reboot_to_runtime(target, verbose)
 
-    # Return the instance
-    return x
+    # Make sure we are not in runtime - you can only reboot to runtime from
+    # the bootloader in this version
+    x = ldict['x'].get_board_information(r, verbose)
+    if x['Active firmware type'] == 'Runtime':
+        raise Exception('You cannot reboot to a runtime image if you are already in the runtime. Reboot to the bootloader first, then back to the runtime.')
+    
+    # Reboot to the runtime
+    ldict['x'].reboot_to_runtime(target, verbose)
 
 def reboot_to_bootloader(target, verbose=False):
     # Query the board
@@ -52,11 +57,10 @@ def reboot_to_bootloader(target, verbose=False):
     # Decide on packet version interface to use and import the associated module
     ldict = locals()
     exec('import qf2_python.identifier.v'+str(r[0])+' as x')
-    x = ldict['x'].reboot_to_bootloader(target, verbose)
 
-    # Return the instance
-    return x
-
+    # Reboot to the bootloader
+    ldict['x'].reboot_to_bootloader(target, verbose)
+    
 def get_board_information(target, verbose=False):
     # Query the board
     r = __query_board(target, verbose)

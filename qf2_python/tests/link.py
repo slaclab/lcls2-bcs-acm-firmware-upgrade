@@ -14,23 +14,13 @@ x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 # Turn on Kintex
 x.set_byte(0, 0x20, 0x20)
 
-# Clear latch
-x.set_byte(0, 0x10, 0x10)
-x.set_byte(0, 0x00, 0x10)
+x.import_network_data()
 
-while True:
-    print
-    x.import_network_data()
-    a = x.get_read_value('DEBUG_RX_10B_DATA')
-    b = x.get_read_value('DEBUG_RX_HS')
-    c = x.get_read_value('LATCHED_DEBUG_RX_10B_DATA')
-    d = x.get_read_value('LATCHED_DEBUG_RX_HS')
-    print(hex(a))
-    print(hex(b))
-    print(hex(c))
-    print(hex(d))
-    if (b != 7) and (d != 7):
-        print(b)
-        print(d)
-        break
-
+print(hex(x.get_read_value('DEBUG_RX_HS')))
+print(hex(x.get_read_value('DEBUG_RX_10B_DATA')))
+print(x.get_read_value('DEBUG_RX_DELAY_LAST_START'))
+print(x.get_read_value('DEBUG_RX_DELAY_LAST_END'))
+print(x.get_read_value('DEBUG_RX_DELAY_START'))
+print(x.get_read_value('DEBUG_RX_DELAY_END'))
+print('{:032b}'.format(x.get_read_value('DEBUG_RX_SCAN_BITS')))
+print(x.get_read_value('DEBUG_RX_DELAY'))

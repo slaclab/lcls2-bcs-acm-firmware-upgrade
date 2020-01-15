@@ -24,7 +24,7 @@ class cfg(mycfg.base):
 
         __write_bytes = 63
         __network_bytes = 23
-        __read_bytes = 117+(23*3)+2*3
+        __read_bytes = 117+(23*3)+2*15
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
@@ -81,8 +81,21 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
 
-                'LATCHED_DEBUG_RX_10B_DATA' : [608+(114*8), 10, int()],
-                'LATCHED_DEBUG_RX_HS' : [608+(113*8), 8, int()],               
+                'LATCHED_DEBUG_RX_SCAN_BITS' : [608+(133*8), 56, int()],
+                'LATCHED_DEBUG_RX_DELAY' : [608+(132*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_LAST_END' : [608+(131*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_LAST_START' : [608+(130*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_END' : [608+(129*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_START' : [608+(128*8), 8, int()],
+                'LATCHED_DEBUG_RX_10B_DATA' : [608+(126*8), 10, int()],
+                'LATCHED_DEBUG_RX_HS' : [608+(125*8), 8, int()],
+
+                'DEBUG_RX_SCAN_BITS' : [608+(118*8), 56, int()],
+                'DEBUG_RX_DELAY' : [608+(117*8), 8, int()],
+                'DEBUG_RX_DELAY_LAST_END' : [608+(116*8), 8, int()],
+                'DEBUG_RX_DELAY_LAST_START' : [608+(115*8), 8, int()],
+                'DEBUG_RX_DELAY_END' : [608+(114*8), 8, int()],
+                'DEBUG_RX_DELAY_START' : [608+(113*8), 8, int()],
                 'DEBUG_RX_10B_DATA' : [608+(111*8), 10, int()],
                 'DEBUG_RX_HS' : [608+(110*8), 8, int()],               
 
