@@ -1,0 +1,1 @@
+In order to use the QF2 core, add the qf2_core.vhd file to VHDL library 'QF2_pre'.
