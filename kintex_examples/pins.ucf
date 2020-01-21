@@ -1,12 +1,11 @@
 ##########################   Clocks   #####################################
 
 # Differential 50MHz system clock from Spartan-6 FPGA
-NET sys_clk_p           LOC = G11 | IOSTANDARD = LVDS_25;
-NET sys_clk_n           LOC = F10 | IOSTANDARD = LVDS_25;
+NET clk_sys_p           LOC = G11 | IOSTANDARD = LVDS_25;
+NET clk_sys_n           LOC = F10 | IOSTANDARD = LVDS_25;
 
 NET "clk_pll" TNM_NET = "clk_master";
-TIMEGRP "tgrp_clk_master" = "clk_master";
-TIMESPEC "TS_clk_master" = PERIOD "trgp_clk_master" 20 ns HIGH 50%;
+TIMESPEC "TS_clk_master" = PERIOD "clk_master" 20 ns HIGH 50%;
 
 ##########################   LEDs   #####################################
 
@@ -19,31 +18,28 @@ NET leds<1>                 LOC = K15 | IOSTANDARD = LVCMOS25;
 # Constraints are easier to implement mostly in-firmware
 
 # External reference clock pins
-#NET gt_ext_clk_p LOC = F6 | IOSTANDARD = LVDS;
-#NET gt_ext_clk_n LOC = F5 | IOSTANDARD = LVDS;
+NET gt_ext_clk_p LOC = F6 | IOSTANDARD = LVDS;
+NET gt_ext_clk_n LOC = F5 | IOSTANDARD = LVDS;
 
 # SIT9121 one-time programmable oscillator (125MHz)
 NET gt_ext_clk_p LOC = D6 | IOSTANDARD = LVDS;
 NET gt_ext_clk_n LOC = D5 | IOSTANDARD = LVDS;
 
 # SI57X_A clock
-#NET gt_ext_clk_p LOC = H6 | IOSTANDARD = LVDS;
-#NET gt_ext_clk_n LOC = H5 | IOSTANDARD = LVDS;
+NET gt_ext_clk_p LOC = H6 | IOSTANDARD = LVDS;
+NET gt_ext_clk_n LOC = H5 | IOSTANDARD = LVDS;
 
 # SI57X_B clock
-#NET gt_ext_clk_p LOC = K6 | IOSTANDARD = LVDS;
-#NET gt_ext_clk_n LOC = K5 | IOSTANDARD = LVDS;
+NET gt_ext_clk_p LOC = K6 | IOSTANDARD = LVDS;
+NET gt_ext_clk_n LOC = K5 | IOSTANDARD = LVDS;
 
 ##########################   Communications   #######################################
 
-# Driven high by firmware to indicate firmware active. Will be removed in a future release.
-NET kintex_done LOC = F14 | IOSTANDARD = LVCMOS25 | DRIVE = 4; #3P
+NET kintex_data_out_p LOC = J11 | IOSTANDARD = LVDS_25; # 1N
+NET kintex_data_out_n LOC = J10 | IOSTANDARD = LVDS_25; # 1P
 
-NET kintex_data_out_p LOC = J11 | IOSTANDARD = LVDS_25 | DRIVE = 4; # 1N
-NET kintex_data_out_n LOC = J10 | IOSTANDARD = LVDS_25 | DRIVE = 4; # 1P
-
-NET kintex_data_in_p LOC = J13 | IOSTANDARD = LVDS_25; # 2P
-NET kintex_data_in_n LOC = H13 | IOSTANDARD = LVDS_25; # 2N
+NET kintex_data_in_p LOC = J13 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE; # 2P
+NET kintex_data_in_n LOC = H13 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE; # 2N
 
 ######################### FMC I/O ####################################
 
