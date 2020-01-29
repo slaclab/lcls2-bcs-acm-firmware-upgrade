@@ -82,18 +82,33 @@ constant link_trainer_kernel_FIFO_DATA_WIDTH : integer := 0;
 constant link_trainer_kernel_PORT_DATA_WIDTH : integer := 8;
 type type_link_trainer_kernel_port_array is array (integer range link_trainer_kernel_PORT_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_PORT_DATA_WIDTH-1 downto 0);
 type type_link_trainer_kernel_rram_array is array (integer range link_trainer_kernel_RRAM_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_CORE_DATA_WIDTH-1 downto 0);
-component link_trainer_kernel
- port (
-    prog_data_in : in std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
-    prog_data_out : out std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
-    prog_address_in : in std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0);
-    port_in : in type_link_trainer_kernel_port_array;
-    port_in_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
-    port_out : out type_link_trainer_kernel_port_array;
-    port_out_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
-    clk, sync_reset, prog_write : in std_logic
-  );
-end component;
+
+  component dp_ram_no_init
+    GENERIC (
+      ADDRESS_WIDTH : integer;
+      DATA_WIDTH : integer;
+      DEPTH : integer
+      );
+    PORT (
+      -- main clock
+      clk : in std_logic;
+
+      -- master control for reloading the program memory from
+      -- and external control interface at runtime
+      master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_write : in std_logic;
+      master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
+      master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
+    
+      -- read / write strobes and addresses
+      slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_write : in std_logic;
+      slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
+      slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
+      );
+  end component;
   component dp_ram
     GENERIC (
       ADDRESS_WIDTH : integer;
@@ -121,6 +136,7 @@ end component;
       slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
       );
   end component;
+
   component lifo
     GENERIC (
       DATA_WIDTH : integer;
@@ -137,6 +153,7 @@ end component;
       data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
       );
   end component;
+
   component op_add
     generic (
       RWIDTH : integer
@@ -295,6 +312,107 @@ end component;
       );
   end component;
   end definitions;
+
+--
+-- dp_ram_no_init
+--
+  
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+ENTITY dp_ram_no_init IS
+  GENERIC (
+    ADDRESS_WIDTH : integer;
+    DATA_WIDTH : integer;
+    DEPTH : integer
+    );
+  PORT (
+    -- main clock
+    clk : in std_logic;
+
+    -- master control for reloading the program memory from
+    -- and external control interface at runtime
+    master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_write : in std_logic;
+    master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
+    master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+    
+    -- read / write strobes and addresses
+    slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_write : in std_logic;
+    slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
+    slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0')
+    );
+END ENTITY dp_ram_no_init;
+
+architecture rtl OF dp_ram_no_init is 
+
+  type type_ram_array is array (integer range DEPTH-1 downto 0) of std_logic_vector(DATA_WIDTH-1 downto 0);
+  
+  function dp_ram_init_null (A : integer; B : integer) return type_ram_array is
+    variable RES : type_ram_array;
+  begin
+    for I in A-1 downto 0 loop
+      for J in B-1 downto 0 loop
+        RES(I)(J) := '0';
+      end loop;
+    end loop;
+    return RES;
+  end dp_ram_init_null;
+
+  function string_to_slv(s : string) return std_logic_vector is
+    variable ret_slv : std_logic_vector(s'length-1 downto 0);
+  begin
+    for i in 1 to s'length loop
+      if s(i) = '0' then
+        ret_slv(i-1) := '0';
+      elsif s(i) = '1' then
+        ret_slv(i-1) := '1';
+      else
+        --catch bad characters
+        ret_slv(i-1) := 'X';
+      end if;
+    end loop;
+    return ret_slv;
+  end string_to_slv;
+
+  -- define the ram array
+  signal int_ram_array : type_ram_array := dp_ram_init_null(DEPTH,DATA_WIDTH);
+
+  -- control signals for the ram
+  -- split read, interlocked write
+  signal int_write : std_logic;
+  signal int_write_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+  signal int_write_data : std_logic_vector(DATA_WIDTH-1 downto 0);
+
+BEGIN
+
+    -- slave read
+  slave_data_out <= int_ram_array(to_integer(unsigned(slave_read_address))) when rising_edge(clk);
+  
+  -- master read
+  master_data_out <= int_ram_array(to_integer(unsigned(master_read_address))) when rising_edge(clk);
+
+  -- interlocked write (master_write must keep at '0' if slave is not halted)
+  int_write <= slave_write or master_write;
+  int_write_address <= master_write_address when master_write = '1'
+                       else slave_write_address;
+  int_write_data <= master_data_in when master_write = '1'
+                    else slave_data_in;
+
+  write_process : process(clk)
+  begin
+    if rising_edge(clk) then
+      if int_write = '1' then
+        int_ram_array(to_integer(unsigned(int_write_address))) <= int_write_data;
+      end if;
+    end if;
+  end process write_process;
+
+END ARCHITECTURE rtl;
 
 --
 -- dp_ram
@@ -1173,12 +1291,12 @@ pram_inst : dp_ram
 pram_master_read_address <= prog_address_in when sync_reset = '1' else next_pram_address;
 pram_prefetch_data <= int_prog_data_out;
 prog_data_out <= int_prog_data_out;
-rram_inst : dp_ram
+rram_inst : dp_ram_no_init
   generic map (
     ADDRESS_WIDTH => RRAM_ADDRESS_WIDTH,
     DATA_WIDTH    => CORE_DATA_WIDTH,
-    DEPTH         => RRAM_DEPTH,
-    INIT          => "")
+    DEPTH         => RRAM_DEPTH
+    )
   port map (
     clk => clk,
     master_read_address => ra_address,
@@ -1578,6 +1696,19 @@ end entity link_trainer;
 
 architecture rtl of link_trainer is
 
+  component link_trainer_kernel
+ port (
+    prog_data_in : in std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
+    prog_data_out : out std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
+    prog_address_in : in std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0);
+    port_in : in type_link_trainer_kernel_port_array;
+    port_in_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
+    port_out : out type_link_trainer_kernel_port_array;
+    port_out_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
+    clk, sync_reset, prog_write : in std_logic
+  );
+  end component;
+  
   signal gnd_prog_data_in    : std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
   signal gnd_prog_address_in : std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
   signal gnd                 : std_logic                                                             := '0';
@@ -4701,7 +4832,7 @@ architecture rtl of comms_link is
     rx_delay_last_end : out std_logic_vector(7 downto 0);
     rx_scan_bits : out std_logic_vector(31 downto 0)
     );
-end component;
+  end component;
 
   -- K codes
   constant K28P2 : std_logic_vector(7 downto 0) := x"5C";

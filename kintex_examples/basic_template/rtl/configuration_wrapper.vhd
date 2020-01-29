@@ -6,29 +6,30 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library qf2_pre;
+
 entity configuration_wrapper is
   generic (
     NUM_READ_BYTES  : integer;
     NUM_WRITE_BYTES : integer
     );
   port (
-    async_reset, clk, clk_4x : in  std_logic;
+    clk_sys_p, clk_sys_n : in std_logic;
+    async_reset, clk_100mhz : out  std_logic;
     transmitting, receiving                   : out std_logic;
     led_lpc_r, led_lpc_g, led_lpc_b           : in  std_logic;
     led_hpc_r, led_hpc_g, led_hpc_b           : in  std_logic;
     data_in_p, data_in_n                      : in  std_logic;
     data_out_p, data_out_n                    : out std_logic;
-    hs_data_out_p, hs_data_out_n              : out std_logic;
     INIT_READ_MAP                             : in  std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
     read_map                                  : out std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
-    write_map                                 : in  std_logic_vector(NUM_WRITE_BYTES*8-1 downto 0);
-    configuration_active                      : out std_logic
+    write_map                                 : in  std_logic_vector(NUM_WRITE_BYTES*8-1 downto 0)
     );
 end entity configuration_wrapper;
 
-architecture behave of configuration_wrapper is
+architecture rtl of configuration_wrapper is
 
-  signal sync_reset : std_logic := '1';
+  signal int_clk_100mhz, int_async_reset, sync_reset : std_logic := '1';
 
   ---------------------------
   -- FIFO signals
@@ -39,13 +40,16 @@ architecture behave of configuration_wrapper is
 
 begin
 
+  clk_100mhz <= int_clk_100mhz;
+  async_reset <= int_async_reset;
+  
   inst_sync_reset_gen : entity work.async_to_sync_reset_shift
     generic map (
       LENGTH => 4
       )
     port map (
-      clk    => clk,
-      input  => async_reset,
+      clk    => int_clk_100mhz,
+      input  => int_async_reset,
       output => sync_reset
       );
 
@@ -57,7 +61,7 @@ begin
       )
     port map (
       sync_reset         => sync_reset,
-      clk                => clk,
+      clk                => int_clk_100mhz,
       inbound_read       => inbound_read,
       inbound_data       => inbound_data,
       inbound_frame_end  => inbound_frame_end,
@@ -72,7 +76,7 @@ begin
       );
 
   -- QF2 core instance
-  inst_qf2_core : entity work.qf2_core
+  inst_qf2_core : entity qf2_pre.qf2_core
     generic map (
       CHANNEL_1_ENABLE   => true,
       CHANNEL_2_ENABLE   => true,
@@ -84,21 +88,27 @@ begin
       CHANNEL_4_LOOPBACK => true
       )
     port map (
-      async_reset                  => async_reset,
-      clk                          => clk,
-      clk_4x                       => clk_4x,
+      async_reset                  => int_async_reset,
+      clk_100mhz                   => int_clk_100mhz,
+      clk_sys_p => clk_sys_p,
+      clk_sys_n => clk_sys_n,
+      
       led_lpc_r                    => led_lpc_r,
       led_lpc_g                    => led_lpc_g,
       led_lpc_b                    => led_lpc_b,
       led_hpc_r                    => led_hpc_r,
       led_hpc_g                    => led_hpc_g,
       led_hpc_b                    => led_hpc_b,
+
       transmitting                 => transmitting,
       receiving                    => receiving,
+
       data_in_p                    => data_in_p,
       data_in_n                    => data_in_n,
       data_out_p                   => data_out_p,
       data_out_n                   => data_out_n,
+
+      channel_1_clk => int_clk_100mhz,
       channel_1_inbound_data       => inbound_data,
       channel_1_inbound_read       => inbound_read,
       channel_1_inbound_frame_end  => inbound_frame_end,
@@ -106,10 +116,12 @@ begin
       channel_1_outbound_data      => outbound_data,
       channel_1_outbound_write     => outbound_write,
       channel_1_outbound_frame_end => outbound_frame_end,
-      channel_1_outbound_available => outbound_available
+      channel_1_outbound_available => outbound_available,
+
+      channel_2_clk => '0',
+      channel_3_clk => '0',
+      channel_4_clk => '0',
+      multicast_clk => '0'
       );
 
-  configuration_active <= outbound_frame_end or inbound_frame_end;
-
-end architecture behave;
-
+end architecture rtl;

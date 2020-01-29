@@ -1,0 +1,21 @@
+##########################   Clocks   #####################################
+
+# Differential 50MHz system clock
+NET clk_sys_p           LOC = G11 | IOSTANDARD = LVDS_25;
+NET clk_sys_n           LOC = F10 | IOSTANDARD = LVDS_25;
+
+NET "clk_sys_p" TNM_NET = "clk_master";
+TIMESPEC "TS_clk_master" = PERIOD "clk_master" 20 ns HIGH 50%;
+
+##########################   LEDs   #####################################
+
+NET leds<0>                 LOC = M16 | IOSTANDARD = LVCMOS25;
+NET leds<1>                 LOC = K15 | IOSTANDARD = LVCMOS25;
+
+##########################   Communications   #######################################
+
+NET kintex_data_out_p LOC = J11 | IOSTANDARD = LVDS_25; # 1N
+NET kintex_data_out_n LOC = J10 | IOSTANDARD = LVDS_25; # 1P
+
+NET kintex_data_in_p LOC = J13 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE; # 2P
+NET kintex_data_in_n LOC = H13 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE; # 2N

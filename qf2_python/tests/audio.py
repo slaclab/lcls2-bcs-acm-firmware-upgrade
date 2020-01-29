@@ -99,6 +99,6 @@ print('Current BCLK frequency estimate: '+str(x.tas2505_osc_frequency())+'MHz')
 time.sleep(0.1)
 
 # Drive the audio buffer
-#x.tas2505_audio_test(args.file)
+x.tas2505_audio_test(args.file)
 
-x.speech_out_test('ip 192.168.1.127')
+#x.speech_out_test('ip 192.168.1.127')
