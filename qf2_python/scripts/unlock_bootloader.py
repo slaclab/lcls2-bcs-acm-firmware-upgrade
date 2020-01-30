@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 
-import helpers, time, sys, argparse, hashlib, qf2_python.identifier
-from datetime import datetime, timedelta
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+import argparse
 
-def my_exec_cfg(x, verbose=False):
-    ldict = locals()
-    exec(x,globals(),ldict)
-    return ldict['x'].cfg(verbose)
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
 
 parser = argparse.ArgumentParser(description='Lock Spartan-6 image and configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')

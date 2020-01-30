@@ -4,11 +4,15 @@
 MAJOR_VERSION   = 0x00 # '?.xx+x'
 MINOR_VERSION_1 = 0x07 # 'x.?x+x'
 MINOR_VERSION_2 = 0x00 # 'x.x?+x'
-MINOR_VERSION_3 = 0x00 # 'x.xx+?'
+MINOR_VERSION_3 = 0x01 # 'x.xx+?'
 
-from socket import *
-import string, time, sys, cfg as mycfg
-from datetime import datetime, timedelta
+import string, time, sys, socket
+import datetime
+#.datetime as datetime
+#import datetime.timedelta as timedelta
+#from datetime import datetime, timedelta
+
+import qf2_python.QF2_pre.cfg as mycfg
 
 class cfg(mycfg.base):
 
@@ -244,12 +248,12 @@ class interface(cfg):
                 self.BOARD_UID = str()
 
                 # Interface socket
-                self.UDPSock = socket(AF_INET,SOCK_DGRAM)
+                self.UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
                 self.UDPSock.bind(("0.0.0.0", 0))
                 self.UDPSock.settimeout(2)
 
                 # External I2C socket
-                self.I2CSock = socket(AF_INET, SOCK_DGRAM)
+                self.I2CSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.I2CSock.bind(("0.0.0.0", 0))
                 self.I2CSock.settimeout(2)
 
@@ -290,11 +294,9 @@ class interface(cfg):
                 rbytes = bytearray()
                 rbytes[:] = (mask + data)
                 
-                read_bytes = str()
-
                 while True:
                         try:
-                                self.UDPSock.sendto(str(rbytes),(self.__host, self.__port))
+                                self.UDPSock.sendto(rbytes,(self.__host, self.__port))
                                 read_bytes = self.UDPSock.recv(cfg.packet_receive_length(self))
                                 if not read_bytes:
                                         print('No data received')
@@ -1277,9 +1279,9 @@ class interface(cfg):
                 results = list()
                 for i in range(0, 4):
                         self.i2c_controller_write(0x2, 0x40|i, 0x0, 0x4727, True)
-                        print 'a'
+                        #print('a'
                         r = self.i2c_controller_read(0x2, 0x40|i, 0x1, True)
-                        print 'b'
+                        #print 'b'
                         if ( r & 0x8000 != 0 ):
                                 results.append(0.0)
                                 results.append(0.0)
@@ -1288,7 +1290,7 @@ class interface(cfg):
                                 results.append(float(self.i2c_controller_read(0x2, 0x40|i, 0x2, True)) * 0.00125 * results[-1])
                                 
                 for i in range(0, 6):
-                        print 'c'
+                        #print 'c'
                         self.write_16b_ina226(0x40, 0x40|i, 0x0, 0x4727)
                         r = self.i2c_controller_read(0x40, 0x40|i, 0x1, True)
                         if ( r & 0x8000 != 0 ):
@@ -1334,11 +1336,11 @@ class interface(cfg):
                         v = v + d
 
                 # Send command
-                read_bytes = str()
+                #read_bytes = str()
 
                 while True:
                         try:
-                                self.I2CSock.sendto(str(v),(self.__host, self.__i2c_port))
+                                self.I2CSock.sendto(v,(self.__host, self.__i2c_port))
                                 read_bytes = self.I2CSock.recv(1400)
                                 if not read_bytes:
                                         print('No data received')
@@ -1390,11 +1392,11 @@ class interface(cfg):
                 #        print hex(i)
 
                 # Send command
-                read_bytes = str()
+                #read_bytes = str()
 
                 while True:
                         try:
-                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
+                                self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
                                 read_bytes = self.I2CSock.recv(1400)
                                 if not read_bytes:
                                         print('No data received')
@@ -1659,7 +1661,7 @@ class interface(cfg):
                 print('+12V_FMC:\t\t'+'{0:.3f}'.format(11.0 * x[2])+'\tV\t'+'{0:.3f}'.format(z[4] / 0.01)+'\tA\t'+'{0:.3f}'.format(z[5] / 0.01)+'\tW')
                 print('+3.3V_FMC:\t\t'+'{0:.3f}'.format(2.0 * x[1])+'\tV\t'+'{0:.3f}'.format(z[2] / 0.004)+'\tA\t'+'{0:.3f}'.format(z[3] / 0.004)+'\tW')
 
-		s = 'VADJ_FMC_TOP:\t\t' + '{0:.3f}'.format(vadj_fmc_top) + '\tV'
+                s = 'VADJ_FMC_TOP:\t\t' + '{0:.3f}'.format(vadj_fmc_top) + '\tV'
                 if ( (vadj_fmc_top > (2.5 * 1.03)) or (vadj_fmc_top < (2.5 * 0.97)) ):
                         s = '!!!!! ' + s
                 print(s)
@@ -1727,76 +1729,76 @@ class interface(cfg):
                         print('\tRX3 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX3_POWER')) * 0.0001)+'mW')
                         print('\tRX4 power:\t'+str(float(self.get_read_value('KINTEX_QSFP_2_RX4_POWER')) * 0.0001)+'mW')
 
-        def reboot_to_runtime(self, wait_for_reboot=False):
-                x = bytearray([0x81])
-                TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.sendto(x,(self.__host,50000))
-                TempSock.close()
+#        def reboot_to_runtime(self, wait_for_reboot=False):
+#                x = bytearray([0x81])
+#                TempSock = socket(AF_INET,SOCK_DGRAM)
+#                TempSock.sendto(x,(self.__host,50000))
+#                TempSock.close()
 
-                if wait_for_reboot == False:
-                        return
+#                if wait_for_reboot == False:
+#                        return
 
-                # Wait two seconds for board to enter reset phase
-                time.sleep(2)
+#                # Wait two seconds for board to enter reset phase
+#                time.sleep(2)
 
-                # Loop wait for reboot
-                print('Waiting for board to reconnect...')
-                x = bytearray([0x0])
-                TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.bind(("0.0.0.0", 0))
-                TempSock.settimeout(1)
+#                # Loop wait for reboot
+#                print('Waiting for board to reconnect...')
+#                x = bytearray([0x0])
+#                TempSock = socket(AF_INET,SOCK_DGRAM)
+#                TempSock.bind(("0.0.0.0", 0))
+#                TempSock.settimeout(1)
 
-                count = 0
-                for count in range(0, 15):
-                        try:
-                                TempSock.sendto(x,(self.__host, 50000))
-                                TempSock.recv(1000)
-                                break
-                        except KeyboardInterrupt:
-                                print('Ctrl-C detected')
-                                exit(0)
-                        except:
-                                continue
+#                count = 0
+#                for count in range(0, 15):
+#                        try:
+#                                TempSock.sendto(x,(self.__host, 50000))
+#                                TempSock.recv(1000)
+#                                break
+#                        except KeyboardInterrupt:
+#                                print('Ctrl-C detected')
+#                                exit(0)
+#                        except:
+#                                continue
 
-                if count == 14:
-                        raise Exception('Reboot failed')
+#                if count == 14:
+#                        raise Exception('Reboot failed')
 
-                print('Reboot complete')
-                TempSock.close()
+#                print('Reboot complete')
+#                TempSock.close()
 
-        def reboot_to_bootloader(self, wait_for_reboot=False):
-                x = bytearray([0x01])
-                TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.sendto(x,(self.__host,50000))
-                TempSock.close()
+#        def reboot_to_bootloader(self, wait_for_reboot=False):
+#                x = bytearray([0x01])
+#                TempSock = socket(AF_INET,SOCK_DGRAM)
+#                TempSock.sendto(x,(self.__host,50000))
+#                TempSock.close()
 
-                if wait_for_reboot == False:
-                        return
+#                if wait_for_reboot == False:
+#                        return
 
-                # Wait two seconds for board to enter reset phase
-                time.sleep(2)
+#                # Wait two seconds for board to enter reset phase
+#                time.sleep(2)
 
-                # Loop wait for reboot
-                print('Waiting for board to reconnect...')
-                x = bytearray([0x0])
-                TempSock = socket(AF_INET,SOCK_DGRAM)
-                TempSock.bind(("0.0.0.0", 0))
-                TempSock.settimeout(1)
+#                # Loop wait for reboot
+#                print('Waiting for board to reconnect...')
+#                x = bytearray([0x0])
+#                TempSock = socket(AF_INET,SOCK_DGRAM)
+#                TempSock.bind(("0.0.0.0", 0))
+#                TempSock.settimeout(1)
 
-                count = 0
-                for count in range(0, 15):
-                        try:
-                                TempSock.sendto(x,(self.__host, 50000))
-                                TempSock.recv(1000)
-                                break
-                        except KeyboardInterrupt:
-                                print('Ctrl-C detected')
-                                exit(0)
-                        except:
-                                continue
+#                count = 0
+#                for count in range(0, 15):
+#                        try:
+#                                TempSock.sendto(x,(self.__host, 50000))
+#                                TempSock.recv(1000)
+#                                break
+#                        except KeyboardInterrupt:
+#                                print('Ctrl-C detected')
+#                                exit(0)
+#                        except:
+#                                continue
 
-                if count == 14:
-                        raise Exception('Reboot failed')
+#                if count == 14:
+#                        raise Exception('Reboot failed')
 
-                print('Reboot complete')
-                TempSock.close()
+#                print('Reboot complete')
+#                TempSock.close()

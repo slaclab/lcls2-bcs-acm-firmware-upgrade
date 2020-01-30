@@ -1,6 +1,6 @@
 
 import socket, string, time
-from idcodes import *
+from qf2_python.configuration.jtag.idcodes import *
 
 # TODO - When exiting TEST_LOGIC_RESET, the device can be in BYPASS or
 # IDCODE. SHIFT_DR will first emit a '1' in IDCODE, but a '0' in BYPASS.
@@ -185,7 +185,7 @@ class chain(states):
         #    print hex(i),
         #print
 
-        self.__config = str(self.__config)
+        #self.__config = str(self.__config)
 
     def idcode(self, index):
         return self.__idcodes[index]
@@ -489,7 +489,7 @@ class chain(states):
 
         # Burst packing is a little tricky...
         # First we get the burst count
-        burst_count = len(data) / 4
+        burst_count = len(data) // 4
         end_count = len(data) % 4
 
         block = bytearray()
@@ -638,33 +638,35 @@ class chain(states):
         #    print hex(i),
         #print 'burst:', self.__burst_size
 
-        data = str(bytearray(data))
+        # TODO: Changed
+        #data = str(bytearray(data))
+        data = bytearray(data)
 
         # Loop through by MTU size
         i = 0
-        substring = data[i : i + MTU]
-        return_string = str()
+        subarray = data[i : i + MTU]
+        return_array = bytearray()
 
         #self.__pre_send_time = time.time()
         #print 'proc:',self.__pre_send_time - self.__post_send_time,
 
         #print 'Exec with result'
 
-        while len(substring):
+        while len(subarray):
 
             # Send the data and receive the output
-            self.__UDPSock.sendto(self.__config + substring, (self.__ip, self.__stream_port))
-            data2 = self.__UDPSock.recv(len(substring))
+            self.__UDPSock.sendto(self.__config + subarray, (self.__ip, self.__stream_port))
+            data2 = self.__UDPSock.recv(len(subarray))
             if not data2:
                 raise EthernetToJTAGException('No data received')
 
             bytes2 = bytearray(data2)
-            if ( len(bytes2) != len(substring) ):
-		raise EthernetToJTAGException('Incorrect data volume received')
+            if ( len(bytes2) != len(subarray) ):
+                raise EthernetToJTAGException('Incorrect data volume received')
 
             i = i + MTU
-            substring = data[i : i + MTU]
-            return_string += data2
+            subarray = data[i : i + MTU]
+            return_array += data2
                 
         #self.__post_send_time = time.time()
         #print 'send:',self.__post_send_time - self.__pre_send_time
@@ -674,7 +676,7 @@ class chain(states):
         #    print hex(i),
         #print
 
-        return bytearray(return_string)
+        return return_array # bytearray(return_string)
 
     def jtag_exec(self, data):
         #self.jtag_exec_with_result(data)
@@ -694,11 +696,11 @@ class chain(states):
 
         #print 'Exec without result'
 
-        data = str(bytearray(data))
+        data = bytearray(data)
 
         # Loop through by MTU size
         i = 0
-        substring = data[i : i + MTU]
+        subarray = data[i : i + MTU]
 
         # Interface shifts one cycle every two of 50MHz at best
         # Therefore theoretical maximum speed is 25MHz
@@ -718,22 +720,29 @@ class chain(states):
 
         #print len(self.__config)
 
-        while len(substring):
+        while len(subarray):
 
+            #print(type(subarray))
+            #print(type(self.__config))
+                  
+
+            #subarray.insert(0, self.__config)
+            #print(type(v))
+            
             # Send the data and receive the output
-            self.__UDPSock.sendto(self.__config + substring, (self.__ip, self.__stream_port))
+            self.__UDPSock.sendto(self.__config + subarray, (self.__ip, self.__stream_port))
 
             # Wait state to avoid overloading the JTAG interface
             # when we're sending UDP packets
 
             time.sleep(time_per_mtu)
             
-            #data2 = self.__UDPSock.recv(len(substring))
+            #data2 = self.__UDPSock.recv(len(subarray))
             #if not data2:
             #    raise "No data received"
 
             i = i + MTU
-            substring = data[i : i + MTU]
+            subarray = data[i : i + MTU]
 
         #self.__post_send_time = time.time()
         #print 'send:',self.__post_send_time - self.__pre_send_time

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from ..jtag import *
-import spi, constants, time
+#import qf2_python.configuration.spi
+import qf2_python.configuration.spi.constants as constants
+import time
 from datetime import datetime, timedelta
 
 KINTEX_IMAGE_TABLE_SECTOR = 57
@@ -67,12 +69,12 @@ class interface():
 
         for i in images:
             if i['sha256'] == identifier:
-                print 'Erasing image'
+                print('Erasing image')
                 images.remove(i)
                 self.save_image_table(images)
                 return
         
-        print 'Image not found'
+        print('Image not found')
 
     def save_image_table(self, images):
 
@@ -133,12 +135,12 @@ class interface():
             if ( table[i] != pd[i] ):
                 if ( pd[i] != 0xFF ):
                     # Erase the previous table
-                    print 'Erasing old file table'
+                    print('Erasing old file table')
                     self.erase_table()
                     break
 
-        print 'Updating file table'
-        for i in range(0, len(table) / 256):
+        print('Updating file table')
+        for i in range(0, len(table) // 256):
             self.__target.page_program(table[i * 256 : (i+1) * 256], i * 256 + KINTEX_IMAGE_TABLE_ADDRESS, True)
 
         # Verify
@@ -163,14 +165,14 @@ class interface():
         for i in images:
 
             if i['sha256'] == parser.hash():
-                if i['length'] == parser.length() / 8:
-                    print 'Matching image already stored in PROM'
+                if i['length'] == parser.length() // 8:
+                    print('Matching image already stored in PROM')
                     return
 
             for j in available_sectors:
 
-                position = i['address'] / constants.SECTOR_SIZE
-                length = i['length'] / constants.SECTOR_SIZE
+                position = i['address'] // constants.SECTOR_SIZE
+                length = i['length'] // constants.SECTOR_SIZE
                 if ( length % constants.SECTOR_SIZE != 0 ):
                     length += 1
 
@@ -194,11 +196,11 @@ class interface():
                 
                     break
 
-        length = parser.length() / constants.SECTOR_SIZE
+        length = parser.length() // constants.SECTOR_SIZE
         if ( parser.length() % constants.SECTOR_SIZE != 0 ):
             length += 1
     
-        print 'Sectors needed:',length
+        print('Sectors needed: ' + str(length))
 
         location = 0
         for i in available_sectors:
@@ -209,7 +211,7 @@ class interface():
         if location == 0:
             raise spi.SPI_Base_Exception('Insufficient contiguous sectors available on device')
         
-        print 'Writing image starting at sector', location
+        print('Writing image starting at sector: ' + str(location))
 
         self.__target.program_bitfile(name, location)
 
@@ -224,18 +226,18 @@ class interface():
                 response = c.request('0.pool.ntp.org', version=3)
                 storage_date = int(response.tx_time)
             except ntplib.NTPException:
-                print 'Timeout on NTP request, using local clock instead'
+                print('Timeout on NTP request, using local clock instead')
                 storage_date = int(time.time())
         except:
-                print 'ntplib does not appear to be installed, using local clock instead'
+                print('ntplib does not appear to be installed, using local clock instead')
                 storage_date = int(time.time())            
 
         build_date = int(time.mktime(datetime.strptime(parser.build_date() + ' ' + parser.build_time(), '%Y/%m/%d %H:%M:%S').timetuple()))
 
-        print 'Storage timestamp:', storage_date
-        print 'Build timestamp:', build_date
+        print('Storage timestamp: ' + str(storage_date))
+        print('Build timestamp: ' + str(build_date))
 
-        print 'Adding entry to image table'
+        print('Adding entry to image table')
 
         images.append({
                 'sha256' : parser.hash(),

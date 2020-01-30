@@ -144,3 +144,12 @@ def get_active_interface(target, r, verbose):
         
     # Return an interface
     return my_exec_interface('import qf2_python.'+x['Board type']+'.v_'+h+' as x', target, verbose)
+
+def verifyInBootloader(r, verbose):
+    raise Exception('This feature is not supported in firmwares that use the v0 identification system')
+
+def verifyInRuntime(r, verbose):
+    raise Exception('This feature is not supported in firmwares that use the v0 identification system')
+
+def verifyFirmwareVersionRecentAs(v1, v2, v3, v4, r, verbose):
+    raise Exception('This feature is not supported in firmwares that use the v0 identification system')

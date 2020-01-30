@@ -2,8 +2,11 @@
 
 import time, sys, argparse, hashlib
 from datetime import datetime, timedelta
-from ..configuration.jtag import *
-from ..configuration.spi import *
+
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.constants as spi_constants
 
 def generate_fw_id_data(bitfile):
 
@@ -21,10 +24,10 @@ def generate_fw_id_data(bitfile):
             response = c.request('0.pool.ntp.org', version=3)
             storage_date = int(response.tx_time)
         except ntplib.NTPException:
-            print 'Timeout on NTP request, using local clock instead'
+            print('Timeout on NTP request, using local clock instead')
             storage_date = int(time.time())
     except:
-        print 'ntplib does not appear to be installed, using local clock instead'
+        print('ntplib does not appear to be installed, using local clock instead')
         storage_date = int(time.time())
 
     # Extract the build date and time from the bitfile and encode it
@@ -61,39 +64,37 @@ def generate_fw_id_data(bitfile):
 def prom_integrity_check(prom, offset, verbose):
 
     if verbose == True:
-        print 'Performing PROM integrity check'
+        print('Performing PROM integrity check')
         
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi.constants.SECTOR_SIZE
+    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
     
     # Assuming Spartan-6 here
     # As the Spartan-6 bitstream length can vary slightly from version to version,
     # the hash is generated to the end of the sector
-    prom_hash = prom.read_hash(offset * spi.constants.SECTOR_SIZE, 23 * spi.constants.SECTOR_SIZE)
+    prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 23 * spi_constants.SECTOR_SIZE)
 
     # Compare the current data with the previous to see if we have to erase
     pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
 
     if verbose == True:
-        print 'Bitstream SHA256:',
-
-        s = str()
+        
+        s = 'Bitstream SHA256: '
         for i in prom_hash[0:32]:
             s += '{:02x}'.format(i)
-        print s
+        print(s)
 
-        print 'Stored SHA256:',
-        s = str()
+        s = 'Stored SHA256: '
         for i in pd[0:32]:
             s += '{:02x}'.format(i)
-        print s
+        print(s)
 
     if prom_hash == pd:
         if verbose == True:
-            print 'PROM bitstream integrity OK'
+            print('PROM bitstream integrity OK')
         return prom_hash
 
     if verbose == True:
-        print 'PROM bitstream integrity BAD'
+        print('PROM bitstream integrity BAD')
     return 0
 
 def prom_compare_check(prom, offset, bitfile, verbose):
@@ -101,7 +102,7 @@ def prom_compare_check(prom, offset, bitfile, verbose):
     if verbose == True:
         print('Performing PROM bitfile comparison check')
         
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi.constants.SECTOR_SIZE
+    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
 
     # Check hash and timestamps stored in PROM
     fw_id_data = generate_fw_id_data(bitfile)
@@ -111,10 +112,10 @@ def prom_compare_check(prom, offset, bitfile, verbose):
         print('Firmware ID from bitfile:')
         print('')
 
-        s = str()
+        s = 'SHA256: '
         for i in fw_id_data[0:32]:
             s += '{:02x}'.format(i)
-        print('SHA256: '+s)
+        print(s)
 
         build_date = 0
         for i in range(0, 8):

@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
-import time, sys, argparse
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+import argparse
 
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.kintex_7_firmware as kintex_7_firmware
+
+# Hard-coded as it is fixed in Spartan firmware
 SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='Add Kintex-7 boot image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-b', '--bit', help='Firmware bitfile to add')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-b', '--bit', required=True, help='Firmware bitfile to add')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 
 args = parser.parse_args()
 

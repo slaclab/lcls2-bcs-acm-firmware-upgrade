@@ -150,3 +150,16 @@ def get_active_interface(target, r, verbose):
         
     # Return an interface
     return my_exec_interface('import qf2_python.'+x['Board type']+'.v_'+h+' as x', target, verbose)
+
+def verifyInBootloader(r, verbose):
+    x = get_board_information(r, verbose)    
+    if x['Active firmware'] != 'Bootloader':
+        raise Exception('Spartan bootloader must be running')
+
+def verifyInRuntime(r, verose):
+    x = get_board_information(r, verbose)    
+    if x['Active firmware'] != 'Runtime':
+        raise Exception('Spartan runtime must be running')
+
+def verifyFirmwareVersionRecentAs(v1, v2, v3, v4, r, verbose):
+    raise Exception('This feature is not supported in firmwares that use the v1 identification system')

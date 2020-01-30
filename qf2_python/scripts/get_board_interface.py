@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+
 import qf2_python.identifier
 
 parser = argparse.ArgumentParser(description='Identify a board and get an interface', formatter_class=argparse.ArgumentDefaultsHelpFormatter)

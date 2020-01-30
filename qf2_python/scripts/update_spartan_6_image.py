@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
-import helpers, time, sys, argparse, hashlib, qf2_python.identifier
+import qf2_python.scripts.helpers as helpers
+import time, sys, argparse, hashlib, qf2_python.identifier
+
 from datetime import datetime, timedelta
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+
+import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.constants as spi_constants
 
 def my_exec_cfg(x, verbose=False):
     ldict = locals()
@@ -36,7 +41,7 @@ FIRMWARE_SECTOR_OFFSET = 32
 if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=int(args.port), input_select=0, speed=0, noinit=True), args.verbose)
@@ -81,7 +86,7 @@ print('Erasing old firmware ID block')
 prom.sector_erase(FIRMWARE_ID_ADDRESS)
 
 print('Updating firmware ID block')
-for i in range(0, len(fw_id_data) / 256):
+for i in range(0, len(fw_id_data) // 256):
     prom.page_program(fw_id_data[i * 256 : (i+1) * 256], i * 256 + FIRMWARE_ID_ADDRESS, True)
 
 s = str()
@@ -101,7 +106,7 @@ print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp
 
 if args.nomigrate == False:
 
-    CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
+    CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
     
     print('Migrating configuration to new firmware')
     

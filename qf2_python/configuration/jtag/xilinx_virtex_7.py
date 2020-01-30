@@ -2,6 +2,12 @@
 
 import time, sys
 
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
+
 # JTAG codes for V7
 BYPASS = 0x3F
 IDCODE = 0x09
@@ -38,7 +44,7 @@ class interface():
         self.target.go_to_run_test_idle()
 
         self.target.go_to_shift_dr()
-        print hex(self.target.read(32, True))
+        #print hex(self.target.read(32, True))
         self.target.go_to_run_test_idle()
 
         # BYPASS
@@ -89,17 +95,18 @@ class interface():
         #        print hex(data[i*4+4]), hex(data[i*4+5]), hex(data[i*4+6]), hex(data[i*4+7])
         #        data[i*4+5] = 1
 
-        print '{:<9}'.format(''),
+        # Adapt code to python2 & python3
+        compat.print_no_flush('{:<9}'.format(''))
 
         while i + 14000 < len(data):
             self.target.write_bytearray(subarray, False, True)
             i = i + 14000
             subarray = data[i : i + 14000]
-            print '\b\b\b\b\b\b\b\b\b\b' + '{:<9}'.format(str((i * 100) / len(data)) + '%'),
-            sys.stdout.flush()
 
-        print
-
+            # Adapt code to python2 & python3
+            compat.print_no_return('\b\b\b\b\b\b\b\b\b\b' + '{:<9}'.format(str((i * 100) // len(data)) + '%'),)
+            
+        print('')
 
         # Last block
         self.target.write_bytearray(subarray, True, True)
@@ -128,7 +135,7 @@ class interface():
         self.target.write(CFG_OUT, 6, True)
         self.target.go_to_run_test_idle()
         self.target.go_to_shift_dr()
-        print hex(self.target.read(32))
+        #print hex(self.target.read(32))
         self.target.go_to_run_test_idle()
 
         # BYPASS
@@ -173,7 +180,7 @@ class interface():
         self.target.write(CFG_OUT, 6, True)
         self.target.go_to_run_test_idle()
         self.target.go_to_shift_dr()
-        print hex(self.target.read(32, True))
+        #print hex(self.target.read(32, True))
         self.target.go_to_run_test_idle()
 
         # BYPASS

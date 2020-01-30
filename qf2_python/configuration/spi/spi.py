@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 
-import time, sys, hashlib, constants
-from ..jtag import *
+import time, sys, hashlib
+
+import qf2_python.configuration.spi.constants as spi_constants
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
+
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
 
 class Generic():
     RDID = 0x9F
@@ -235,7 +244,7 @@ class SL25FLL():
 
         # Read the status register and wait for completion
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
-            print self.read_register(self.RDSR1, 1)[0]
+            print(str(self.read_register(self.RDSR1, 1)[0]))
             continue
 
     def sector_erase(self, address):
@@ -501,11 +510,11 @@ class interface():
 
         if self.__manufacturer_id == 0x20:
             if verbose == True:
-                print 'Micron manufacturer code found, assuming N25Q'
+                print('Micron manufacturer code found, assuming N25Q')
             self.__interface = N25Q(self.__target, self.__verbose)
         elif self.__manufacturer_id == 0x1:
             if verbose == True:
-                print 'Cypress manufacturer code found, assuming SL25FL-L'
+                print('Cypress manufacturer code found, assuming SL25FL-L')
             self.__interface = SL25FLL(self.__target, self.__verbose)
                 
     def dummy_cycles(self):
@@ -544,30 +553,29 @@ class interface():
         data = xilinx_bitfile_parser.bitfile(name).data()
 
         # Pad the data to the block boundary
-        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
+        data += bytearray([0xFF]) * (spi_constants.SECTOR_SIZE - len(data) % spi_constants.SECTOR_SIZE)
 
         last_length = 0
         start_time = time.time()
-        num_blocks = len(data) / constants.SECTOR_SIZE
+        num_blocks = len(data) // spi_constants.SECTOR_SIZE
 
         for i in range(0, num_blocks):
 
             # Read the sector
-            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
+            pd = self.read_data((offset + i) * spi_constants.SECTOR_SIZE, spi_constants.SECTOR_SIZE)
             elapsed = time.time() - start_time
-            left = elapsed * (num_blocks - i - 1) / (i + 1)
+            left = elapsed * (num_blocks - i - 1) // (i + 1)
             total = elapsed + left
             output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+'{0:.2f}'.format(elapsed)+'s)'
             output = '{:<100}'.format(output)
             x = str('\b' * last_length)
-            print(x+'\b'+output),
-            sys.stdout.flush()
+            compat.print_no_return(x+'\b'+output)
             last_length = len(output) + 1
 
             sector_update = False
             sector_erase = False
-            for j in range(0, constants.SECTOR_SIZE):
-                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
+            for j in range(0, spi_constants.SECTOR_SIZE):
+                if pd[j] != data[i * spi_constants.SECTOR_SIZE + j]:
                     sector_update = True
                     break
 
@@ -575,7 +583,7 @@ class interface():
                 continue
 
             print('')
-            raise SPI_Base_Exception('Verifying bitfile failed at byte: ' + str(i * constants.SECTOR_SIZE + j))
+            raise SPI_Base_Exception('Verifying bitfile failed at byte: ' + str(i * spi_constants.SECTOR_SIZE + j))
         
         print('')
 
@@ -585,31 +593,28 @@ class interface():
         data = xilinx_bitfile_parser.bitfile(name).data()
 
         # Pad the data to the block boundary
-        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
+        data += bytearray([0xFF]) * (spi_constants.SECTOR_SIZE - len(data) % spi_constants.SECTOR_SIZE)
 
         last_length = 0
         start_time = time.time()
-        num_blocks = len(data) / constants.SECTOR_SIZE
+        num_blocks = len(data) // spi_constants.SECTOR_SIZE
 
         for i in range(0, num_blocks):
 
             # Read the sector
-            pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)
+            pd = self.read_data((offset + i) * spi_constants.SECTOR_SIZE, spi_constants.SECTOR_SIZE)
             elapsed = time.time() - start_time
-            left = elapsed * (num_blocks - i - 1) / (i + 1)
+            left = elapsed * (num_blocks - i - 1) // (i + 1)
             total = elapsed + left
             output = str(i)+' / '+str(num_blocks-1)+' (Elapsed: '+'{0:.2f}'.format(elapsed)+'s)'
             output = '{:<50}'.format(output)
             x = str('\b' * last_length)
-            print(x+'\b'+output),
-            sys.stdout.flush()
-            sys.stdout.flush()
+            compat.print_no_return(x+'\b'+output)
             last_length = len(output) + 1
-
             sector_update = False
             sector_erase = False
-            for j in range(0, constants.SECTOR_SIZE):
-                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
+            for j in range(0, spi_constants.SECTOR_SIZE):
+                if pd[j] != data[i * spi_constants.SECTOR_SIZE + j]:
                     sector_update = True
                     break
 
@@ -619,20 +624,20 @@ class interface():
             # Only erase the sector if the data that's changed is currently not set to 0xFF
             sector_erase = False
             #sector_erase = True
-            for j in range(0, constants.SECTOR_SIZE):
-                if pd[j] != data[i * constants.SECTOR_SIZE + j]:
+            for j in range(0, spi_constants.SECTOR_SIZE):
+                if pd[j] != data[i * spi_constants.SECTOR_SIZE + j]:
                     if pd[j] != 0xFF:
                         sector_erase = True
                         break
 
             # Erase if necessary
             if sector_erase:
-                self.sector_erase((offset + i) * constants.SECTOR_SIZE)
-                print('ERASED'),
+                self.sector_erase((offset + i) * spi_constants.SECTOR_SIZE)
+                compat.print_no_return('ERASED')
 
             # Program the 256 byte blocks
-            for j in range(0, constants.SECTOR_SIZE/256):
-                self.page_program(data[j * 256 + i * constants.SECTOR_SIZE : (j+1) * 256 + i * constants.SECTOR_SIZE], j * 256 + ((offset + i) * constants.SECTOR_SIZE), True)
+            for j in range(0, spi_constants.SECTOR_SIZE//256):
+                self.page_program(data[j * 256 + i * spi_constants.SECTOR_SIZE : (j+1) * 256 + i * spi_constants.SECTOR_SIZE], j * 256 + ((offset + i) * spi_constants.SECTOR_SIZE), True)
 
             # Verify
             #pd = self.read_data((offset + i) * constants.SECTOR_SIZE, constants.SECTOR_SIZE)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 __all__ = [
+    'compat',
     'scripts',
     'tests',
     'configuration',

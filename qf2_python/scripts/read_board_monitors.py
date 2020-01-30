@@ -12,8 +12,8 @@ args = parser.parse_args()
 x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 
 while True:
-    print
-    print '----------------------------------', datetime.datetime.now(), '----------------------------------'
+    print('')
+    print('----------------------------------', datetime.datetime.now(), '----------------------------------')
     x.print_monitors()
     time.sleep(1)
 

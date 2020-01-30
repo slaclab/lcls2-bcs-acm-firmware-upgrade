@@ -164,3 +164,27 @@ def get_active_interface(target, r, verbose):
                              target,
                              x['Active firmware version'],
                              verbose)
+
+def verifyInBootloader(r, verbose):
+    x = get_board_information(r, verbose)    
+    if x['Active firmware type'] != 'Bootloader':
+        raise Exception('Spartan bootloader must be running')
+
+def verifyInRuntime(r, verbose):
+    x = get_board_information(r, verbose)    
+    if x['Active firmware type'] != 'Runtime':
+        raise Exception('Spartan runtime must be running')
+
+def verifyFirmwareVersionRecentAs(v1, v2, v3, v4, r, verbose):
+
+    # Turn the version check into a numerical comparison
+    a = (int(r[6]) << 24) | (int(r[5]) << 16) | (int(r[4]) << 8) | int(r[3])
+    b = (int(v1) << 24) | (int(v2) << 16) | (int(v3) << 8) | int(v4)
+
+    if a >= b:
+        return
+    
+    active_firmware_version = str(r[6]) + '.' + str(r[5]) + '.' + str(r[4]) + '+' + str(r[3])
+    expected_firmware_version = str(v1) + '.' + str(v2) + '.' + str(v3) + '+' + str(v4)    
+    raise Exception('Active firmware version ('+active_firmware_version+') must be at least as recent as '+expected_firmware_version)
+

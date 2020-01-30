@@ -3,6 +3,12 @@
 import time, sys, hashlib
 from qf2_python.configuration.spi import constants
 
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
+
 # Reverse-idcode lookup (bitfile names -> [mask, idcode])
 xilinx_idcode_bitfile_dictionary = {
 
@@ -85,7 +91,7 @@ class bitfile():
             if bytes == b"":
                 raise Xilinx_Bitfile_Parser_Exception('Incorrect design file name length')
             # Strip the null off the end
-            self.__design_name = str(bytes)[:-1]
+            self.__design_name = compat.str_cast(bytes)[:-1]
 
             # Token
             bytes = f.read(1)
@@ -101,7 +107,7 @@ class bitfile():
             if bytes == b"":
                 raise Xilinx_Bitfile_Parser_Exception('Incorrect device name length')
             # Strip the null off the end
-            self.__device_name = str(bytes)[:-1]
+            self.__device_name = compat.str_cast(bytes)[:-1]
 
             if not(self.__device_name in xilinx_idcode_bitfile_dictionary):
                 raise Xilinx_Bitfile_Parser_Exception('Device name not recognised - '+self.__device_name)
@@ -119,7 +125,7 @@ class bitfile():
             bytes = f.read(name_length)
             if bytes == b"":
                 raise Xilinx_Bitfile_Parser_Exception('Incorrect build date length')
-            self.__build_date = str(bytes)[:-1]
+            self.__build_date = compat.str_cast(bytes)[:-1]
         
             # Token
             bytes = f.read(1)
@@ -134,7 +140,7 @@ class bitfile():
             bytes = f.read(name_length)
             if bytes == b"":
                 raise Xilinx_Bitfile_Parser_Exception('Incorrect build time length')
-            self.__build_time = str(bytes)[:-1]
+            self.__build_time = compat.str_cast(bytes)[:-1]
         
             # Token
             bytes = f.read(1)

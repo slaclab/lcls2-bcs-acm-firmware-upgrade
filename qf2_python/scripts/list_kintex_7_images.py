@@ -1,11 +1,12 @@
-
 #!/usr/bin/env python
 
-import time, sys, argparse
-from datetime import datetime
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+import argparse
 
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.kintex_7_firmware as kintex_7_firmware
+
+# Fixed for S6 on QF2-pre
 SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='List available Kintex-7 boot images', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -24,22 +25,21 @@ interface = kintex_7_firmware.interface(prom)
 images = interface.get_images()
 
 if len(images) == 0:
-    print 'No images stored'
+    print('No images stored')
     exit()
 
 for i in images:
 
-    print
+    print('')
 
-    print 'SHA256:',
     s = str()
     for j in i['sha256']:
         s += '{:02x}'.format(j)
-    print s
+    print('SHA256: '+s)
 
-    print 'Bitstream address:', i['address']
-    print 'Bitstream length (bits):', i['length'] * 8
-    print 'Firmware build date:', i['build_date'], '(' + str(datetime.utcfromtimestamp(i['build_date'])) + ')'
-    print 'Firmware storage date:', i['storage_date'], '(' + str(datetime.utcfromtimestamp(i['storage_date'])) + ')'
+    print('Bitstream address: ' + str(i['address']))
+    print('Bitstream length (bits): ' + str(i['length'] * 8))
+    print('Firmware build date: ' + str(i['build_date']) + ' (' + str(datetime.datetime.utcfromtimestamp(i['build_date'])) + ')')
+    print('Firmware storage date: ' + str(i['storage_date']) + ' (' + str(datetime.datetime.utcfromtimestamp(i['storage_date'])) + ')')
 
-print
+print('')
