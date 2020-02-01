@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import time, sys, argparse
-import qf2_python.identifier
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+import argparse
+
+import qf2_python.identifier as identifier
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.constants as spi_constants
 
 def my_exec_cfg(x, verbose=False):
     ldict = locals()
@@ -33,8 +35,8 @@ if args.bootloader == True:
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
@@ -108,10 +110,10 @@ if ( x == pd ):
     if args.reboot == True:
         if args.bootloader == True:
             print('Rebooting with new bootloader settings')
-            qf2_python.identifier.reboot_to_bootloader(args.target, args.verbose)
+            identifier.reboot_to_bootloader(args.target, args.verbose)
         else:
             print('Rebooting with new runtime settings')
-            qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
+            identifier.reboot_to_runtime(args.target, args.verbose)
     exit()
 
 print('Updating PROM settings')
@@ -124,7 +126,7 @@ del prom
 if args.reboot == True:
     if args.bootloader == True:
         print('Rebooting with new bootloader settings')
-        qf2_python.identifier.reboot_to_bootloader(args.target, args.verbose)
+        identifier.reboot_to_bootloader(args.target, args.verbose)
     else:
         print('Rebooting with new runtime settings')
-        qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
+        identifier.reboot_to_runtime(args.target, args.verbose)

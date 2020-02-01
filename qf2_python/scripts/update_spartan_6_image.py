@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import qf2_python.scripts.helpers as helpers
-import time, sys, argparse, hashlib, qf2_python.identifier
-
+import argparse
 from datetime import datetime, timedelta
 
+import qf2_python.identifier as identifier
+import qf2_python.scripts.helpers as helpers
 import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.spi.spi as spi
@@ -15,15 +15,20 @@ def my_exec_cfg(x, verbose=False):
     exec(x,globals(),ldict)
     return ldict['x'].cfg(verbose)
 
-parser = argparse.ArgumentParser(description='Store Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Store Spartan-6 image in PROM', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-b', '--bit', help='Firmware bitfile to store')
-parser.add_argument('-n', '--nomigrate', action="store_true", default=False, help='Don\'t migrate configuration when updating firmware')
-parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
-parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-f', '--force', action="store_true", default=False, help='Force update even if previous PROM data is unrecognized or corrupt')
-parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
-parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
+parser.add_argument('-b', '--bit', required=True, help='Firmware bitfile to store')
+parser.add_argument('-n', '--nomigrate', default=False, action="store_true", help='Don\'t migrate configuration when updating firmware')
+parser.add_argument('-X', '--bootloader', default=False, action="store_true", help='Store bootloader')
+parser.add_argument('-r', '--reboot', default=False, action="store_true", help='Reboot automatically')
+parser.add_argument('-f', '--force', default=False, action="store_true", help='Force update even if previous PROM data is unrecognized or corrupt')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
+
+# Deprecated
+#parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
+
+# Fixed for current hardware
+SEQUENCER_PORT = 50003
 
 args = parser.parse_args()
 
@@ -44,7 +49,7 @@ if args.bootloader == True:
 FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=int(args.port), input_select=0, speed=0, noinit=True), args.verbose)
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
 # Do integrity check and check current firmware hash
 prev_hash = helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET, args.verbose)
@@ -229,7 +234,7 @@ del prom
 if args.reboot == True:
     if args.bootloader == True:
         print('Rebooting to new bootloader image')
-        qf2_python.identifier.reboot_to_bootloader(args.target, args.verbose)
+        identifier.reboot_to_bootloader(args.target, args.verbose)
     else:
         print('Rebooting to new runtime image')
-        qf2_python.identifier.reboot_to_runtime(args.target, args.verbose)
+        identifier.reboot_to_runtime(args.target, args.verbose)

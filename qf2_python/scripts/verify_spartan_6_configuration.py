@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
-import time, sys, argparse
-from qf2_python.configuration.jtag import *
-from qf2_python.configuration.spi import *
+import argparse
+
+#import qf2_python.scripts.helpers as helpers
+import qf2_python.configuration.jtag.jtag as jtag
+import qf2_python.configuration.spi.spi as spi
+import qf2_python.configuration.spi.constants as spi_constants
 
 # Dynamic execution helper
 def my_exec_cfg(x, verbose=False):
@@ -14,7 +17,9 @@ parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', f
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
-parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
+
+# Deprecated
+#parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 
 args = parser.parse_args()
 
@@ -24,9 +29,11 @@ if args.bootloader == True:
 else:
     FIRMWARE_SECTOR_OFFSET = 32
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi.constants.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi.constants.SECTOR_SIZE
-SEQUENCER_PORT = int(args.port)
+FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
+CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
+
+# Fixed in current hardware
+SEQUENCER_PORT = 50003 #int(args.port)
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
