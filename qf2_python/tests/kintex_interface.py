@@ -89,12 +89,17 @@ class interface():
                 # 45 == 0000000 & monitoring_frame_end & monitoring_available
                 # 44 == 0000000 & monitoring_data
 
+                # Set the page address
+                self.set_byte(110, (page >> 16) & 0xFF, 0xFF)
+                self.set_byte(109, (page >> 8) & 0xFF, 0xFF)
+                self.set_byte(108, page & 0xFF, 0xFF)
+                
                 # Trigger flash read
                 self.set_byte(107, 0, 1)
                 self.set_byte(107, 1, 1)
 
                 # Wait to make sure it is ready
-                time.sleep(1)
+                time.sleep(.1)
 
                 # Read while data available
                 i = 0
@@ -104,8 +109,6 @@ class interface():
                         self.set_byte(107, 2, 2)
                         i = i + 1
 
-                self.set_byte(107, 0, 1)
-                        
                 # Trigger page read
                 #self.set_byte(107, 0, 1)
                 #self.set_byte(107, 1, 1)
