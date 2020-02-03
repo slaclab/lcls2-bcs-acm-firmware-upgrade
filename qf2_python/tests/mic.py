@@ -3,8 +3,8 @@
 from math import *
 
 import argparse, time, ctypes
-import qf2_python.identifier
-#import argparse, time, datetime
+
+import qf2_python.identifier as identifier
 
 parser = argparse.ArgumentParser(description='Test microphone', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
@@ -13,8 +13,11 @@ parser.add_argument('-l', '--length', default=5, type=int, help='Length of recor
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
+# Require bootloader
+identifier.verifyInBootloader(args.target)
+
 # Start the class
-x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
+x = identifier.get_active_interface(args.target, args.verbose)
 
 print('Initializing audio subsystem...')
 x.tas2505_enable()

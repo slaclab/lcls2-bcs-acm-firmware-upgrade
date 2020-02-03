@@ -72,9 +72,9 @@ class cfg(mycfg.base):
                 'N_SI57X_A_CFG_ENABLE' : [16, 1, int(1)],
                 
                 '__N_TAS_2505_RESET' : [11, 1, int(0)],
-                'MONITORING_ENABLE' : [10, 1, int(0)],
-                'MAIN_POWER_ENABLE' : [9, 1, int(0)],
-                'POWER_BURST_MODE' : [8, 1, int(1)],
+                'MONITORING_ENABLE' : [10, 1, int(1)],
+                'MAIN_POWER_ENABLE' : [9, 1, int(1)],
+                'POWER_BURST_MODE' : [8, 1, int(0)],
                 
                 '__SYS_I2C_RESET' : [2, 1, int(1)],
                 '__SYS_I2C_SDA' : [1, 1, int(1)],
@@ -236,6 +236,12 @@ class cfg(mycfg.base):
                 'KINTEX_TEMPERATURE' : [0, 16, int()]
                 
         }
+
+class PCA9534:
+	INPUT = 0
+	OUTPUT = 1
+	POLARITY = 2
+	DIRECTION = 3
         
 class interface(cfg):
 
@@ -260,15 +266,34 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-        def enable_monitoring(self):
-                self.set_byte(1, 4, 4)
-        def disable_monitoring(self):
-                self.set_byte(1, 0, 4)
+        #def enable_monitoring(self):
+        #        self.set_byte(1, 4, 4)
+        #def disable_monitoring(self):
+        #        self.set_byte(1, 0, 4)
 
-        def enable_main_power(self):
-                self.set_byte(1, 2, 2)
-        def disable_main_power(self):
-                self.set_byte(1, 0, 2)
+        def toggle_setting(self, s):
+                if self.get_write_size(s) != 1:
+                        raise Exception('This function only works with write values of a single bit.')
+
+                # Find the location of the bit
+                posn = self.get_write_location(s)
+                posn_byte = posn // 8
+                posn_bit = posn % 8
+
+                bit = (self.get_byte(posn_byte + self.read_length()) >> posn_bit) & 1
+                if bit == 0:
+                        bit = 1
+                else:
+                        bit = 0
+
+                self.set_byte(posn_byte, bit << posn_bit, 1 << posn_bit)
+
+                return bit
+                
+        #def enable_main_power(self):
+        #        self.set_byte(1, 2, 2)
+        #def disable_main_power(self):
+        #        self.set_byte(1, 0, 2)
 
         def set_byte(self, index, data, mask):
                 d = bytearray(cfg.write_length(self))
@@ -828,6 +853,8 @@ class interface(cfg):
 
         def spartan_qsfp_get(self):
 
+                self.disable_monitoring()
+
                 # Modsel the Spartan-6 QSFP, disable the others
                 self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
                 self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
@@ -835,7 +862,11 @@ class interface(cfg):
 
                 self.pca9534_bit_set(0x80, 0, 4, False) # s6
 
-                return self.qsfp_get()
+                x = self.qsfp_get()
+                
+                self.enable_monitoring()
+                
+                return x
 
         def qsfp_get(self):
                 # Chain is already set, query the QSFP
@@ -1442,11 +1473,9 @@ class interface(cfg):
                 d[6] = (data >> 8) & 0xFF
 
                 # Send command
-                read_bytes = str()
-
                 while True:
                         try:
-                                self.I2CSock.sendto(str(d),(self.__host, self.__i2c_port))
+                                self.I2CSock.sendto(d,(self.__host, self.__i2c_port))
                                 read_bytes = self.I2CSock.recv(1400)
                                 if not read_bytes:
                                         print('No data received')

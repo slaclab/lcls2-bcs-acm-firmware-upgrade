@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 def print_no_flush(s):
-    print(s + ' ', flush=False)
+    print(s + ' ', end='', flush=False)
 
 def print_no_return(s):
     print(s + ' ', end='', flush=True)

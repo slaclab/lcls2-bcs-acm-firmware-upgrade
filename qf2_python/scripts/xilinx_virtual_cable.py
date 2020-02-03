@@ -1,8 +1,16 @@
 #!/bin/env python
 
 import select, socket, string, sys, time, argparse
-from qf2_python.configuration.jtag import *
 
+import qf2_python.configuration.jtag.jtag as jtag
+
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
+
+# Fixed value in current hardware
 SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='Xilinx virtual cable interface', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -12,12 +20,12 @@ args = parser.parse_args()
 # Initialise the chain control
 chain = jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=1, speed=0)
 
-print 'There are', chain.num_devices(), 'devices in the chain:'
+print('There are', chain.num_devices(), 'devices in the chain:')
 
-print
+print('')
 for i in range(0, chain.num_devices()):
-    print hex(chain.idcode(i))+' - '+chain.idcode_resolve_name(chain.idcode(i))
-print
+    print(hex(chain.idcode(i))+' - '+chain.idcode_resolve_name(chain.idcode(i)))
+print('')
 
 chain.go_to_run_test_idle()
 jtag_state = jtag.states.RUN_TEST_IDLE
@@ -74,7 +82,7 @@ def handle_data(c):
             #reply[1] = (resp >> 16) & 0xFF
             #reply[0] = (resp >> 24) & 0xFF
             c.send('xvcServer_v1.0:200000000\n')
-            print 'Received getinfo:'
+            print('Received getinfo:')
             return True
         elif data == 'se':
             data = c.recv(9)
@@ -85,7 +93,7 @@ def handle_data(c):
             if data[0:5] != 'ttck:':
                 return False
             v = bytearray(data)
-            print 'Received settck:', int(v[8]) * 16777216 + int(v[7]) * 65536 + int(v[6]) * 256 + int(v[5])
+            print('Received settck:', int(v[8]) * 16777216 + int(v[7]) * 65536 + int(v[6]) * 256 + int(v[5]))
             reply = bytearray(4)
             for i in range(0, 4):
                 reply[i] = v[5+i]
@@ -130,7 +138,7 @@ def handle_data(c):
         if ( ((jtag_state == jtag.states.EXIT_1_IR) and (num_bits == 5) and (data[0] == 0x17)) or
              ((jtag_state == jtag.states.EXIT_1_DR) and (num_bits == 4) and (data[0] == 0x0b)) ):
 
-            print 'Ignoring bogus JTAG state movement'
+            print('Ignoring bogus JTAG state movement')
 
         else:
 
@@ -176,9 +184,7 @@ def handle_data(c):
 
                 reply[i/8] |= (int(result[i]) & jtag.TDO) << (i&7)
 
-            #print
-            print '.',# num_bits
-            sys.stdout.flush()
+            compat.print_no_return('.')
 
             # Send the reply
             c.send(str(reply))
@@ -220,7 +226,7 @@ while True:
                 ConnectionSocket = None
 
             ConnectionSocket, client_address = s.accept()
-            print 'New connection from', client_address
+            print('New connection from', client_address)
 
             # Make sure we don't serve anything left from the previous connection
             break
@@ -231,18 +237,18 @@ while True:
             ConnectionSocket.close()
             ConnectionSocket = None
 
-            print 'Connection closed'
+            print('Connection closed')
 
     for s in exceptional:
         if s == ListenerSocket:
             
-            print 'Exception on listener socket'
+            print('Exception on listener socket')
             s.close()
             exit()
 
         else:
             
-            print 'Exception on connection socket'
+            print('Exception on connection socket')
             ConnectionSocket.close()
             ConnectionSocket = None
 

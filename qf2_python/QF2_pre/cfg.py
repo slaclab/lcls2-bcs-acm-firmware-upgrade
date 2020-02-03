@@ -408,12 +408,30 @@ class base:
 
         def get_network_value(self, key):
                 return self.__network_cfg[key][2]
-                
+
+        def get_network_size(self, key):
+                return self.__network_cfg[key][1]
+
+        def get_network_location(self, key):
+                return self.__network_cfg[key][0]
+        
         def get_write_value(self, key):
                 return self.__write_cfg[key][2]
-                
+
+        def get_write_size(self, key):
+                return self.__write_cfg[key][1]
+
+        def get_write_location(self, key):
+                return self.__write_cfg[key][0]
+        
         def get_read_value(self, key):
                 return self.__read_cfg[key][2]
+
+        def get_read_size(self, key):
+                return self.__read_cfg[key][1]
+
+        def get_read_location(self, key):
+                return self.__read_cfg[key][0]
 
         def print_network_cfg(self):
                 for key, value in sorted(self.__network_cfg.items()):

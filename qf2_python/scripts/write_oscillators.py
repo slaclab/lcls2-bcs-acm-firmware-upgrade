@@ -6,13 +6,10 @@ import qf2_python.identifier
 parser = argparse.ArgumentParser(description='Display QF2-pre oscillator settings and check current frequency', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-p', '--part', default='SI57X_A', help='Target oscillator')
-parser.add_argument('-f', '--frequency', type=float, default=156.25, help='New frequency')
+parser.add_argument('-f', '--frequency', type=float, required=True, help='New frequency')
 parser.add_argument('-d', '--default', type=float, default=156.25, help='Default frequency')
-#parser.add_argument('-r', '--rfreq', default=None, help='RFREQ setting')
-#parser.add_argument('-n', '--n', default=None, help='N1 setting')
-#parser.add_argument('-d', '--div', default=None, help='HSDIV setting')
-parser.add_argument('-o', '--output_enable', action="store_true", help='Output enable')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-o', '--output_enable', default=False, action="store_true", help='Output enable')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 print('\nNOTE: This code assumes the startup frequency of the SI570 is 156.25MHz. If you are using a non-standard part you will needed to override it (-d).\n')
@@ -45,7 +42,7 @@ def compute(r):
       for hsdiv in [4, 5, 6, 7, 9, 11]:
          fdco = args.frequency * n1 * hsdiv
          if (fdco > 4850.0) and (fdco < 5670.0):
-            print n1-1, hsdiv-4, fdco
+            print(n1-1, hsdiv-4, fdco)
             if fdco < best[2]:
                best = [n1, hsdiv, fdco]
 
@@ -53,7 +50,7 @@ def compute(r):
       raise Exception('Could not find appropriate settings for your target frequency')
 
    print('\nBest option is:\n')
-   print best[0]-1, best[1]-4, best[2]
+   print(best[0]-1, best[1]-4, best[2])
 
    r['N1'] = best[0]-1
    r['HSDIV'] = best[1]-4

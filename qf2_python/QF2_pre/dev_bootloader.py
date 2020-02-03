@@ -542,7 +542,7 @@ class interface(cfg):
                         cd = self.sd_clk(None, None)
                         response = (response << 1) | cd[0]
 
-                print hex(response)
+                print(hex(response))
 
                 exit()
 
@@ -553,7 +553,7 @@ class interface(cfg):
                 
                 crc = self.sd_crc16(data_header, 1024)
                 for i in crc:
-                        print hex(i),
+                        print(hex(i)),
                 print
 
                 crc_0 = 0
@@ -568,8 +568,8 @@ class interface(cfg):
                         crc_2 = (crc_2 << 1) | ((tmp >> 2) & 1)
                         crc_3 = (crc_3 << 1) | ((tmp >> 3) & 1)
 
-                print hex(crc_0), hex(crc_1), hex(crc_2), hex(crc_3)
-                print
+                print(hex(crc_0), hex(crc_1), hex(crc_2), hex(crc_3))
+                print('')
 
                 # Final clock (should be 0xF)
                 self.sd_clk(None, None)[1]
@@ -914,11 +914,11 @@ class interface(cfg):
         def mic_demo(self, fname, length):
 
                 # Collect microphone data
-                print 'This test will collect mic data, apply a 5th order CIC filter, then play back the sample on the laptop and store it as a file'
+                print('This test will collect mic data, apply a 5th order CIC filter, then play back the sample on the laptop and store it as a file')
                 
                 # Discard first packets as the buffer needs to flush (it will be stuck full)
                 
-                print 'Flushing buffer'
+                print('Flushing buffer')
                 while True:
                         # Send a short packet to trigger a microphone data dump
                         self.MicSock.sendto('0',(self.__target, self.__mic_port))
@@ -947,26 +947,26 @@ class interface(cfg):
                         data_collected += len(next_data)
                         raw_mic_data += next_data
 
-                print
-                print 'Audio buffer size: '+str(data_collected*8)+' bits'
+                print('')
+                print('Audio buffer size: '+str(data_collected*8)+' bits')
 
                 bit_mic_data = list()
                 for i in raw_mic_data:
                         for j in range(0, 8):
                                 bit_mic_data.append((i >> (7-j)) & 1)
 
-                print 'Applying 5th order CIC decimator (x64)'
+                print('Applying 5th order CIC decimator (x64)')
                 decimated = self.cic_decimator(bit_mic_data)
 
-                print 'Removing first samples (filter settling)'
+                print('Removing first samples (filter settling)')
                 decimated = decimated[64:]
 
                 av = average(decimated)
-                print 'Removing DC bias ('+str(av)+')'
+                print('Removing DC bias ('+str(av)+')')
                 for i in range(0, len(decimated)):
                         decimated[i] = decimated[i] - av
 
-                print 'Normalizing gain'
+                print('Normalizing gain')
                 maximum = 0
                 for i in decimated:
                         if i < 0:
@@ -978,16 +978,16 @@ class interface(cfg):
                 for i in range(0, len(decimated)):
                         decimated[i] = (decimated[i] * 32767) / maximum
 
-                print 'Plotting audio'
+                print('Plotting audio')
                 plt.plot(decimated)
                 plt.show()
 
-                print 'Playing back audio'
+                print('Playing back audio')
 
                 p = pyaudio.PyAudio()
                 for x in range(p.get_device_count()):
                         for y in [p.get_device_info_by_index(x)]:
-                                print '\n'.join([y['name']])
+                                print('\n'.join([y['name']]))
 
                 stream = p.open(format=p.get_format_from_width(2),
                                 channels=1,

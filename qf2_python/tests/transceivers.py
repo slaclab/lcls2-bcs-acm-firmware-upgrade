@@ -1,21 +1,25 @@
 #!/bin/env python
 
-import time, argparse, kintex_interface
+import time, argparse
 
-parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+import qf2_python.identifier as identifier
+import qf2_python.tests.kintex_interface as kintex_interface
+
+parser = argparse.ArgumentParser(description='Test GTX transceivers', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Unicast IP address of board')
 parser.add_argument('-l', '--loopback', action="store_true", default=False, help='Near-end PMA loopback')
 parser.add_argument('-f', '--freq', default='125', help='Reference frequency in MHz')
 parser.add_argument('-q', '--qpll', action="store_true", default=False, help='Use QPLL')
 parser.add_argument('-p', '--prbs', action="store_true", default=False, help='PRBS-7')
-parser.add_argument('-r', '--rate', help='Line rate in Gb/s')
+parser.add_argument('-r', '--rate', required=True, help='Line rate in Gb/s')
 parser.add_argument('-s', '--ref_clk_src', default='125', help='Reference clock source (SI57X_A/SI57X_B/125/EXT)')
 parser.add_argument('-e', '--use_rx_buffer', action="store_true", default=False, help='Use RX elastic buffer')
 parser.add_argument('-d', '--duration', default='0', help='Duration of test in seconds')
+
 args = parser.parse_args()
 
-if not(args.rate):
-    parser.error('Line rate not set')
+# Ensure we are in runtime
+identifier.verifyInRuntime(args.target)
 
 ref_freq = str(args.freq)
 use_qpll = args.qpll
@@ -614,7 +618,7 @@ time.sleep(1)
 # Reconfigure the clock system
 for quad in range(0, 2):
 
-    print 'Quad',quad
+    print('Quad',quad)
 
     if use_qpll:
         x.gt_drp_quad_write(quad, QPLL_FBDIV_RATIO, (x.gt_drp_quad_read(quad, QPLL_FBDIV_RATIO) & 0xFFBF) | (new_qpll_fbdiv_ratio << 6))
@@ -623,17 +627,17 @@ for quad in range(0, 2):
         x.gt_drp_quad_write(quad, QPLL_CFG, new_qpll_cfg & 0xFFFF)
         x.gt_drp_quad_write(quad, QPLL_REFCLK_DIV, (new_qpll_refclk_div << 11) | ((new_qpll_cfg >> 16) & 0x7FF))
 
-        print 'QPLL_CFG:', hex(((x.gt_drp_quad_read(quad, QPLL_REFCLK_DIV) & 0x7FF) << 16) | x.gt_drp_quad_read(quad, QPLL_CFG))
-        print 'QPLL_REFCLK_DIV:', hex(x.gt_drp_quad_read(quad, QPLL_REFCLK_DIV) >> 11)
-        print 'QPLL_LOCK_CFG:', hex(x.gt_drp_quad_read(quad, QPLL_LOCK_CFG))
-        print 'QPLL_FBDIV:', hex(x.gt_drp_quad_read(quad, QPLL_FBDIV) & 0x3FF)
-        print 'QPLL_FBDIV_RATIO:', hex((x.gt_drp_quad_read(quad, QPLL_FBDIV_RATIO) >> 6) & 0x1)
+        print('QPLL_CFG:', hex(((x.gt_drp_quad_read(quad, QPLL_REFCLK_DIV) & 0x7FF) << 16) | x.gt_drp_quad_read(quad, QPLL_CFG)))
+        print('QPLL_REFCLK_DIV:', hex(x.gt_drp_quad_read(quad, QPLL_REFCLK_DIV) >> 11))
+        print('QPLL_LOCK_CFG:', hex(x.gt_drp_quad_read(quad, QPLL_LOCK_CFG)))
+        print('QPLL_FBDIV:', hex(x.gt_drp_quad_read(quad, QPLL_FBDIV) & 0x3FF))
+        print('QPLL_FBDIV_RATIO:', hex((x.gt_drp_quad_read(quad, QPLL_FBDIV_RATIO) >> 6) & 0x1))
 
-        print
+        print('')
 
     for channel in range(0, 4):
 
-        print 'Channel',channel
+        print('Channel',channel)
 
         # Update settings
         x.gt_drp_channel_write(quad, channel, PMA_RSV_0, new_pma_rsv_0)
@@ -656,17 +660,17 @@ for quad in range(0, 2):
         # Only if using QPLL
         if not(use_qpll):
             x.gt_drp_channel_write(quad, channel, CPLL_CFG, new_cpll_cfg)
-            print 'CPLL_CFG:', hex(x.gt_drp_channel_read(quad, channel, CPLL_CFG))
+            print('CPLL_CFG:', hex(x.gt_drp_channel_read(quad, channel, CPLL_CFG)))
 
         # Channel-specific
-        print 'RXOUT_DIV:', x.gt_drp_channel_read(quad, channel, RXTXOUT_DIV) & 0x7
-        print 'TXOUT_DIV:', (x.gt_drp_channel_read(quad, channel, RXTXOUT_DIV) >> 4) & 0x7
-        print 'RXCDR_CFG:', hex(x.gt_drp_channel_read(quad, channel, RXCDR_CFG_5) << 80 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_4) << 64 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_3) << 48 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_2) << 32 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_1) << 16 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_0))
-        print 'PMA_RSV:', hex(x.gt_drp_channel_read(quad, channel, PMA_RSV_1) << 16 | x.gt_drp_channel_read(quad, channel, PMA_RSV_0))
-        print 'RXBUF_CFG:', hex(x.gt_drp_channel_read(quad, channel, RXBUF_CFG))
-        print 'RXTX_XCLK_SEL:', hex(x.gt_drp_channel_read(quad, channel, RXTX_XCLK_SEL))
+        print('RXOUT_DIV:', x.gt_drp_channel_read(quad, channel, RXTXOUT_DIV) & 0x7)
+        print('TXOUT_DIV:', (x.gt_drp_channel_read(quad, channel, RXTXOUT_DIV) >> 4) & 0x7)
+        print('RXCDR_CFG:', hex(x.gt_drp_channel_read(quad, channel, RXCDR_CFG_5) << 80 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_4) << 64 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_3) << 48 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_2) << 32 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_1) << 16 | x.gt_drp_channel_read(quad, channel, RXCDR_CFG_0)))
+        print('PMA_RSV:', hex(x.gt_drp_channel_read(quad, channel, PMA_RSV_1) << 16 | x.gt_drp_channel_read(quad, channel, PMA_RSV_0)))
+        print('RXBUF_CFG:', hex(x.gt_drp_channel_read(quad, channel, RXBUF_CFG)))
+        print('RXTX_XCLK_SEL:', hex(x.gt_drp_channel_read(quad, channel, RXTX_XCLK_SEL)))
 
-        print
+        print('')
 
 start_time = time.time()
 
@@ -690,7 +694,7 @@ x.gt_reset()
 x.gt_rx_reset()
 x.gt_rx_stability_counter_reset()
 x.gt_rx_data_checker_reset()
-print
+print('')
 
 while True:
     print('Elapsed: '+str(int(time.time() - start_time)))
@@ -698,7 +702,7 @@ while True:
 
     # Status
     x.gt_status()
-    print
+    print('')
 
     if int(args.duration) != 0:
         if (int(args.duration) + start_time) < time.time():
