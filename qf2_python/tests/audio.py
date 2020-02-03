@@ -1,17 +1,20 @@
 #!/bin/env python
 
 import argparse, time, ctypes
-import qf2_python.identifier
-#import argparse, time, datetime
+
+import qf2_python.identifier as identifier
 
 parser = argparse.ArgumentParser(description='Test TAS2505 audio driver', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-f', '--file', default='mic_demo.wav', help='Output file name for recorded audio')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-f', '--file', type=str, required=True, help='Output file name for recorded audio')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
 
+# Make sure we are in bootloader - this is test code
+identifier.verifyInBootloader(args.target)
+
 # Start the class
-x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
+x = identifier.get_active_interface(args.target, args.verbose)
 
 print('Testing TAS2505 audio amplifier...')
 x.tas2505_enable()

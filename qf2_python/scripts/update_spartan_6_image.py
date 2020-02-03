@@ -17,7 +17,7 @@ def my_exec_cfg(x, verbose=False):
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 image in PROM', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-b', '--bit', required=True, help='Firmware bitfile to store')
+parser.add_argument('-b', '--bit', default=None, help='Firmware bitfile to store')
 parser.add_argument('-n', '--nomigrate', default=False, action="store_true", help='Don\'t migrate configuration when updating firmware')
 parser.add_argument('-X', '--bootloader', default=False, action="store_true", help='Store bootloader')
 parser.add_argument('-r', '--reboot', default=False, action="store_true", help='Reboot automatically')

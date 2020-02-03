@@ -1,7 +1,8 @@
 #!/bin/env python
 
-import argparse, time, ctypes
-import qf2_python.identifier
+import argparse
+
+import qf2_python.identifier as identifier
 
 # Test blocks
 reboot_to_runtime = [
@@ -53,8 +54,11 @@ parser.add_argument('-t', '--target', default='192.168.1.127', help='Current uni
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
+# Require bootloader
+identifier.verifyInBootloader()
+
 # Start the class
-x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
+x = identifier.get_active_interface(args.target, args.verbose)
 
 #x.icap_write(write_scratchpad)
 #x.icap_write(reboot_to_bootloader)

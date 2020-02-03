@@ -1,15 +1,16 @@
 #!/bin/env python
 
 import argparse, ctypes, time
-import qf2_python.identifier
 
-parser = argparse.ArgumentParser(description='Display QF2-pre oscillator settings and check current frequency', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+import qf2_python.identifier as identifier
+
+parser = argparse.ArgumentParser(description='Display sensor settings', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 # Start the class
-x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
+x = identifier.get_active_interface(args.target, args.verbose)
 
 # BME280 - Chain 0x2, address 0x76
 
