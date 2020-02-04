@@ -1,4 +1,4 @@
-Copyright (c) 2014-2017, Dr. John Alexander Jones, Iceberg Technology
+Copyright (c) 2014-2020, Dr. John Alexander Jones, Iceberg Technology
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
