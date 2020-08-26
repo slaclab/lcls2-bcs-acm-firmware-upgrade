@@ -5646,8 +5646,28 @@ begin
       tx_ps_done       => debug_tx_phase_shift_done
       );
 
+  -- When int_async_reset is released it means the MMCM and PLL are locked, but
+  -- it doesn't mean that the links between the FPGAs are ready.
+  -- This is a simple fix - wait 'long enough' to ensure the links are stable.
+  -- TODO: Think of a better way? One option would be to assume that if the RX
+  -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
+  async_reset_delay : process(int_async_reset, int_clk_100mhz)
+    variable reset_count : unsigned(26 downto 0) := (others => '1');
+  begin
+    if int_async_reset = '1' then
+      reset_count := (others => '1');
+      async_reset <= '1';
+    elsif rising_edge(int_clk_100mhz) then
+      if reset_count = 0 then
+        async_reset <= '0';
+      else
+        reset_count := reset_count - 1;
+      end if;
+    end if;
+  end process async_reset_delay;
+  --async_reset <= int_async_reset;
+  
   -- Pass-through
-  async_reset <= int_async_reset;
   clk_100mhz  <= int_clk_100mhz;
 
   -- Hold the reset for the receiver after the ISERDES is reset for a
