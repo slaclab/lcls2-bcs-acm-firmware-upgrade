@@ -4,7 +4,7 @@
 MAJOR_VERSION   = 0x00 # '?.xx+x'
 MINOR_VERSION_1 = 0x07 # 'x.?x+x'
 MINOR_VERSION_2 = 0x00 # 'x.x?+x'
-MINOR_VERSION_3 = 0x01 # 'x.xx+?'
+MINOR_VERSION_3 = 0x03 # 'x.xx+?'
 
 import string, time, sys, socket
 import datetime
@@ -27,19 +27,22 @@ class cfg(mycfg.base):
                                     self.__read_cfg)
 
         __write_bytes = 63
-        __network_bytes = 23
+        __network_bytes = 33
         __read_bytes = 117+(23*3)+2*15
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
 
+                'HIREL_IPV4_UNICAST_MAC' : [128+48+8+32, 48, mycfg.base.IPV4_MAC(0xAABBCCDDEEF1)],
+                'HIREL_IPV4_UNICAST_IP' : [128+48+8, 32, mycfg.base.IPV4_IP(0xC0A80180)],                
+                
                 'NETWORK_INTERFACE' : [128+48, 8, mycfg.base.NETWORK_INTERFACE(0)],
                 
                 'IPV4_MULTICAST_MAC' : [128, 48, mycfg.base.IPV4_MAC(0)],
                 'IPV4_MULTICAST_IP' : [96, 32, mycfg.base.IPV4_IP(0)],
                 'IPV4_MULTICAST_PORT' : [80, 16, mycfg.base.IPV4_PORT(0)],
 
-                'IPV4_UNICAST_MAC' : [32, 48, mycfg.base.IPV4_MAC(0xAABBCCDDEEFF)],
+                'IPV4_UNICAST_MAC' : [32, 48, mycfg.base.IPV4_MAC(0xAABBCCDDEEF0)],
                 'IPV4_UNICAST_IP' : [0, 32, mycfg.base.IPV4_IP(0xC0A8017F)]
 
         }
