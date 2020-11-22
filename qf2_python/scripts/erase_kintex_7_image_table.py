@@ -4,6 +4,12 @@ import time, sys, argparse
 from qf2_python.configuration.jtag import *
 from qf2_python.configuration.spi import *
 
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
+
 SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='Erase Kintex-7 firmware image table', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -18,7 +24,7 @@ prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, inpu
 # Create a Kintex firmware interface
 interface = kintex_7_firmware.interface(prom)
 
-result = raw_input('ARE YOU SURE YOU WANT TO ERASE THE IMAGE TABLE? (Y FOR YES): ')
+result = compat.my_raw_input('ARE YOU SURE YOU WANT TO ERASE THE IMAGE TABLE? (Y FOR YES): ')
 
 if (result != 'y') and (result != 'Y'):
     exit()

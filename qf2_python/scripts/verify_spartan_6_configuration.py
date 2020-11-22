@@ -15,68 +15,48 @@ def my_exec_cfg(x, verbose=False):
 
 parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
-
-# Deprecated
-#parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 
 args = parser.parse_args()
 
-# Chose firmware location
-if args.bootloader == True:
-    FIRMWARE_SECTOR_OFFSET = 0
-else:
-    FIRMWARE_SECTOR_OFFSET = 32
-
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
+NETWORK_CONFIG_ADDRESS = 24 * spi_constants.SECTOR_SIZE
+BOOTLOADER_FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE
+BOOTLOADER_FIRMWARE_CONFIG_ADDRESS = 25 * spi_constants.SECTOR_SIZE
+RUNTIME_FIRMWARE_ID_ADDRESS = (23+32) * spi_constants.SECTOR_SIZE
+RUNTIME_FIRMWARE_CONFIG_ADDRESS = (24+32) * spi_constants.SECTOR_SIZE
 
 # Fixed in current hardware
-SEQUENCER_PORT = 50003 #int(args.port)
+SEQUENCER_PORT = 50003
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
-# Read the VCR and VECR
-#if args.verbose == True:
-#    print('Scanning PROM bitstream and generating search hash')
-
-# Use the hash of the bitstream to determine the configuration
-#prom_hash = prom.read_hash(FIRMWARE_SECTOR_OFFSET * spi.constants.SECTOR_SIZE, 23 * spi.constants.SECTOR_SIZE)
-
-# Convert the hash to text
-#s = str()
-#for j in prom_hash[0:32]:
-#    s += '{:02x}'.format(j)
-#prom_hash = s
-
-#if args.verbose == True:
-#    print('Loading configuration interface matching SHA256: '+prom_hash)
-
-# Get the configuration object for this firmware version
-#cfg = my_exec_cfg(s, True)
+print('-----------------------------------------')
+print('Bootloader')
 
 # Check the stored SHA256 to see what configuration space we should be using
-pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+pd = prom.read_data(BOOTLOADER_FIRMWARE_ID_ADDRESS, 32)
 
-s = str()
+b = str()
 for i in pd[0:32]:
-    s += '{:02x}'.format(i)
-print('Stored SHA256:'+s)
+    b += '{:02x}'.format(i)
+print('Stored bootloader SHA256: '+b)
 
 print('Selecting matching configuration interface...')
 
-cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
+cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+b+' as x', args.verbose)
 
 # TODO - Warn on mismatch with running firmware
 #x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
 print('Importing stored Spartan-6 configuration settings...')
 
-if ( cfg.import_prom_data(prom.read_data(CONFIG_ADDRESS, 256)) == False ):
+if ( cfg.import_network_prom_data(prom.read_data(NETWORK_CONFIG_ADDRESS, 256)) == False ):
     exit(1)
 
+if ( cfg.import_firmware_prom_data(prom.read_data(BOOTLOADER_FIRMWARE_CONFIG_ADDRESS, 256)) == False ):
+    exit(1)
+    
 print('')
 print('Network configuration is currently:')
 print('')
@@ -88,3 +68,34 @@ print('Firmware configuration is currently:')
 print('')
 
 cfg.print_write_cfg()
+
+print('')
+print('-----------------------------------------')
+print('Runtime')
+
+pd = prom.read_data(RUNTIME_FIRMWARE_ID_ADDRESS, 32)
+
+r = str()
+for i in pd[0:32]:
+    r += '{:02x}'.format(i)
+print('Stored runtime SHA256: '+r)
+
+print('Selecting matching configuration interface...')
+
+cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+r+' as x', args.verbose)
+
+# TODO - Warn on mismatch with running firmware
+#x = qf2_python.identifier.get_board_information(args.target, args.verbose)
+
+print('Importing stored Spartan-6 configuration settings...')
+
+if ( cfg.import_firmware_prom_data(prom.read_data(RUNTIME_FIRMWARE_CONFIG_ADDRESS, 256)) == False ):
+    exit(1)
+
+print('')
+print('Firmware configuration is currently:')
+print('')
+
+cfg.print_write_cfg()
+
+

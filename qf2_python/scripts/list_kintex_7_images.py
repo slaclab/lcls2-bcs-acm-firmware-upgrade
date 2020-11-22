@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse
+import argparse, datetime
 
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.spi.spi as spi

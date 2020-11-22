@@ -1,6 +1,6 @@
 #!/bin/env python
 
-import sys
+import sys, zlib
 
 class QSFP_INFO:
         IDENTIFIER = {
@@ -448,9 +448,9 @@ class base:
         def __export_cfg_value(self, value):
                 return int(value[2]) << value[0]
 
-        def export_prom_data(self):
+        def export_firmware_prom_data(self):
 
-                result = bytearray(self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
+                result = bytearray(self.__WRITE_LENGTH)
 
                 total = 0
                 for key, value in self.__write_cfg.items():
@@ -461,18 +461,30 @@ class base:
                         result[i] = total & 0xFF
                         total = total >> 8
 
+                result.reverse()
+
+                v = self.gen_checksum(result)
+                result += v
+                result += bytearray([0xFF]) * (256 - len(result))
+
+                return result
+        
+        def export_network_prom_data(self):
+
+                result = bytearray(self.__NETWORK_LENGTH)
+
                 total = 0
                 for key, value in self.__network_cfg.items():
                         x = self.__export_cfg_value(value)
                         total = total | x
 
                 for i in range(0, self.__NETWORK_LENGTH):
-                        result[i + self.__WRITE_LENGTH] = total & 0xFF
+                        result[i] = total & 0xFF
                         total = total >> 8
 
                 result.reverse()
 
-                v = self.fletcher_check(result)
+                v = self.gen_checksum(result)
                 result += v
                 result += bytearray([0xFF]) * (256 - len(result))
 
@@ -526,28 +538,43 @@ class base:
 
                 target[key][2] = type(target[key][2])(block)
 
-        def import_prom_data(self, data):
+        def import_firmware_prom_data(self, data):
 
-                v = self.fletcher_check(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
+                v = self.gen_checksum(data[0:self.__WRITE_LENGTH])
 
-                if ( v != data[self.__WRITE_LENGTH + self.__NETWORK_LENGTH:self.__WRITE_LENGTH + self.__NETWORK_LENGTH+2] ):
+                if ( v != data[self.__WRITE_LENGTH:self.__WRITE_LENGTH+4] ):
                         # Invalid checksum
-                        print('Imported PROM data checksum is invalid, configuration will not be imported')
+                        print('Imported firmware PROM data checksum is invalid, configuration will not be imported')
                         return False
 
                 # Reverse so ordering matches VHDL
-                rdata = data[0:self.__WRITE_LENGTH+self.__NETWORK_LENGTH]
+                rdata = data[0:self.__WRITE_LENGTH]
                 rdata.reverse()
 
                 for key, value in self.__write_cfg.items():
                         self.__import_cfg_value(key, self.__write_cfg, rdata[0:self.__WRITE_LENGTH])
 
-                # Import each value one by one from the PROM data
-                for key, value in self.__network_cfg.items():
-                        self.__import_cfg_value(key, self.__network_cfg, rdata[self.__WRITE_LENGTH:self.__NETWORK_LENGTH+self.__WRITE_LENGTH])
-
                 return True
 
+        def import_network_prom_data(self, data):
+
+                v = self.gen_checksum(data[0:self.__NETWORK_LENGTH])
+
+                print('haha')
+                if ( v != data[self.__NETWORK_LENGTH:self.__NETWORK_LENGTH+4] ):
+                        # Invalid checksum
+                        print('Imported network PROM data checksum is invalid, configuration will not be imported')
+                        return False
+
+                # Reverse so ordering matches VHDL
+                rdata = data[0:self.__NETWORK_LENGTH]
+                rdata.reverse()
+
+                for key, value in self.__network_cfg.items():
+                        self.__import_cfg_value(key, self.__network_cfg, rdata[0:self.__NETWORK_LENGTH])
+
+                return True
+        
         def network_length(self):
                 return self.__NETWORK_LENGTH
         def write_length(self):
@@ -557,25 +584,44 @@ class base:
         def packet_receive_length(self):
                 return (self.__READ_LENGTH + self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
 
-        def fletcher(self, data):
+        def gen_checksum(self, data):
 
-                sum1 = 0xAA
-                sum2 = 0x55
-
-                for i in data:
-                        sum1 = sum1 + int(i)
-                        sum2 = sum1 + sum2
-
-                sum1 = sum1 % 255
-                sum2 = sum2 % 255
-
-                return bytearray([sum1, sum2])
-
-        def fletcher_check(self, data):
+                # Used to be fletcher, now CRC32
                 
-                v = self.fletcher(data)
+                # Calculate CRC
+                crc = zlib.crc32(data) & 0xFFFFFFFF
 
-                sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
-                sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+                # Copy data
+                result = bytearray()
+                
+                # Append CRC
+                for i in range(4):
+                        byte = (crc >> (8*i)) & 0xFF
+                        result.append(byte) #[len(data)+i] = byte
 
-                return bytearray([sum1, sum2])
+                return result
+                
+
+        
+        #def fletcher(self, data):
+
+        #sum1 = 0xAA
+        #        sum2 = 0x55
+
+        #        for i in data:
+        #                sum1 = sum1 + int(i)
+        #                sum2 = sum1 + sum2
+
+        #sum1 = sum1 % 255
+        #        sum2 = sum2 % 255
+
+        #        return bytearray([sum1, sum2])
+
+        #def fletcher_check(self, data):
+                
+        #        v = self.fletcher(data)
+
+        #sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
+        #        sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+
+        #        return bytearray([sum1, sum2])
