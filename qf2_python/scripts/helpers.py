@@ -65,17 +65,26 @@ def prom_integrity_check(prom, offset, verbose):
 
     if verbose == True:
         print('Performing PROM integrity check')
-        
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
+
+    if offset != 65:
+        FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
     
-    # Assuming Spartan-6 here
-    # As the Spartan-6 bitstream length can vary slightly from version to version,
-    # the hash is generated to the end of the sector
-    prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 23 * spi_constants.SECTOR_SIZE)
+        # Assuming Spartan-6 here
+        # As the Spartan-6 bitstream length can vary slightly from version to version,
+        # the hash is generated to the end of the sector
+        prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 23 * spi_constants.SECTOR_SIZE)
 
-    # Compare the current data with the previous to see if we have to erase
-    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+        # Compare the current data with the previous to see if we have to erase
+        pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+    else:
+        FIRMWARE_ID_ADDRESS = (offset-1) * spi_constants.SECTOR_SIZE
+    
+        # Assuming Kintex-7 here
+        prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 103 * spi_constants.SECTOR_SIZE)
 
+        # Compare the current data with the previous to see if we have to erase
+        pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+        
     if verbose == True:
         
         s = 'Bitstream SHA256: '
@@ -101,9 +110,12 @@ def prom_compare_check(prom, offset, bitfile, verbose):
 
     if verbose == True:
         print('Performing PROM bitfile comparison check')
-        
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
 
+    if offset != 65:
+        FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
+    else:
+        FIRMWARE_ID_ADDRESS = (offset-1) * spi_constants.SECTOR_SIZE
+    
     # Check hash and timestamps stored in PROM
     fw_id_data = generate_fw_id_data(bitfile)
 

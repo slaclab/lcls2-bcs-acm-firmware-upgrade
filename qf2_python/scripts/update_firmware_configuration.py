@@ -32,11 +32,13 @@ args = parser.parse_args()
 # Chose firmware location
 if args.bootloader == True:
     FIRMWARE_SECTOR_OFFSET = 0
+    FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE
+    CONFIG_ADDRESS = 25 * spi_constants.SECTOR_SIZE
 else:
     FIRMWARE_SECTOR_OFFSET = 32
+    FIRMWARE_ID_ADDRESS = 55 * spi_constants.SECTOR_SIZE
+    CONFIG_ADDRESS = 56 * spi_constants.SECTOR_SIZE
 
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+25) * spi_constants.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM

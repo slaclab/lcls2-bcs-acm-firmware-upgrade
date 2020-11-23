@@ -560,7 +560,6 @@ class base:
 
                 v = self.gen_checksum(data[0:self.__NETWORK_LENGTH])
 
-                print('haha')
                 if ( v != data[self.__NETWORK_LENGTH:self.__NETWORK_LENGTH+4] ):
                         # Invalid checksum
                         print('Imported network PROM data checksum is invalid, configuration will not be imported')

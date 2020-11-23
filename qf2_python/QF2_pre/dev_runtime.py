@@ -50,7 +50,7 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type / Default]
         __write_cfg = {
                 
-                'KINTEX_BOOT_SHA256' : [248, 256, mycfg.base.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
+                #'KINTEX_BOOT_SHA256' : [248, 256, mycfg.base.SHA256('0000000000000000000000000000000000000000000000000000000000000000')],
                 
                 'FAN_PWM_GRADIENT' : [184, 8, int(9)],
                 'FAN_PWM_STOP_TEMPERATURE' : [176, 8, int(0)],
