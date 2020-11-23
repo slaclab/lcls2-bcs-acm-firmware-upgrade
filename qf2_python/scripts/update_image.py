@@ -96,6 +96,10 @@ prom.program_bitfile(args.bit, FIRMWARE_SECTOR_OFFSET)
 # Generate a firwmare ID block
 fw_id_data = helpers.generate_fw_id_data(args.bit)
 
+#for i in fw_id_data:
+#    print(hex(i))
+#print('')
+
 print('Erasing old firmware ID block')
 prom.sector_erase(FIRMWARE_ID_ADDRESS)
 
@@ -107,17 +111,23 @@ s = str()
 for j in fw_id_data[0:32]:
     s += '{:02x}'.format(j)
 print('SHA256: '+s)
-
+    
 build_date = 0
 for i in range(0, 8):
-    build_date += int(fw_id_data[32+i]) * 2**(56-i*8)
+    build_date += int(fw_id_data[32+i]) << ((7-i)*8)
 print('Build timestamp: '+str(build_date)+' ('+str(datetime.utcfromtimestamp(build_date))+')')
 
 storage_date = 0
 for i in range(0, 8):
-    storage_date += int(fw_id_data[40+i]) * 2**(56-i*8)
+    storage_date += int(fw_id_data[40+i]) << ((7-i)*8)
 print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
 
+if args.image == 'K':
+    length = 0
+    for i in range(0, 3):
+        length += int(fw_id_data[48+i]) << ((2-i)*8)
+    print('Firmware length: '+str(length))
+    
 # Migrate if not(nomigrate) and a Spartan image
 if (args.nomigrate == False) and (args.image != 'K'):
 
@@ -236,8 +246,8 @@ if (args.nomigrate == False) and (args.image != 'K'):
     else:
         print('Updating PROM settings...')
     
-        prom.sector_erase(CONFIG_ADDRESS)
-        prom.page_program(new_prom_cfg, CONFIG_ADDRESS, True)
+    prom.sector_erase(CONFIG_ADDRESS)
+    prom.page_program(new_prom_cfg, CONFIG_ADDRESS, True)
 
 # Disconnect the PROM interface before doing a reboot
 del prom
