@@ -16,7 +16,7 @@ import qf2_python.configuration.spi.spi as spi
 parser = argparse.ArgumentParser(description='Verify Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', help='Bitfile to compare against')
-parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Verify bootloader')
+parser.add_argument('-i', '--image', default='K', type=str, help='Target image')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 
 # Deprecated - fixed in current hardware
@@ -24,11 +24,15 @@ parser.add_argument('-v', '--verbose', action="store_true", default=False, help=
 
 args = parser.parse_args()
 
-# Chose firmware location (bootloader or runtime)
-if args.bootloader == True:
+# Validate the image argument and set the image offsets
+if args.image == 'B':
     FIRMWARE_SECTOR_OFFSET = 0
-else:
+elif args.image == 'R':
     FIRMWARE_SECTOR_OFFSET = 32
+elif args.image == 'K':
+    FIRMWARE_SECTOR_OFFSET = 65
+else:
+    raise Exception('Image argument \''+args.image+'\' not a recognized type, choices are B (Bootloader), R (Runtime) or K (Kintex)')
 
 # Fixed in current hardware
 SEQUENCER_PORT = 50003 #int(args.port)
