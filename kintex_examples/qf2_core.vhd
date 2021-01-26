@@ -5600,7 +5600,7 @@ architecture rtl of qf2_core is
   -- Monitoring channel
   signal monitoring_outbound_read  : std_logic := '0';
   signal monitoring_outbound_empty : std_logic := '1';
-  signal monitoring_outbound_dout  : std_logic_vector(8 downto 0) := "100000000";
+  constant monitoring_outbound_dout  : std_logic_vector(8 downto 0) := "100000000";
   signal global_domain_monitoring_request, tx_domain_monitoring_request, r_tx_domain_monitoring_request, r_r_tx_domain_monitoring_request : std_logic := '0';
   
   signal monitoring_inbound_fifo_din, monitoring_inbound_fifo_dout     : std_logic_vector(8 downto 0);

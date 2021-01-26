@@ -472,7 +472,7 @@ class base:
 
                 result.reverse()
 
-                v = self.fletcher_check(result)
+                v = self.gen_checksum(result)
                 result += v
                 result += bytearray([0xFF]) * (256 - len(result))
 
@@ -528,7 +528,7 @@ class base:
 
         def import_prom_data(self, data):
 
-                v = self.fletcher_check(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
+                v = self.gen_checksum(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
 
                 if ( v != data[self.__WRITE_LENGTH + self.__NETWORK_LENGTH:self.__WRITE_LENGTH + self.__NETWORK_LENGTH+2] ):
                         # Invalid checksum
@@ -557,25 +557,43 @@ class base:
         def packet_receive_length(self):
                 return (self.__READ_LENGTH + self.__WRITE_LENGTH + self.__NETWORK_LENGTH)
 
-        def fletcher(self, data):
+        #def fletcher(self, data):
 
-                sum1 = 0xAA
-                sum2 = 0x55
+        #sum1 = 0xAA
+        #        sum2 = 0x55
 
-                for i in data:
-                        sum1 = sum1 + int(i)
-                        sum2 = sum1 + sum2
+        #        for i in data:
+        #                sum1 = sum1 + int(i)
+        #                sum2 = sum1 + sum2
 
-                sum1 = sum1 % 255
-                sum2 = sum2 % 255
+        #        sum1 = sum1 % 255
+        #        sum2 = sum2 % 255
 
-                return bytearray([sum1, sum2])
+        #        return bytearray([sum1, sum2])
 
-        def fletcher_check(self, data):
+
+        
+        def gen_checksum(self, data):
+
+                # Used to be fletcher, now CRC32
                 
-                v = self.fletcher(data)
+                # Calculate CRC
+                crc = zlib.crc32(data) & 0xFFFFFFFF
 
-                sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
-                sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+                #result = bytearray([0]*(len(data)+4))
+                #result[0:len(data)] = data
+                result = data
+                
+                # Append CRC
+                for i in range(4):
+                        byte = (crc >> (8*i)) & 0xFF
+                        result.append(byte) #[len(data)+i] = byte
 
-                return bytearray([sum1, sum2])
+                return result
+                
+                #v = self.fletcher(data)
+
+                #sum1 = 0xFF - ((int(v[0]) + int(v[1])) % 255)
+                #sum2 = 0xFF - ((int(v[0]) + sum1) % 255)
+
+                #return bytearray([sum1, sum2])
