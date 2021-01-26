@@ -14,8 +14,7 @@ def my_exec_cfg(x, verbose=False):
 
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
-parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
+#parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
 parser.add_argument('-d', '--defaults', action="store_true", help='Reset to defaults')
 parser.add_argument('-j', '--json', help='JSON settings file')
 parser.add_argument('-s', '--settings', nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
@@ -29,14 +28,9 @@ args = parser.parse_args()
 #if args.lock == True:
 #        raise Exception('ERROR: Lock argument can only be used for the bootloader')
 
-# Chose firmware location
-if args.bootloader == True:
-    FIRMWARE_SECTOR_OFFSET = 0
-else:
-    FIRMWARE_SECTOR_OFFSET = 32
-
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
-CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
+# TODO: Verify network space for bootloader and runtime are compatible
+FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE
+CONFIG_ADDRESS = 24 * spi_constants.SECTOR_SIZE
 SEQUENCER_PORT = int(args.port)
 
 # Initialise the interface to the PROM
@@ -59,8 +53,8 @@ cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x', args.verbose)
 pd = prom.read_data(CONFIG_ADDRESS, 256)
 
 if args.defaults == False:
-    print('Importing stored Spartan-6 configuration settings')
-    cfg.import_prom_data(pd)
+    print('Importing stored Spartan-6 network configuration settings')
+    cfg.import_network_prom_data(pd)
 
     if args.json != None:
         print('Importing JSON file settings from '+args.json)
@@ -75,9 +69,6 @@ if args.defaults == False:
                 if cfg.is_network_key(i_k):
                     unknown_key = False
                     cfg.set_network_value(i_k, i_v)
-                if cfg.is_write_key(i_k):
-                    unknown_key = False
-                    cfg.set_write_value(i_k, i_v)
                 if unknown_key == True:
                     raise Exception('Unknown key '+i_k)
 
@@ -89,31 +80,28 @@ if args.defaults == False:
             if cfg.is_network_key(i[0]):
                 unknown_key = False
                 cfg.set_network_value(i[0], i[1])
-            if cfg.is_write_key(i[0]):
-                unknown_key = False
-                cfg.set_write_value(i[0], i[1])
             if unknown_key == True:
                 raise Exception('Unknown key '+i[0])
 
 if args.verbose == True:
     print('Updated settings are:')
     cfg.print_network_cfg()
-    cfg.print_write_cfg()
+    #cfg.print_write_cfg()
 
 print('Exporting PROM settings')
-x = cfg.export_prom_data()
+x = cfg.export_network_prom_data()
 
 if ( x == pd ):
     print('Values already programmed')
     # Disconnect the PROM interface before doing a reboot
     del prom
-    if args.reboot == True:
-        if args.bootloader == True:
-            print('Rebooting with new bootloader settings')
-            identifier.reboot_to_bootloader(args.target, args.verbose)
-        else:
-            print('Rebooting with new runtime settings')
-            identifier.reboot_to_runtime(args.target, args.verbose)
+    #if args.reboot == True:
+    #    if args.bootloader == True:
+    #        print('Rebooting with new bootloader settings')
+    #        identifier.reboot_to_bootloader(args.target, args.verbose)
+    #    else:
+    #        print('Rebooting with new runtime settings')
+    #        identifier.reboot_to_runtime(args.target, args.verbose)
     exit()
 
 print('Updating PROM settings')
@@ -123,10 +111,10 @@ prom.page_program(x, CONFIG_ADDRESS, True)
 
 # Disconnect the PROM interface before doing a reboot
 del prom
-if args.reboot == True:
-    if args.bootloader == True:
-        print('Rebooting with new bootloader settings')
-        identifier.reboot_to_bootloader(args.target, args.verbose)
-    else:
-        print('Rebooting with new runtime settings')
-        identifier.reboot_to_runtime(args.target, args.verbose)
+#if args.reboot == True:
+#    if args.bootloader == True:
+#        print('Rebooting with new bootloader settings')
+#        identifier.reboot_to_bootloader(args.target, args.verbose)
+#    else:
+#        print('Rebooting with new runtime settings')
+#        identifier.reboot_to_runtime(args.target, args.verbose)

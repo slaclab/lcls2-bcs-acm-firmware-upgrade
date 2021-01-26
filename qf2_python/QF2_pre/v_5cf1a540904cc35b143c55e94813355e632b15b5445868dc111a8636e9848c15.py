@@ -6,9 +6,9 @@ MINOR_VERSION_1 = 0x07 # 'x.?x+x'
 MINOR_VERSION_2 = 0x00 # 'x.x?+x'
 MINOR_VERSION_3 = 0x01 # 'x.xx+?'
 
-from numpy import int32, int64, array, average
-import wave, pyaudio
-import matplotlib.pyplot as plt
+#from numpy import int32, int64, array, average
+#import wave, pyaudio
+#import matplotlib.pyplot as plt
 
 from . import cfg as mycfg
 from socket import *

@@ -19,44 +19,49 @@ parser = argparse.ArgumentParser(description='Store Spartan-6 image in PROM', fo
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-b', '--bit', default=None, help='Firmware bitfile to store')
 parser.add_argument('-n', '--nomigrate', default=False, action="store_true", help='Don\'t migrate configuration when updating firmware')
-parser.add_argument('-X', '--bootloader', default=False, action="store_true", help='Store bootloader')
+parser.add_argument('-i', '--image', default='K', type=str, help='Target image')
+parser.add_argument('-e', '--erase', default=False, action="store_true", help='Only erase the image')
 parser.add_argument('-r', '--reboot', default=False, action="store_true", help='Reboot automatically')
 parser.add_argument('-f', '--force', default=False, action="store_true", help='Force update even if previous PROM data is unrecognized or corrupt')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
-
-# Deprecated
-#parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
 
 # Fixed for current hardware
 SEQUENCER_PORT = 50003
 
 args = parser.parse_args()
 
-if args.bit == None:
-    if args.bootloader == True:
-        args.bit = 'firmwares/spartan_bootloader.bit'
-    else:
-        args.bit = 'firmwares/spartan_runtime.bit'
-    print('Bitfile argument was not provided, assuming default from firmwares directory ('+args.bit+')')
-
-# Sector offset is +32 for runtime image
-FIRMWARE_SECTOR_OFFSET = 32
-
-# Chose firmware location
-if args.bootloader == True:
+# Validate the image argument and set the image offsets
+if args.image == 'B':
     FIRMWARE_SECTOR_OFFSET = 0
-
-FIRMWARE_ID_ADDRESS = (FIRMWARE_SECTOR_OFFSET+23) * spi_constants.SECTOR_SIZE
+    FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE    
+elif args.image == 'R':
+    FIRMWARE_SECTOR_OFFSET = 32
+    FIRMWARE_ID_ADDRESS = 55 * spi_constants.SECTOR_SIZE    
+elif args.image == 'K':
+    FIRMWARE_SECTOR_OFFSET = 65
+    FIRMWARE_ID_ADDRESS = 64 * spi_constants.SECTOR_SIZE
+else:
+    raise Exception('Image argument \''+args.image+'\' not a recognized type, choices are B (Bootloader), R (Runtime) or K (Kintex)')
+    
+# Select default image to program if we are not erasing only
+if (args.bit == None) and (args.erase == False):
+    if args.image == 'B':
+        args.bit = 'firmwares/spartan_bootloader.bit'
+    elif args.image == 'R':
+        args.bit = 'firmwares/spartan_runtime.bit'
+    elif args.image == 'K':
+        raise Exception('You must provide an image for the Kintex, there isn\'t a default')
+    print('Bitfile argument was not provided, assuming default from firmwares directory ('+args.bit+')')
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
-# Do integrity check and check current firmware hash
+# Do integrity check and check current firmware hash, Spartan only
+#if args.image != 'K':
+print('Running PROM image integrity check...')
 prev_hash = helpers.prom_integrity_check(prom, FIRMWARE_SECTOR_OFFSET, args.verbose)
-
 if (prev_hash == 0) and (args.force == False):
-    print('ERROR: Current PROM data failed integrity check. You must use \'--force\' to continue - will set PROM settings to defaults.')
-    exit(1)
+    raise Exception('ERROR: Current PROM data failed integrity check. You must use \'--force\' to continue - will set PROM settings to defaults.')
 
 if args.verbose == True:
     print('Loading bitfile: '+args.bit)
@@ -70,14 +75,18 @@ if args.verbose == True:
     print('Build time: '+bitfile.build_time())
     print('Length: '+str(bitfile.length()))
 
-# Safety check to match bitfile to Spartan-6
-if bitfile.device_name() != '6slx45tcsg324':
-    print('ERROR: Bitfile device name is not a Spartan-6 FPGA')
-    exit(1)
+# Safety check to match bitfile to part
+if args.image != 'K':
+    if bitfile.device_name() != '6slx45tcsg324':
+        raise Exception('ERROR: Bitfile device name \''+bitfile.device_name()+'\' is not a Spartan-6 FPGA')
+else:
+    if bitfile.device_name() != '7k160tffg676':
+        raise Exception('ERROR: Bitfile device name \''+bitfile.device_name()+'\' is not a Kintex-7 FPGA')
 
 if bitfile.padded_hash() == prev_hash:
     print('Bitfile hash is already stored in PROM and hash is valid. Comparing PROM data for exact match...')
     if ( helpers.prom_compare_check(prom, FIRMWARE_SECTOR_OFFSET, args.bit, args.verbose) != 0 ):
+        print('PROM data matches, exiting')
         exit(0)
     print('Mismatch in PROM data - continuing')
 
@@ -86,6 +95,10 @@ prom.program_bitfile(args.bit, FIRMWARE_SECTOR_OFFSET)
 
 # Generate a firwmare ID block
 fw_id_data = helpers.generate_fw_id_data(args.bit)
+
+#for i in fw_id_data:
+#    print(hex(i))
+#print('')
 
 print('Erasing old firmware ID block')
 prom.sector_erase(FIRMWARE_ID_ADDRESS)
@@ -98,18 +111,25 @@ s = str()
 for j in fw_id_data[0:32]:
     s += '{:02x}'.format(j)
 print('SHA256: '+s)
-
+    
 build_date = 0
 for i in range(0, 8):
-    build_date += int(fw_id_data[32+i]) * 2**(56-i*8)
+    build_date += int(fw_id_data[32+i]) << ((7-i)*8)
 print('Build timestamp: '+str(build_date)+' ('+str(datetime.utcfromtimestamp(build_date))+')')
 
 storage_date = 0
 for i in range(0, 8):
-    storage_date += int(fw_id_data[40+i]) * 2**(56-i*8)
+    storage_date += int(fw_id_data[40+i]) << ((7-i)*8)
 print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
 
-if args.nomigrate == False:
+if args.image == 'K':
+    length = 0
+    for i in range(0, 3):
+        length += int(fw_id_data[48+i]) << ((2-i)*8)
+    print('Firmware length: '+str(length))
+    
+# Migrate if not(nomigrate) and a Spartan image
+if (args.nomigrate == False) and (args.image != 'K'):
 
     CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
     
@@ -226,15 +246,15 @@ if args.nomigrate == False:
     else:
         print('Updating PROM settings...')
     
-        prom.sector_erase(CONFIG_ADDRESS)
-        prom.page_program(new_prom_cfg, CONFIG_ADDRESS, True)
+    prom.sector_erase(CONFIG_ADDRESS)
+    prom.page_program(new_prom_cfg, CONFIG_ADDRESS, True)
 
 # Disconnect the PROM interface before doing a reboot
 del prom
 if args.reboot == True:
-    if args.bootloader == True:
-        print('Rebooting to new bootloader image')
+    if args.image == 'B':
+        print('Rebooting to bootloader')
         identifier.reboot_to_bootloader(args.target, args.verbose)
     else:
-        print('Rebooting to new runtime image')
+        print('Rebooting to runtime')
         identifier.reboot_to_runtime(args.target, args.verbose)

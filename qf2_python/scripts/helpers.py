@@ -56,6 +56,16 @@ def generate_fw_id_data(bitfile):
     sha256.append((storage_date >> 8) & 0xFF)
     sha256.append((storage_date) & 0xFF)
 
+    # If a Kintex firmware, we include the length
+    if parser.device_name() == '7k160tffg676':
+        length = parser.length()
+        sha256.append((length >> 16) & 0xFF)
+        sha256.append((length >> 8) & 0xFF)
+        sha256.append(length & 0xFF)
+
+    #for i in range(0, len(sha256)):
+    #    print(str(i)+' '+str(hex(sha256[i])))
+        
     # Pad to page boundary
     sha256 += bytearray([0xFF]) * (256 - len(sha256) % 256)
 
@@ -65,17 +75,28 @@ def prom_integrity_check(prom, offset, verbose):
 
     if verbose == True:
         print('Performing PROM integrity check')
-        
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
+
+    if offset != 65:
+
+        FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
     
-    # Assuming Spartan-6 here
-    # As the Spartan-6 bitstream length can vary slightly from version to version,
-    # the hash is generated to the end of the sector
-    prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 23 * spi_constants.SECTOR_SIZE)
+        # Assuming Spartan-6 here
+        # As the Spartan-6 bitstream length can vary slightly from version to version,
+        # the hash is generated to the end of the sector
+        prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 23 * spi_constants.SECTOR_SIZE)
 
-    # Compare the current data with the previous to see if we have to erase
-    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+        # Compare the current data with the previous to see if we have to erase
+        pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+        
+    else:
+        FIRMWARE_ID_ADDRESS = (offset-1) * spi_constants.SECTOR_SIZE
+    
+        # Assuming Kintex-7 here
+        prom_hash = prom.read_hash(offset * spi_constants.SECTOR_SIZE, 103 * spi_constants.SECTOR_SIZE)
 
+        # Compare the current data with the previous to see if we have to erase
+        pd = prom.read_data(FIRMWARE_ID_ADDRESS, 32)
+        
     if verbose == True:
         
         s = 'Bitstream SHA256: '
@@ -101,9 +122,12 @@ def prom_compare_check(prom, offset, bitfile, verbose):
 
     if verbose == True:
         print('Performing PROM bitfile comparison check')
-        
-    FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
 
+    if offset != 65:
+        FIRMWARE_ID_ADDRESS = (offset+23) * spi_constants.SECTOR_SIZE
+    else:
+        FIRMWARE_ID_ADDRESS = (offset-1) * spi_constants.SECTOR_SIZE
+    
     # Check hash and timestamps stored in PROM
     fw_id_data = generate_fw_id_data(bitfile)
 
@@ -119,7 +143,7 @@ def prom_compare_check(prom, offset, bitfile, verbose):
 
         build_date = 0
         for i in range(0, 8):
-            build_date += int(fw_id_data[32+i]) * 2**(56-i*8)
+            build_date += int(fw_id_data[32+i]) << ((7-i)*8)
         print('Build timestamp: '+str(build_date)+' ('+str(datetime.utcfromtimestamp(build_date))+')')
 
     # Compare bitfile with data stored in PROM
@@ -128,7 +152,7 @@ def prom_compare_check(prom, offset, bitfile, verbose):
     prom.verify_bitfile(bitfile, offset)
 
     # Compare the current data with the previous to see if we have to erase
-    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 48)
+    pd = prom.read_data(FIRMWARE_ID_ADDRESS, 51)
 
     if verbose == True:
         print('')
@@ -142,16 +166,21 @@ def prom_compare_check(prom, offset, bitfile, verbose):
 
         build_date = 0
         for i in range(0, 8):
-            build_date += int(pd[32+i]) * 2**(56-i*8)
+            build_date += int(pd[32+i]) << ((7-i)*8)
         print('Build timestamp: '+str(build_date)+' ('+str(datetime.utcfromtimestamp(build_date))+')')
 
         storage_date = 0
         for i in range(0, 8):
-            storage_date += int(pd[40+i]) * 2**(56-i*8)
+            storage_date += int(pd[40+i]) << ((7-i)*8)
         print('Storage timestamp: '+str(storage_date)+' ('+str(datetime.utcfromtimestamp(storage_date))+')')
         print
 
-    if pd[0:40] == fw_id_data[0:40]:
+    #for i in range(0, 51):
+    #    print(str(i)+' '+hex(fw_id_data[i])+' '+hex(pd[i]))
+    #print('')
+
+    # Check everything but the storage date matches
+    if (pd[0:40] == fw_id_data[0:40]) and (pd[48:51] == fw_id_data[48:51]):
         if verbose == True:
             print('Firmware ID matches')
         return pd[0:32]
