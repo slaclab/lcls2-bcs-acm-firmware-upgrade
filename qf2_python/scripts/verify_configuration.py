@@ -49,14 +49,12 @@ cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+b+' as x', args.verbose)
 # TODO - Warn on mismatch with running firmware
 #x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
-print('Importing stored Spartan-6 configuration settings...')
+print('')
+print('Importing stored Spartan-6 bootloader network configuration settings...')
 
 if ( cfg.import_network_prom_data(prom.read_data(NETWORK_CONFIG_ADDRESS, 256)) == False ):
     exit(1)
 
-if ( cfg.import_firmware_prom_data(prom.read_data(BOOTLOADER_FIRMWARE_CONFIG_ADDRESS, 256)) == False ):
-    exit(1)
-    
 print('')
 print('Network configuration is currently:')
 print('')
@@ -64,7 +62,13 @@ print('')
 cfg.print_network_cfg()
 
 print('')
-print('Firmware configuration is currently:')
+print('Importing stored Spartan-6 bootloader configuration settings...')
+
+if ( cfg.import_firmware_prom_data(prom.read_data(BOOTLOADER_FIRMWARE_CONFIG_ADDRESS, 256)) == False ):
+    exit(1)
+    
+print('')
+print('Bootloader configuration is currently:')
 print('')
 
 cfg.print_write_cfg()
@@ -87,13 +91,26 @@ cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+r+' as x', args.verbose)
 # TODO - Warn on mismatch with running firmware
 #x = qf2_python.identifier.get_board_information(args.target, args.verbose)
 
-print('Importing stored Spartan-6 configuration settings...')
+print('')
+print('Importing stored Spartan-6 runtime network configuration settings...')
+
+if ( cfg.import_network_prom_data(prom.read_data(NETWORK_CONFIG_ADDRESS, 256)) == False ):
+    exit(1)
+
+print('')
+print('Network configuration is currently:')
+print('')
+
+cfg.print_network_cfg()
+
+print('')
+print('Importing stored Spartan-6 runtime configuration settings...')
 
 if ( cfg.import_firmware_prom_data(prom.read_data(RUNTIME_FIRMWARE_CONFIG_ADDRESS, 256)) == False ):
     exit(1)
 
 print('')
-print('Firmware configuration is currently:')
+print('Runtime configuration is currently:')
 print('')
 
 cfg.print_write_cfg()

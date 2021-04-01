@@ -115,7 +115,7 @@ class interface():
 
         if ((status & 0x31) != 0x31):
             raise Exception('DONE & INIT did not go high after programming')
-
+        
     def enter_user_1_dr(self):
         self.target.go_to_run_test_idle()
         self.target.go_to_shift_ir()

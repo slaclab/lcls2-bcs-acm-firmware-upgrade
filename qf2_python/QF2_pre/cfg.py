@@ -465,6 +465,10 @@ class base:
 
                 v = self.gen_checksum(result)
                 result += v
+
+                #for i in result:
+                #        print(hex(i))                
+                
                 result += bytearray([0xFF]) * (256 - len(result))
 
                 return result
@@ -487,7 +491,7 @@ class base:
                 v = self.gen_checksum(result)
                 result += v
                 result += bytearray([0xFF]) * (256 - len(result))
-
+                
                 return result
 
         def __import_cfg_value(self, key, target, data):
@@ -540,7 +544,10 @@ class base:
 
         def import_firmware_prom_data(self, data):
 
-                v = self.gen_checksum(data[0:self.__WRITE_LENGTH + self.__NETWORK_LENGTH])
+                #for i in data:
+                #        print(hex(i))                
+                
+                v = self.gen_checksum(data[0:self.__WRITE_LENGTH])
 
                 if ( v != data[self.__WRITE_LENGTH:self.__WRITE_LENGTH+4] ):
                         # Invalid checksum
