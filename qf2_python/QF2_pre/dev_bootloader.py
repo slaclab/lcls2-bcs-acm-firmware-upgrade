@@ -1686,30 +1686,52 @@ class interface(cfg):
 
                 return r
 
-        def programPMOD(self, f):
+        def programControllerPMODA(self, f):
+                p = self.__formatPMODControllerBinary(f)
+                
+                # Load the code
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+
+                for i in p:
+                        TempSock.sendto(bytearray(i),(self.__target, 50006))
+
+        def programControllerPMODB(self, f):
+                p = self.__formatPMODControllerBinary(f)
+                
+                # Load the code
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+
+                for i in p:
+                        TempSock.sendto(bytearray(i),(self.__target, 50007))
+        
+        def __formatPMODControllerBinary(self, f):
                 
                 with open(f, mode='rb') as f:
                         x = bytearray(f.read())
 
+                        print(len(x))
+                
                 # Only Python3...
                 #int.from_bytes(b, byteorder='big', signed=False)
-                if self.convToU64(x[0:8]) != 18:
-                        raise Exception('Binary PRAM depth is not 18')
+                print(self.convToU64(x[0:8]))
+                if self.convToU64(x[0:8]) != 28:
+                        raise Exception('Binary PRAM data width is not 28')
 
                 # Iterate through, ignoring first entry
                 v = list()
-                for i in range(0, (len(x)/8)-1):
+                for i in range(0, (len(x)//8)-1):
                         v.append(self.convToU64(x[(i*8)+8:(i*8)+16]))
 
                 if len(v) != 1024:
                         raise Exception('Binary code length isn\'t 1024')
-                        
+
                 # Reformat the data into the loading format
                 # Break programming data into packets, with a reset tag on the front of each one
                 s = list()
                 p = list()
                 for i in v:
-                        s.append((i>>16) & 0x3)
+                        s.append((i>>24) & 0xF)
+                        s.append((i>>16) & 0xFF)
                         s.append((i>>8) & 0xFF)
                         s.append(i & 0xFF)
                         if len(s) > 1000:
@@ -1717,19 +1739,17 @@ class interface(cfg):
                                 p.append(s)
                                 s = list()
 
+                # Last bit
+                if len(s) != 0:
+                        s.insert(0, 0x01)
+                        p.append(s)
+                                
                 # Release PMOD reset
                 p.append([0])
-                                
-                #print len(p)
-                #print p
 
-                # Load the code
-                TempSock = socket(AF_INET,SOCK_DGRAM)
-
-                for i in p:
-                        TempSock.sendto(bytearray(i),(self.__target, 50006))
-
-        def sendReceivePMOD(self, data):
+                return p
+        
+        def sendReceiveControllerPMODA(self, data):
 
                 data.insert(0, 0)
 
@@ -1751,3 +1771,27 @@ class interface(cfg):
 
                 res = bytearray(read_bytes)
                 return res
+
+        def sendReceiveControllerPMODB(self, data):
+
+                data.insert(0, 0)
+
+                TempSock = socket(AF_INET,SOCK_DGRAM)
+                TempSock.bind(("0.0.0.0", 0))
+                TempSock.settimeout(2)
+                
+                #read_bytes = str()
+
+                try:
+                        TempSock.sendto(bytearray(data),(self.__target, 50007))
+                        read_bytes = TempSock.recv(1024)
+                        if not read_bytes:
+                                print('No data received')
+
+                except KeyboardInterrupt:
+                        print('Ctrl-C detected')
+                        exit(0)
+
+                res = bytearray(read_bytes)
+                return res
+        
