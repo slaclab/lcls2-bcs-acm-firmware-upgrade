@@ -42,52 +42,80 @@ def get_board_information(r, verbose=False):
     j = 0
     for i in range(0, 8):
         j = j + (int(r[7+i]) << (i*8))
-    bootloader_storage_date = str(datetime.datetime.utcfromtimestamp(j))
+    if j == (2**64-1):
+        bootloader_storage_date = 'NOT SET'
+    else:
+        bootloader_storage_date = str(datetime.datetime.utcfromtimestamp(j))
 
     j = 0
     for i in range(0, 8):
         j = j + (int(r[15+i]) << (i*8))
-    bootloader_build_date = str(datetime.datetime.utcfromtimestamp(j))
+    if j == (2**64-1):
+        bootloader_build_date = 'NOT SET'
+    else:
+        bootloader_build_date = str(datetime.datetime.utcfromtimestamp(j))
     
     bootloader_hash = str()
     x = r[23:55]
     x.reverse()
     for i in x: bootloader_hash += '{:02x}'.format(i)
+    if bootloader_hash == 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff':
+        bootloader_hash = 'NOT SET'
 
     j = 0
     for i in range(0, 8):
         j = j + (int(r[55+i]) << (i*8))
-    runtime_storage_date = str(datetime.datetime.utcfromtimestamp(j))
+    if j == (2**64-1):
+        runtime_storage_date = 'NOT SET'
+    else:
+        runtime_storage_date = str(datetime.datetime.utcfromtimestamp(j))
 
     j = 0
     for i in range(0, 8):
         j = j + (int(r[63+i]) << (i*8))
-    runtime_build_date = str(datetime.datetime.utcfromtimestamp(j))
+    if j == (2**64-1):
+        runtime_build_date = 'NOT SET'
+    else:
+        runtime_build_date = str(datetime.datetime.utcfromtimestamp(j))
     
     runtime_hash = str()
     x = r[71:103]
     x.reverse()
     for i in x: runtime_hash += '{:02x}'.format(i)
+    if runtime_hash == 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff':
+        runtime_hash = 'NOT SET'
     
     j = 0
     for i in range(0, 8):
         j = j + (int(r[103+i]) << (i*8))
-    kintex_storage_date = str(datetime.datetime.utcfromtimestamp(j))
+
+    # Check for undefined
+    if j == (2**64-1):
+        kintex_storage_date = 'NOT SET'
+    else:
+        kintex_storage_date = str(datetime.datetime.utcfromtimestamp(j))
 
     j = 0
     for i in range(0, 8):
         j = j + (int(r[111+i]) << (i*8))
-    kintex_build_date = str(datetime.datetime.utcfromtimestamp(j))
+    if j == (2**64-1):
+        kintex_build_date = 'NOT SET'
+    else:
+        kintex_build_date = str(datetime.datetime.utcfromtimestamp(j))
     
     kintex_hash = str()
     x = r[119:151]
     x.reverse()
     for i in x: kintex_hash += '{:02x}'.format(i)
+    if kintex_hash == 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff':
+        kintex_hash = 'NOT SET'
 
     j = 0
     for i in range(0, 3):
         j = j + (int(r[151+i]) << (i*8))
     kintex_length = str(j)
+    if j == (2**24-1):
+        kintex_length = 'NOT SET'
     
     board_uid = str()
     x = r[154:163]

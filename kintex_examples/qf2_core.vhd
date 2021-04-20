@@ -5063,7 +5063,7 @@ begin
       is_k         => tx_is_k
       );
 
-  -- Mercury kernel - trains the receiver, retrains on any error after lock
+  -- Mercury kernel - trains the receiver, re-trains on any error after lock
   inst_rx_link_trainer : link_trainer
     port map (
       clk                 => clk_1x_rx,
