@@ -72,12 +72,12 @@ def get_board_information(r, verbose=False):
     j = 0
     for i in range(0, 8):
         j = j + (int(r[103+i]) << (i*8))
-    kintex_storage_date = str(datetime.datetime.utcfromtimestamp(j))
+    kintex_storage_date = '0' # TODO str(datetime.datetime.utcfromtimestamp(j))
 
     j = 0
     for i in range(0, 8):
         j = j + (int(r[111+i]) << (i*8))
-    kintex_build_date = str(datetime.datetime.utcfromtimestamp(j))
+    kintex_build_date = '0' # TODO str(datetime.datetime.utcfromtimestamp(j))
     
     kintex_hash = str()
     x = r[119:151]

@@ -1049,7 +1049,7 @@ entity async_to_sync_reset_shift is
 end async_to_sync_reset_shift;
 
 architecture rtl of async_to_sync_reset_shift is
-  signal shift : std_logic_vector(LENGTH-1 downto 0);
+  signal shift : std_logic_vector(LENGTH-1 downto 0) := (others => OUTPUT_POLARITY);
 begin
 
   reset : process(input, clk)
@@ -1061,8 +1061,8 @@ begin
     end if;
   end process reset;
 
-  -- Output the result on edge - helps to meet timing
-  output <= shift(LENGTH-1) when rising_edge(clk);
+  -- No clock here - mustn't be
+  output <= shift(LENGTH-1);
 
 end rtl;
 
@@ -4028,7 +4028,7 @@ entity base is
 end base;
 
 architecture rtl of base is
-
+  
   signal clk_sys : std_logic;
 
   signal mmcm_reset, pll_reset, idelayctrl_reset : std_logic := '1';
@@ -4195,7 +4195,7 @@ begin
   -- Release global reset when MMCM and IDELAYCTRL are locked
   -- PLL must be locked by this point
   async_reset <= not(mmcm_locked and idelay_rdy);
-
+  
   -- Use BUFH to restrict placement
   inst_bufh_clk_100mhz_tx : component unisim.vcomponents.BUFH
     port map (
@@ -4557,7 +4557,7 @@ entity k7_tx_8b10b is
   port (
 
     -- SERDES reset
-    serdes_reset : std_logic;
+    serdes_reset : in std_logic;
 
     -- Byte clock and DDR 10b clock
     clk_1x, clk_5x : in std_logic;
@@ -4601,7 +4601,7 @@ begin
   inst_oserdes_master : component unisim.vcomponents.OSERDESE2
     generic map (
       DATA_RATE_OQ   => "DDR",
-      DATA_RATE_TQ   => "SDR",
+      DATA_RATE_TQ   => "DDR",
       DATA_WIDTH     => 10,
       SERDES_MODE    => "MASTER",
       TRISTATE_WIDTH => 1
@@ -4634,7 +4634,7 @@ begin
   inst_oserdes_slave : component unisim.vcomponents.OSERDESE2
     generic map (
       DATA_RATE_OQ   => "DDR",
-      DATA_RATE_TQ   => "SDR",
+      DATA_RATE_TQ   => "DDR",
       DATA_WIDTH     => 10,
       SERDES_MODE    => "SLAVE",
       TRISTATE_WIDTH => 1
@@ -4770,7 +4770,7 @@ architecture rtl of comms_link is
     component k7_tx_8b10b
     port (
       -- SERDES reset
-      serdes_reset : std_logic;
+      serdes_reset : in std_logic;
 
       -- Byte clock and DDR 10b clock
       clk_1x, clk_5x : in std_logic;
@@ -4786,7 +4786,7 @@ architecture rtl of comms_link is
   component k7_rx_8b10b
     port (
       -- SERDES reset
-      serdes_reset : std_logic;
+      serdes_reset : in std_logic;
 
       -- Byte clock and DDR 10b clock
       clk_1x, clk_5x : in std_logic;
@@ -5272,7 +5272,13 @@ entity qf2_core is
 
     FLASH_ENABLE : boolean := false;
 
-    MONITORING_ENABLE : boolean := false
+    MONITORING_ENABLE : boolean := false;
+
+    PMOD_A_ENABLE : boolean := false;
+
+    PMOD_B_ENABLE : boolean := false;
+
+    PMOD_C_ENABLE : boolean := false
     
     );
   port(
@@ -5294,7 +5300,7 @@ entity qf2_core is
 
     -- Status signals to indicate data is being moved in / out of the FPGA
     -- (clk_100mhz domain)
-    transmitting, receiving : out std_logic;
+    transmitting, receiving : out std_logic := '0';
 
     -- Differential pins connected to Spartan-6 - Kintex-7 bridge
     data_in_p, data_in_n   : in  std_logic;
@@ -5328,6 +5334,39 @@ entity qf2_core is
     monitoring_frame_end  : out std_logic;
     monitoring_read       : in  std_logic := '1';
 
+    -- PMOD A core
+    pmod_a_clk                : in  std_logic;
+    pmod_a_inbound_data       : out std_logic_vector(7 downto 0);
+    pmod_a_inbound_available  : out std_logic;
+    pmod_a_inbound_frame_end  : out std_logic;
+    pmod_a_inbound_read       : in  std_logic := '1';
+    pmod_a_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
+    pmod_a_outbound_available : out std_logic;
+    pmod_a_outbound_frame_end : in  std_logic := '1';
+    pmod_a_outbound_write     : in  std_logic := '0';
+
+    -- PMOD B core
+    pmod_b_clk                : in  std_logic;
+    pmod_b_inbound_data       : out std_logic_vector(7 downto 0);
+    pmod_b_inbound_available  : out std_logic;
+    pmod_b_inbound_frame_end  : out std_logic;
+    pmod_b_inbound_read       : in  std_logic := '1';
+    pmod_b_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
+    pmod_b_outbound_available : out std_logic;
+    pmod_b_outbound_frame_end : in  std_logic := '1';
+    pmod_b_outbound_write     : in  std_logic := '0';
+
+    -- PMOD C core
+    pmod_c_clk                : in  std_logic;
+    pmod_c_inbound_data       : out std_logic_vector(7 downto 0);
+    pmod_c_inbound_available  : out std_logic;
+    pmod_c_inbound_frame_end  : out std_logic;
+    pmod_c_inbound_read       : in  std_logic := '1';
+    pmod_c_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
+    pmod_c_outbound_available : out std_logic;
+    pmod_c_outbound_frame_end : in  std_logic := '1';
+    pmod_c_outbound_write     : in  std_logic := '0';
+    
     -- Channel 1 interface (port 50004)
     channel_1_clk                : in  std_logic;
     channel_1_inbound_data       : out std_logic_vector(7 downto 0);
@@ -5525,15 +5564,14 @@ architecture rtl of qf2_core is
   signal outbound_word_available                 : std_logic                    := '0';
   signal outbound_copy, outbound_empty           : std_logic;
   signal inbound_copy, inbound_full              : std_logic;
-  signal data_in, data_out                       : std_logic;
 
   -- Bridge FIFO signals
   signal inbound_bridge_dout, inbound_bridge_din     : std_logic_vector(8 downto 0);
   signal inbound_bridge_empty                        : std_logic;
   signal inbound_bridge_almost_full                  : std_logic;
   signal inbound_bridge_available                    : std_logic;
-  signal inbound_bridge_write                        : std_logic;
-  signal outbound_bridge_dout, outbound_bridge_din   : std_logic_vector(8 downto 0);
+  signal inbound_bridge_write                        : std_logic := '0';
+  signal outbound_bridge_dout, outbound_bridge_din   : std_logic_vector(8 downto 0) := (others => '0');
   signal outbound_bridge_empty, outbound_bridge_full : std_logic;
   signal outbound_bridge_read                        : std_logic;
 
@@ -5578,6 +5616,28 @@ architecture rtl of qf2_core is
   signal multicast_outbound_fifo_write, multicast_outbound_fifo_read : std_logic;
   signal multicast_outbound_fifo_full, multicast_outbound_fifo_empty : std_logic;
 
+  -- PMOD FIFO signals
+  signal pmod_a_inbound_fifo_din, pmod_a_inbound_fifo_dout     : std_logic_vector(8 downto 0);
+  signal pmod_a_inbound_fifo_write, pmod_a_inbound_fifo_read   : std_logic;
+  signal pmod_a_inbound_fifo_full, pmod_a_inbound_fifo_empty   : std_logic;
+  signal pmod_a_outbound_fifo_din, pmod_a_outbound_fifo_dout   : std_logic_vector(8 downto 0);
+  signal pmod_a_outbound_fifo_write, pmod_a_outbound_fifo_read : std_logic;
+  signal pmod_a_outbound_fifo_full, pmod_a_outbound_fifo_empty : std_logic;
+
+  signal pmod_b_inbound_fifo_din, pmod_b_inbound_fifo_dout     : std_logic_vector(8 downto 0);
+  signal pmod_b_inbound_fifo_write, pmod_b_inbound_fifo_read   : std_logic;
+  signal pmod_b_inbound_fifo_full, pmod_b_inbound_fifo_empty   : std_logic;
+  signal pmod_b_outbound_fifo_din, pmod_b_outbound_fifo_dout   : std_logic_vector(8 downto 0);
+  signal pmod_b_outbound_fifo_write, pmod_b_outbound_fifo_read : std_logic;
+  signal pmod_b_outbound_fifo_full, pmod_b_outbound_fifo_empty : std_logic;
+
+  signal pmod_c_inbound_fifo_din, pmod_c_inbound_fifo_dout     : std_logic_vector(8 downto 0);
+  signal pmod_c_inbound_fifo_write, pmod_c_inbound_fifo_read   : std_logic;
+  signal pmod_c_inbound_fifo_full, pmod_c_inbound_fifo_empty   : std_logic;
+  signal pmod_c_outbound_fifo_din, pmod_c_outbound_fifo_dout   : std_logic_vector(8 downto 0);
+  signal pmod_c_outbound_fifo_write, pmod_c_outbound_fifo_read : std_logic;
+  signal pmod_c_outbound_fifo_full, pmod_c_outbound_fifo_empty : std_logic;
+  
   -- LED channel
   signal led_outbound_read  : std_logic := '0';
   signal led_outbound_empty : std_logic := '1';
@@ -5607,7 +5667,7 @@ architecture rtl of qf2_core is
   signal monitoring_inbound_fifo_write, monitoring_inbound_fifo_read   : std_logic;
   signal monitoring_inbound_fifo_full, monitoring_inbound_fifo_empty   : std_logic;
 
-  -- Counters
+  -- Unused counter signals
   signal inbound_bridge_fifo_wrcount, inbound_bridge_fifo_rdcount         : std_logic_vector(11 downto 0);
   signal outbound_bridge_fifo_wrcount, outbound_bridge_fifo_rdcount       : std_logic_vector(11 downto 0);
   signal channel_1_inbound_fifo_wrcount, channel_1_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
@@ -5620,6 +5680,12 @@ architecture rtl of qf2_core is
   signal channel_4_outbound_fifo_wrcount, channel_4_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
   signal multicast_inbound_fifo_wrcount, multicast_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
   signal multicast_outbound_fifo_wrcount, multicast_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_a_inbound_fifo_wrcount, pmod_a_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_a_outbound_fifo_wrcount, pmod_a_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_b_inbound_fifo_wrcount, pmod_b_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_b_outbound_fifo_wrcount, pmod_b_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_c_inbound_fifo_wrcount, pmod_c_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
+  signal pmod_c_outbound_fifo_wrcount, pmod_c_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
   signal flash_inbound_fifo_wrcount, flash_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
   signal monitoring_inbound_fifo_wrcount, monitoring_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
 
@@ -5665,7 +5731,6 @@ begin
       end if;
     end if;
   end process async_reset_delay;
-  --async_reset <= int_async_reset;
   
   -- Pass-through
   clk_100mhz  <= int_clk_100mhz;
@@ -5674,7 +5739,7 @@ begin
   -- few cycles to allow it to initialise
   inst_tx_sync_reset : async_to_sync_reset_shift
     generic map (
-      LENGTH => 4
+      LENGTH => 8
       )
     port map (
       clk    => clk_100mhz_tx,
@@ -5721,7 +5786,7 @@ begin
       DI          => outbound_bridge_din,
       RDCLK       => clk_100mhz_tx,
       RDEN        => outbound_bridge_read,
-      RST         => int_async_reset,
+      RST         => tx_sync_reset,
       WRCLK       => clk_100mhz_tx,
       WREN        => outbound_copy
       );
@@ -5754,7 +5819,7 @@ begin
 
               -- Check the next stream
               outbound_stream_select <= std_logic_vector(unsigned(outbound_stream_select) + 1);
-              if outbound_stream_select = "0111" then
+              if outbound_stream_select = "1010" then
                 outbound_stream_select <= "0000";
               end if;
 
@@ -5779,7 +5844,7 @@ begin
 
                 -- Check the next stream
                 outbound_stream_select <= std_logic_vector(unsigned(outbound_stream_select) + 1);
-                if outbound_stream_select = "0111" then
+                if outbound_stream_select = "1010" then
                   outbound_stream_select <= "0000";
                 end if;
 
@@ -5808,6 +5873,9 @@ begin
     led_outbound_empty            when outbound_stream_select = "0101" else
     flash_outbound_empty          when outbound_stream_select = "0110" else
     monitoring_outbound_empty     when outbound_stream_select = "0111" else
+    pmod_a_outbound_fifo_empty when outbound_stream_select = "1000" else
+    pmod_b_outbound_fifo_empty when outbound_stream_select = "1001" else
+    pmod_c_outbound_fifo_empty when outbound_stream_select = "1010" else
     '0';
 
   outbound_bridge_din <=
@@ -5819,6 +5887,9 @@ begin
     led_outbound_dout            when outbound_stream_select = "0101" else
     flash_outbound_dout          when outbound_stream_select = "0110" else
     monitoring_outbound_dout     when outbound_stream_select = "0111" else    
+    pmod_a_outbound_fifo_dout     when outbound_stream_select = "1000" else    
+    pmod_b_outbound_fifo_dout     when outbound_stream_select = "1001" else    
+    pmod_c_outbound_fifo_dout     when outbound_stream_select = "1010" else    
     ("00000" & outbound_target);
 
   channel_1_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0000" else '0';
@@ -5829,7 +5900,10 @@ begin
   led_outbound_read            <= outbound_copy when outbound_stream_select = "0101" else '0';
   flash_outbound_read          <= outbound_copy when outbound_stream_select = "0110" else '0';
   monitoring_outbound_read     <= outbound_copy when outbound_stream_select = "0111" else '0';
-
+  pmod_a_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1000" else '0';
+  pmod_b_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1001" else '0';
+  pmod_c_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1010" else '0';
+  
   -- Cross the LED signals from the clk_100mhz domain (or whatever else) into
   -- the TX domain. We don't need to take great care here as a glitch wouldn't
   -- be obvious to anyone visibly inspecting them and is not a critical path.
@@ -5966,7 +6040,7 @@ begin
   -- few cycles to allow it to initialise
   inst_rx_sync_reset : async_to_sync_reset_shift
     generic map (
-      LENGTH => 4
+      LENGTH => 8
       )
     port map (
       clk    => clk_100mhz_rx,
@@ -6013,7 +6087,7 @@ begin
       DI          => inbound_bridge_din,
       RDCLK       => clk_100mhz_rx,
       RDEN        => inbound_copy,
-      RST         => int_async_reset,
+      RST         => rx_sync_reset,
       WRCLK       => clk_100mhz_rx,
       WREN        => inbound_bridge_write
       );
@@ -6083,6 +6157,9 @@ begin
     -- "0101" == LEDs (unused)
     flash_inbound_fifo_full when inbound_stream_select = "0110" else
     monitoring_inbound_fifo_full when inbound_stream_select = "0111" else    
+    pmod_a_inbound_fifo_full when inbound_stream_select = "1000" else
+    pmod_b_inbound_fifo_full when inbound_stream_select = "1001" else
+    pmod_c_inbound_fifo_full when inbound_stream_select = "1010" else
     '0';
 
   channel_1_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0000" else '0';
@@ -6093,6 +6170,9 @@ begin
   -- "0101" == LEDs (unused)
   flash_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0110" else '0';
   monitoring_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0111" else '0';
+  pmod_a_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1000" else '0';
+  pmod_b_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1001" else '0';
+  pmod_c_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1010" else '0';
 
   -- Direct fanouts
   channel_1_inbound_fifo_din <= inbound_bridge_dout;
@@ -6103,6 +6183,9 @@ begin
   -- "0101" == LEDs (unused)
   flash_inbound_fifo_din <= inbound_bridge_dout;
   monitoring_inbound_fifo_din <= inbound_bridge_dout;
+  pmod_a_inbound_fifo_din <= inbound_bridge_dout;
+  pmod_b_inbound_fifo_din <= inbound_bridge_dout;
+  pmod_c_inbound_fifo_din <= inbound_bridge_dout;
   
   -----------------------------------------------------------------------------
   -- FIFO instances
@@ -6133,7 +6216,7 @@ begin
         DI          => channel_1_inbound_fifo_din,
         RDCLK       => int_channel_1_clk,
         RDEN        => channel_1_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => channel_1_inbound_fifo_write
         );
@@ -6232,7 +6315,7 @@ begin
         DI          => channel_2_inbound_fifo_din,
         RDCLK       => int_channel_2_clk,
         RDEN        => channel_2_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => channel_2_inbound_fifo_write
         );
@@ -6331,7 +6414,7 @@ begin
         DI          => channel_3_inbound_fifo_din,
         RDCLK       => int_channel_3_clk,
         RDEN        => channel_3_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => channel_3_inbound_fifo_write
         );
@@ -6430,7 +6513,7 @@ begin
         DI          => channel_4_inbound_fifo_din,
         RDCLK       => int_channel_4_clk,
         RDEN        => channel_4_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => channel_4_inbound_fifo_write
         );
@@ -6529,7 +6612,7 @@ begin
         DI          => multicast_inbound_fifo_din,
         RDCLK       => int_multicast_clk,
         RDEN        => multicast_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => multicast_inbound_fifo_write
         );
@@ -6587,6 +6670,249 @@ begin
 
   end generate g_n_multicast;
 
+  -- Only instantiate the FIFO if enabled
+  g_pmod_a : if PMOD_A_ENABLE = true generate
+
+    inst_pmod_a_inbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_a_inbound_fifo_dout,
+        EMPTY       => pmod_a_inbound_fifo_empty,
+        FULL        => pmod_a_inbound_fifo_full,
+        RDCOUNT     => pmod_a_inbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_a_inbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_a_inbound_fifo_din,
+        RDCLK       => pmod_a_clk,
+        RDEN        => pmod_a_inbound_fifo_read,
+        RST         => rx_sync_reset,
+        WRCLK       => clk_100mhz_rx,
+        WREN        => pmod_a_inbound_fifo_write
+        );
+
+    inst_pmod_a_outbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_a_outbound_fifo_dout,
+        EMPTY       => pmod_a_outbound_fifo_empty,
+        FULL        => pmod_a_outbound_fifo_full,
+        RDCOUNT     => pmod_a_outbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_a_outbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_a_outbound_fifo_din,
+        RDCLK       => clk_100mhz_tx,
+        RDEN        => pmod_a_outbound_fifo_read,
+        RST         => int_async_reset,
+        WRCLK       => pmod_a_clk,
+        WREN        => pmod_a_outbound_fifo_write
+        );
+
+    -- Mappings
+    pmod_a_inbound_fifo_read <= pmod_a_inbound_read;
+    pmod_a_inbound_data      <= pmod_a_inbound_fifo_dout(7 downto 0);
+    pmod_a_inbound_frame_end <= pmod_a_inbound_fifo_dout(8);
+    pmod_a_inbound_available <= not(pmod_a_inbound_fifo_empty);
+
+    pmod_a_outbound_fifo_din   <= pmod_a_outbound_frame_end & pmod_a_outbound_data;
+    pmod_a_outbound_available  <= not(pmod_a_outbound_fifo_full);
+    pmod_a_outbound_fifo_write <= pmod_a_outbound_write;
+
+  end generate g_pmod_a;
+
+  g_n_pmod_a : if PMOD_A_ENABLE = false generate
+
+    pmod_a_inbound_fifo_dout  <= (others => '0');
+    pmod_a_inbound_fifo_empty <= '1';
+    pmod_a_inbound_fifo_full  <= '0';
+
+    pmod_a_outbound_fifo_dout  <= (others => '0');
+    pmod_a_outbound_fifo_empty <= '1';
+    pmod_a_outbound_fifo_full  <= '0';
+
+  end generate g_n_pmod_a;
+
+  -- Only instantiate the FIFO if enabled
+  g_pmod_b : if PMOD_B_ENABLE = true generate
+
+    inst_pmod_b_inbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_b_inbound_fifo_dout,
+        EMPTY       => pmod_b_inbound_fifo_empty,
+        FULL        => pmod_b_inbound_fifo_full,
+        RDCOUNT     => pmod_b_inbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_b_inbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_b_inbound_fifo_din,
+        RDCLK       => pmod_b_clk,
+        RDEN        => pmod_b_inbound_fifo_read,
+        RST         => rx_sync_reset,
+        WRCLK       => clk_100mhz_rx,
+        WREN        => pmod_b_inbound_fifo_write
+        );
+
+    inst_pmod_b_outbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_b_outbound_fifo_dout,
+        EMPTY       => pmod_b_outbound_fifo_empty,
+        FULL        => pmod_b_outbound_fifo_full,
+        RDCOUNT     => pmod_b_outbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_b_outbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_b_outbound_fifo_din,
+        RDCLK       => clk_100mhz_tx,
+        RDEN        => pmod_b_outbound_fifo_read,
+        RST         => int_async_reset,
+        WRCLK       => pmod_b_clk,
+        WREN        => pmod_b_outbound_fifo_write
+        );
+
+    -- Mappings
+    pmod_b_inbound_fifo_read <= pmod_b_inbound_read;
+    pmod_b_inbound_data      <= pmod_b_inbound_fifo_dout(7 downto 0);
+    pmod_b_inbound_frame_end <= pmod_b_inbound_fifo_dout(8);
+    pmod_b_inbound_available <= not(pmod_b_inbound_fifo_empty);
+
+    pmod_b_outbound_fifo_din   <= pmod_b_outbound_frame_end & pmod_b_outbound_data;
+    pmod_b_outbound_available  <= not(pmod_b_outbound_fifo_full);
+    pmod_b_outbound_fifo_write <= pmod_b_outbound_write;
+
+  end generate g_pmod_b;
+
+  g_n_pmod_b : if PMOD_B_ENABLE = false generate
+
+    pmod_b_inbound_fifo_dout  <= (others => '0');
+    pmod_b_inbound_fifo_empty <= '1';
+    pmod_b_inbound_fifo_full  <= '0';
+
+    pmod_b_outbound_fifo_dout  <= (others => '0');
+    pmod_b_outbound_fifo_empty <= '1';
+    pmod_b_outbound_fifo_full  <= '0';
+
+  end generate g_n_pmod_b;
+
+  -- Only instantiate the FIFO if enabled
+  g_pmod_c : if PMOD_C_ENABLE = true generate
+
+    inst_pmod_c_inbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_c_inbound_fifo_dout,
+        EMPTY       => pmod_c_inbound_fifo_empty,
+        FULL        => pmod_c_inbound_fifo_full,
+        RDCOUNT     => pmod_c_inbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_c_inbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_c_inbound_fifo_din,
+        RDCLK       => pmod_c_clk,
+        RDEN        => pmod_c_inbound_fifo_read,
+        RST         => rx_sync_reset,
+        WRCLK       => clk_100mhz_rx,
+        WREN        => pmod_c_inbound_fifo_write
+        );
+
+    inst_pmod_c_outbound_fifo : component unimacro.vcomponents.FIFO_DUALCLOCK_MACRO
+      generic map (
+        DEVICE                  => "7SERIES",
+        ALMOST_FULL_OFFSET      => x"0080",
+        ALMOST_EMPTY_OFFSET     => x"0080",
+        DATA_WIDTH              => 9,
+        FIFO_SIZE               => "36Kb",
+        FIRST_WORD_FALL_THROUGH => true
+        )
+      port map (
+        ALMOSTEMPTY => open,
+        ALMOSTFULL  => open,
+        DO          => pmod_c_outbound_fifo_dout,
+        EMPTY       => pmod_c_outbound_fifo_empty,
+        FULL        => pmod_c_outbound_fifo_full,
+        RDCOUNT     => pmod_c_outbound_fifo_rdcount,
+        RDERR       => open,
+        WRCOUNT     => pmod_c_outbound_fifo_wrcount,
+        WRERR       => open,
+        DI          => pmod_c_outbound_fifo_din,
+        RDCLK       => clk_100mhz_tx,
+        RDEN        => pmod_c_outbound_fifo_read,
+        RST         => int_async_reset,
+        WRCLK       => pmod_c_clk,
+        WREN        => pmod_c_outbound_fifo_write
+        );
+
+    -- Mappings
+    pmod_c_inbound_fifo_read <= pmod_c_inbound_read;
+    pmod_c_inbound_data      <= pmod_c_inbound_fifo_dout(7 downto 0);
+    pmod_c_inbound_frame_end <= pmod_c_inbound_fifo_dout(8);
+    pmod_c_inbound_available <= not(pmod_c_inbound_fifo_empty);
+
+    pmod_c_outbound_fifo_din   <= pmod_c_outbound_frame_end & pmod_c_outbound_data;
+    pmod_c_outbound_available  <= not(pmod_c_outbound_fifo_full);
+    pmod_c_outbound_fifo_write <= pmod_c_outbound_write;
+
+  end generate g_pmod_c;
+
+  g_n_pmod_c : if PMOD_C_ENABLE = false generate
+
+    pmod_c_inbound_fifo_dout  <= (others => '0');
+    pmod_c_inbound_fifo_empty <= '1';
+    pmod_c_inbound_fifo_full  <= '0';
+
+    pmod_c_outbound_fifo_dout  <= (others => '0');
+    pmod_c_outbound_fifo_empty <= '1';
+    pmod_c_outbound_fifo_full  <= '0';
+
+  end generate g_n_pmod_c;
+  
   -- Only instantiate the channel if enabled
   g_flash : if FLASH_ENABLE = true generate
 
@@ -6612,7 +6938,7 @@ begin
         DI          => flash_inbound_fifo_din,
         RDCLK       => flash_clk,
         RDEN        => flash_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => flash_inbound_fifo_write
         );
@@ -6658,7 +6984,7 @@ begin
         DI          => monitoring_inbound_fifo_din,
         RDCLK       => monitoring_clk,
         RDEN        => monitoring_inbound_fifo_read,
-        RST         => int_async_reset,
+        RST         => rx_sync_reset,
         WRCLK       => clk_100mhz_rx,
         WREN        => monitoring_inbound_fifo_write
         );
