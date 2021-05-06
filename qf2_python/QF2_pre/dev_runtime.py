@@ -14,6 +14,12 @@ import datetime
 
 import qf2_python.QF2_pre.cfg as mycfg
 
+# Compatibility layer
+if sys.version_info < (3,):
+    import qf2_python.compat.python2 as compat
+else:
+    import qf2_python.compat.python3 as compat
+
 class cfg(mycfg.base):
 
         def __init__(self, verbose):
@@ -269,10 +275,11 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-        #def enable_monitoring(self):
-        #        self.set_byte(1, 4, 4)
-        #def disable_monitoring(self):
-        #        self.set_byte(1, 0, 4)
+        def enable_monitoring(self):
+                self.set_byte(1, 4, 4)
+        
+        def disable_monitoring(self):
+                self.set_byte(1, 0, 4)
 
         def toggle_setting(self, s):
                 if self.get_write_size(s) != 1:
@@ -832,6 +839,9 @@ class interface(cfg):
 
         def kintex_qsfp_1_get(self):
 
+                # Turn monitoring off (can work without , technically)
+                self.disable_monitoring()
+            
                 # Modsel the Kintex-7 QSFP1, disable the others
                 self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
                 self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
@@ -840,10 +850,18 @@ class interface(cfg):
                 self.pca9534_bit_set(0x80, 0, 2, False) # k7_1
 
                 # Chain is already set, query the QSFP
-                return self.qsfp_get()
+                x = self.qsfp_get()
+
+                # Restart monitoring
+                self.enable_monitoring()
+
+                return x
 
         def kintex_qsfp_2_get(self):
 
+                # Turn monitoring off (can work without , technically)
+                self.disable_monitoring()
+            
                 # Modsel the Kintex-7 QSFP2, disable the others
                 self.pca9534_bit_set(0x80, 0, 2, True) # k7_1
                 self.pca9534_bit_set(0x80, 0, 3, True) # k7_2
@@ -852,7 +870,12 @@ class interface(cfg):
                 self.pca9534_bit_set(0x80, 0, 3, False) # k7_2
 
                 # Chain is already set, query the QSFP
-                return self.qsfp_get()
+                x = self.qsfp_get()
+
+                # Turn monitoring back on
+                self.enable_monitoring()
+
+                return x
 
         def spartan_qsfp_get(self):
 
@@ -866,14 +889,16 @@ class interface(cfg):
                 self.pca9534_bit_set(0x80, 0, 4, False) # s6
 
                 x = self.qsfp_get()
-                
+
+                # Restart monitoring
                 self.enable_monitoring()
                 
                 return x
 
         def qsfp_get(self):
+            
                 # Chain is already set, query the QSFP
-                self.i2c_controller_write(0x80, 0x50, 128, 0)
+                self.i2c_controller_read(0x80, 0x50, 128, 0)
                 
                 time.sleep(0.2)
 
@@ -886,13 +911,13 @@ class interface(cfg):
                         result[i+128] = x[i]
 
                 # Lower memory
-                result['IDENTIFIER'] = QSFP_INFO.IDENTIFIER.get(result[0], 'Unknown / unspecified')
-                result['STATUS'] = QSFP_INFO.STATUS.get(result[2], 'Unknown / unspecified')
+                result['IDENTIFIER'] = mycfg.QSFP_INFO.IDENTIFIER.get(result[0], 'Unknown / unspecified')
+                result['STATUS'] = mycfg.QSFP_INFO.STATUS.get(result[2], 'Unknown / unspecified')
                 for j in range(0, 4):
                         result['LOS RX' + str(j+1)] = '(' + str((result[3] >> j) & 1) + ')'
                         result['LOS TX' + str(j+1)] = '(' + str((result[3] >> j+4) & 1) + ')'
                         result['FAULT TX' + str(j+1)] = '(' + str((result[4] >> j) & 1) + ')'
-                result['TEMPERATURE'] = str(float(conv_n((result[22] << 8) | result[23], 16)) / 256.0) + ' C'
+                result['TEMPERATURE'] = str(float(mycfg.conv_n((result[22] << 8) | result[23], 16)) / 256.0) + ' C'
                 result['SUPPLY VOLTAGE'] = str(float((result[26] << 8) | result[27]) * 0.0001) + ' V'
 
                 # Upper memory
@@ -900,18 +925,18 @@ class interface(cfg):
                 result['SUPPORTED OM3 50um LENGTH'] = str(result[143] * 2) + ' m'
                 output = str()
                 for j in range(148, 164):
-                        output += str(unichr(result[j]))
+                        output += str(compat.unicode_chr(result[j]))
                 result['VENDOR NAME'] = output
                 result['IEEE COMPANY ID'] = '0x' + '{:06x}'.format(result[165] << 16 | result[166] << 8 | result[167])
                 output = str()
                 for j in range(168, 186):
-                        output += str(unichr(result[j]))
+                        output += str(compat.unicode_chr(result[j]))
                 result['PART NUMBER'] = output
-                result['REVISION LEVEL'] = str(unichr(result[184])) + str(unichr(result[185]))
+                result['REVISION LEVEL'] = str(compat.unicode_chr(result[184])) + str(compat.unicode_chr(result[185]))
                 result['LASER WAVELENGTH'] = str(float((result[186] << 8) | result[187]) / 20.0) + ' nm'
                 output = str()
                 for j in range(196, 212):
-                        output += str(unichr(result[j]))
+                        output += str(compat.unicode_chr(result[j]))
                 result['VENDOR SERIAL NUMBER'] = output
 
                 return result

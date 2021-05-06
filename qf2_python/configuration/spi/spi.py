@@ -302,6 +302,8 @@ class SL25FLL():
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
             continue
 
+        #time.sleep(0.1)
+
         if ( verify==True ):
             compare_data = self.read_data(address, 256)
             if compare_data != data:

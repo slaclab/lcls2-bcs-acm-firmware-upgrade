@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+def dict_iteritems(s):
+    return s.items()
+
+def unicode_chr(s):
+    return chr(s)
+
 def print_no_flush(s):
     print(s + ' ', end='', flush=False)
 

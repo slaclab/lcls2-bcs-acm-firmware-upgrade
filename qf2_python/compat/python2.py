@@ -2,6 +2,12 @@
 
 import sys
 
+def dict_iteritems(s):
+    return s.iteritems()
+
+def unicode_chr(s):
+    return unichr(s)
+
 def print_no_flush(s):
     print s,
 
