@@ -4720,6 +4720,9 @@ entity comms_link is
     tx_p, tx_n : out std_logic;
     rx_p, rx_n : in  std_logic;
 
+    -- Lock indicator to Spartan
+    rx_locked              : out std_logic;
+
     -- Channel FIFO interface
     outbound_data      : in  std_logic_vector(7 downto 0);
     outbound_available : in  std_logic;
@@ -4737,7 +4740,6 @@ entity comms_link is
     debug_rx_10b_data_out        : out std_logic_vector(9 downto 0);
     debug_rx_is_k                : out std_logic;
     debug_rx_data_out            : out std_logic_vector(7 downto 0);
-    debug_rx_locked              : out std_logic;
     debug_rx_delay               : out std_logic_vector(4 downto 0);
     debug_rx_code_error          : out std_logic;
     debug_rx_disparity_error     : out std_logic;
@@ -4849,7 +4851,7 @@ architecture rtl of comms_link is
   -- Signals
   signal tx_sync_reset, rx_sync_reset, rx_trainer_sync_reset             : std_logic                     := '1';
   signal tx_backpressure_needed                                          : std_logic                     := '0';
-  signal rx_bitslip, rx_locked, rx_backpressure_needed                   : std_logic                     := '0';
+  signal rx_bitslip, rx_backpressure_needed                   : std_logic                     := '0';
   signal rx_delay                                                        : std_logic_vector(4 downto 0)  := "00000";
   signal rx_crc_error, rx_code_error, rx_disparity_error                 : std_logic                     := '0';
   signal tx_crc, rx_crc, latched_tx_crc, latched_rx_crc, received_rx_crc : std_logic_vector(31 downto 0) := (others => '0');
@@ -4889,14 +4891,15 @@ architecture rtl of comms_link is
   signal pre_inbound_data                                                                                                                                                                                                                                                             : std_logic_vector(7 downto 0) := (others => '0');
   signal tx_state_is_backpressure, pre_tx_state_is_backpressure, rx_domain_tx_state_is_backpressure, r_rx_domain_tx_state_is_backpressure, r_tx_domain_tx_backpressure_needed, r_tx_domain_rx_backpressure_needed, tx_domain_tx_backpressure_needed, tx_domain_rx_backpressure_needed : std_logic                    := '1';
   signal rx_delay_start, rx_delay_end, rx_delay_last_start, rx_delay_last_end                                                                                                                                                                                                         : std_logic_vector(7 downto 0) := (others => '0');
-  signal int_phase_shift, inv_rx_locked                                                                                                                                                                                                                                                              : std_logic                    := '0';
+  signal int_phase_shift, int_rx_locked                                                                                                                                                                                                                                                              : std_logic                    := '0';
 
 begin
+
+  rx_locked              <= int_rx_locked;
 
   -- Debug signals
   debug_rx_data_out            <= rx_data_out;
   debug_rx_is_k                <= rx_is_k;
-  debug_rx_locked              <= rx_locked;
   debug_rx_delay               <= rx_delay;
   debug_rx_crc_error           <= rx_crc_error;
   debug_rx_disparity_error     <= rx_disparity_error;
@@ -4909,19 +4912,16 @@ begin
   debug_rx_delay_last_end      <= rx_delay_last_end;
 
   -- Transmitter only comes out of reset once the rx is locked
-  -- This intentionally stalls the receiver on the other end - training of the
-  -- Spartan comes after the Kintex has locked so we ensure the phase shift signals
-  -- are properly received
   inst_sync_tx_reset_gen : async_to_sync_reset_shift
     generic map (
+      INPUT_POLARITY => '0',
       LENGTH => 8
       )
     port map (
       clk    => clk_1x_tx,
-      input  => inv_rx_locked,
+      input  => int_rx_locked,
       output => tx_sync_reset
       );
-  inv_rx_locked <= not(rx_locked);
 
   inst_sync_rx_reset_gen : async_to_sync_reset_shift
     generic map (
@@ -5073,7 +5073,7 @@ begin
       rx_crc_error        => rx_crc_error,
       rx_disparity_error  => rx_disparity_error,
       rx_code_error       => rx_code_error,
-      rx_locked           => rx_locked,
+      rx_locked           => int_rx_locked,
       rx_delay_start      => rx_delay_start,
       rx_delay_end        => rx_delay_end,
       rx_delay_last_start => rx_delay_last_start,
@@ -5124,7 +5124,7 @@ begin
   begin
     if rising_edge(clk_1x_rx) then
       tx_backpressure_needed <= '0';
-      if rx_locked = '0' then
+      if int_rx_locked = '0' then
         -- Force idle TX when RX is not locked to prevent accidental overflow
         tx_backpressure_count  <= 31;
         tx_backpressure_needed <= '1';
@@ -5180,7 +5180,7 @@ begin
       rx_crc_error <= '0';
       rx_crc_reset <= '0';
 
-      if (rx_locked = '0') then
+      if (int_rx_locked = '0') then
         rx_state <= WAIT_LOCK;
       else
         case rx_state is
@@ -5229,7 +5229,7 @@ begin
   end process rx_state_proc;
 
   -- Phase shift receiver
-  int_phase_shift <= '1' when (rx_is_k = '1') and (rx_data_out = K_PHASE_SHIFT) else
+  int_phase_shift <= '1' when (rx_is_k = '1') and (rx_data_out = K_PHASE_SHIFT) and (rx_state = RECEIVE_DATA) else
                      '0';
   tx_phase_shift <= int_phase_shift when rising_edge(clk_1x_rx);
 
@@ -5289,6 +5289,13 @@ entity qf2_core is
     -- Reference 50MHz clock from Spartan-6
     clk_sys_p, clk_sys_n : in std_logic;
 
+    -- Differential pins connected to Spartan-6 - Kintex-7 bridge
+    data_in_p, data_in_n   : in  std_logic;
+    data_out_p, data_out_n : out std_logic;
+
+    -- RX lock signal to Spartan - used to drive TX PS linkup after RX is locked
+    rx_locked : out std_logic;
+    
     -- System clock reference from MMCM
     -- Jitter-cleaned reference for other clock generation
     -- in application firmware layer. Buffer in application.
@@ -5301,10 +5308,6 @@ entity qf2_core is
     -- Status signals to indicate data is being moved in / out of the FPGA
     -- (clk_100mhz domain)
     transmitting, receiving : out std_logic := '0';
-
-    -- Differential pins connected to Spartan-6 - Kintex-7 bridge
-    data_in_p, data_in_n   : in  std_logic;
-    data_out_p, data_out_n : out std_logic;
 
     -- LED pass-through interface (clk_100mhz domain)
     led_lpc_r, led_lpc_g, led_lpc_b : in std_logic := '0';
@@ -5438,7 +5441,6 @@ entity qf2_core is
     debug_rx_10b_data_out        : out std_logic_vector(9 downto 0);
     debug_rx_is_k                : out std_logic;
     debug_rx_data_out            : out std_logic_vector(7 downto 0);
-    debug_rx_locked              : out std_logic;
     debug_rx_delay               : out std_logic_vector(4 downto 0);
     debug_rx_code_error          : out std_logic;
     debug_rx_disparity_error     : out std_logic;
@@ -5486,6 +5488,9 @@ architecture rtl of qf2_core is
       tx_p, tx_n : out std_logic;
       rx_p, rx_n : in  std_logic;
 
+      -- Lock indicator
+      rx_locked : out std_logic;
+      
       -- Channel FIFO interface
       outbound_data      : in  std_logic_vector(7 downto 0);
       outbound_available : in  std_logic;
@@ -5503,7 +5508,6 @@ architecture rtl of qf2_core is
       debug_rx_10b_data_out        : out std_logic_vector(9 downto 0);
       debug_rx_is_k                : out std_logic;
       debug_rx_data_out            : out std_logic_vector(7 downto 0);
-      debug_rx_locked              : out std_logic;
       debug_rx_delay               : out std_logic_vector(4 downto 0);
       debug_rx_code_error          : out std_logic;
       debug_rx_disparity_error     : out std_logic;
@@ -5740,12 +5744,12 @@ begin
   -- TODO: Think of a better way? One option would be to assume that if the RX
   -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
   async_reset_delay : process(int_async_reset, int_clk_100mhz)
-    variable reset_count : unsigned(26 downto 0) := to_unsigned(20000, 27); 
-    --variable reset_count : unsigned(26 downto 0) := (others => '1');
+    --variable reset_count : unsigned(26 downto 0) := to_unsigned(20000, 27); 
+    variable reset_count : unsigned(26 downto 0) := (others => '1');
   begin
     if int_async_reset = '1' then
-      reset_count := to_unsigned(20000, 27);
-      --reset_count := (others => '1');
+      --reset_count := to_unsigned(20000, 27);
+      reset_count := (others => '1');
       async_reset <= '1';
     elsif rising_edge(int_clk_100mhz) then
       if reset_count = 0 then
@@ -6031,6 +6035,7 @@ begin
       tx_n => data_out_n,
       rx_p => data_in_p,
       rx_n => data_in_n,
+      rx_locked              => rx_locked,
 
       outbound_data      => outbound_bridge_dout(7 downto 0),
       outbound_available => outbound_available,
@@ -6046,7 +6051,6 @@ begin
       debug_rx_10b_data_out        => debug_rx_10b_data_out,
       debug_rx_data_out            => debug_rx_data_out,
       debug_rx_is_k                => debug_rx_is_k,
-      debug_rx_locked              => debug_rx_locked,
       debug_rx_delay               => debug_rx_delay,
       debug_rx_code_error          => debug_rx_code_error,
       debug_rx_disparity_error     => debug_rx_disparity_error,
