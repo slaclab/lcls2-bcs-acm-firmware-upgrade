@@ -4178,7 +4178,7 @@ begin
   idelayctrl_reset <= not(pll_locked);
 
   -- Use BUFH to restrict placement
-  inst_bufh_clk_300mhz_idelay : component unisim.vcomponents.BUFH
+  inst_bufh_clk_300mhz_idelay : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_300mhz_idelay,
       o => clk_300mhz_idelay
@@ -4196,22 +4196,19 @@ begin
   -- PLL must be locked by this point
   async_reset <= not(mmcm_locked and idelay_rdy);
   
-  -- Use BUFH to restrict placement
-  inst_bufh_clk_100mhz_tx : component unisim.vcomponents.BUFH
+  inst_bufg_clk_100mhz_tx : component unisim.vcomponents.BUFH
     port map (
       i => int_clk_100mhz_tx,
       o => clk_100mhz_tx
       );
 
-  -- Use BUFH to restrict placement
-  inst_bufh_clk_500mhz_tx : component unisim.vcomponents.BUFH
+  inst_bufg_clk_500mhz_tx : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_500mhz_tx,
       o => clk_500mhz_tx
       );
 
-  -- Use BUFH to restrict placement
-  inst_bufh_clk_100mhz_rx : component unisim.vcomponents.BUFH
+  inst_bufg_clk_100mhz_rx : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_100mhz_rx,
       o => pre_clk_100mhz_rx
@@ -4220,8 +4217,7 @@ begin
   -- Buffered to connect to phase shifter
   clk_100mhz_rx <= pre_clk_100mhz_rx;
 
-  -- Use BUFH to restrict placement
-  inst_bufh_clk_500mhz_rx : component unisim.vcomponents.BUFH
+  inst_bufg_clk_500mhz_rx : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_500mhz_rx,
       o => clk_500mhz_rx
