@@ -228,7 +228,7 @@ class cfg(mycfg.base):
 
                 '__N_TAS2505_RESET' : [7, 1, int(0)],
                 'MONITORING_ENABLE' : [6, 1, int(0)],
-                'FLASH_READER_DISABLE' : [5, 1, int(0)],
+                '__FLASH_READER_DISABLE' : [5, 1, int(0)],
                 'AUTOBOOT_TO_RUNTIME' : [4, 1, int(0)],
                 '__SYS_I2C_RESET' : [2, 1, int(1)],
                 '__SYS_I2C_SDA' : [1, 1, int(1)],
