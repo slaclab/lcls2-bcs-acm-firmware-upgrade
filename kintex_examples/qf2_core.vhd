@@ -4177,8 +4177,7 @@ begin
   -- Release IDELAYCTRL reset when PLL is locked.
   idelayctrl_reset <= not(pll_locked);
 
-  -- Use BUFH to restrict placement
-  inst_bufh_clk_300mhz_idelay : component unisim.vcomponents.BUFG
+  inst_bufg_clk_300mhz_idelay : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_300mhz_idelay,
       o => clk_300mhz_idelay
@@ -4196,7 +4195,7 @@ begin
   -- PLL must be locked by this point
   async_reset <= not(mmcm_locked and idelay_rdy);
   
-  inst_bufg_clk_100mhz_tx : component unisim.vcomponents.BUFH
+  inst_bufg_clk_100mhz_tx : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_100mhz_tx,
       o => clk_100mhz_tx

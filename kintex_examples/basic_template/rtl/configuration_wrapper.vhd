@@ -14,16 +14,17 @@ entity configuration_wrapper is
     NUM_WRITE_BYTES : integer
     );
   port (
-    clk_sys_p, clk_sys_n : in std_logic;
-    async_reset, clk_100mhz : out  std_logic;
-    transmitting, receiving                   : out std_logic;
-    led_lpc_r, led_lpc_g, led_lpc_b           : in  std_logic;
-    led_hpc_r, led_hpc_g, led_hpc_b           : in  std_logic;
-    data_in_p, data_in_n                      : in  std_logic;
-    data_out_p, data_out_n                    : out std_logic;
-    INIT_READ_MAP                             : in  std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
-    read_map                                  : out std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
-    write_map                                 : in  std_logic_vector(NUM_WRITE_BYTES*8-1 downto 0)
+    clk_sys_p, clk_sys_n            : in  std_logic;
+    async_reset, clk_100mhz         : out std_logic;
+    transmitting, receiving         : out std_logic;
+    led_lpc_r, led_lpc_g, led_lpc_b : in  std_logic;
+    led_hpc_r, led_hpc_g, led_hpc_b : in  std_logic;
+    data_in_p, data_in_n            : in  std_logic;
+    data_out_p, data_out_n          : out std_logic;
+    rx_locked                       : out std_logic;
+    INIT_READ_MAP                   : in  std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
+    read_map                        : out std_logic_vector(NUM_READ_BYTES*8-1 downto 0);
+    write_map                       : in  std_logic_vector(NUM_WRITE_BYTES*8-1 downto 0)
     );
 end entity configuration_wrapper;
 
@@ -40,9 +41,9 @@ architecture rtl of configuration_wrapper is
 
 begin
 
-  clk_100mhz <= int_clk_100mhz;
+  clk_100mhz  <= int_clk_100mhz;
   async_reset <= int_async_reset;
-  
+
   inst_sync_reset_gen : entity work.async_to_sync_reset_shift
     generic map (
       LENGTH => 4
@@ -88,27 +89,29 @@ begin
       CHANNEL_4_LOOPBACK => true
       )
     port map (
-      async_reset                  => int_async_reset,
-      clk_100mhz                   => int_clk_100mhz,
-      clk_sys_p => clk_sys_p,
-      clk_sys_n => clk_sys_n,
-      
-      led_lpc_r                    => led_lpc_r,
-      led_lpc_g                    => led_lpc_g,
-      led_lpc_b                    => led_lpc_b,
-      led_hpc_r                    => led_hpc_r,
-      led_hpc_g                    => led_hpc_g,
-      led_hpc_b                    => led_hpc_b,
+      async_reset => int_async_reset,
+      clk_100mhz  => int_clk_100mhz,
+      clk_sys_p   => clk_sys_p,
+      clk_sys_n   => clk_sys_n,
 
-      transmitting                 => transmitting,
-      receiving                    => receiving,
+      led_lpc_r => led_lpc_r,
+      led_lpc_g => led_lpc_g,
+      led_lpc_b => led_lpc_b,
+      led_hpc_r => led_hpc_r,
+      led_hpc_g => led_hpc_g,
+      led_hpc_b => led_hpc_b,
 
-      data_in_p                    => data_in_p,
-      data_in_n                    => data_in_n,
-      data_out_p                   => data_out_p,
-      data_out_n                   => data_out_n,
+      transmitting => transmitting,
+      receiving    => receiving,
 
-      channel_1_clk => int_clk_100mhz,
+      data_in_p  => data_in_p,
+      data_in_n  => data_in_n,
+      data_out_p => data_out_p,
+      data_out_n => data_out_n,
+      rx_locked  => rx_locked,
+
+      channel_1_reset              => int_async_reset,
+      channel_1_clk                => int_clk_100mhz,
       channel_1_inbound_data       => inbound_data,
       channel_1_inbound_read       => inbound_read,
       channel_1_inbound_frame_end  => inbound_frame_end,
@@ -118,6 +121,19 @@ begin
       channel_1_outbound_frame_end => outbound_frame_end,
       channel_1_outbound_available => outbound_available,
 
+      flash_reset => '1',
+      monitoring_reset => '1',
+      pmod_a_reset => '1',
+      pmod_b_reset => '1',
+      pmod_c_reset => '1',
+      channel_2_reset => '1',
+      channel_3_reset => '1',
+      channel_4_reset => '1',
+      multicast_reset => '1',
+
+      pmod_a_clk => '0',
+      pmod_b_clk => '0',
+      pmod_c_clk => '0',
       channel_2_clk => '0',
       channel_3_clk => '0',
       channel_4_clk => '0',

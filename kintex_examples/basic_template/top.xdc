@@ -37,3 +37,6 @@ set_property PACKAGE_PIN J10 [get_ports kintex_data_out_n]
 set_property PACKAGE_PIN J13 [get_ports kintex_data_in_p]
 set_property PACKAGE_PIN H13 [get_ports kintex_data_in_n]
 
+set_property DRIVE 4 [get_ports kintex_rx_locked]
+set_property IOSTANDARD LVCMOS25 [get_ports kintex_rx_locked]
+set_property PACKAGE_PIN F14 [get_ports kintex_rx_locked]

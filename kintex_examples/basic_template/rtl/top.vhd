@@ -19,8 +19,9 @@ entity top is
 
     -- Communications
     kintex_data_out_p, kintex_data_out_n : out std_logic;
-    kintex_data_in_p, kintex_data_in_n   : in  std_logic
-
+    kintex_data_in_p, kintex_data_in_n   : in  std_logic;
+    kintex_rx_locked : out std_logic
+    
     );
 end entity top;
 
@@ -100,6 +101,7 @@ begin
       data_in_n     => kintex_data_in_n,
       data_out_p    => kintex_data_out_p,
       data_out_n    => kintex_data_out_n,
+      rx_locked     => kintex_rx_locked,
       INIT_READ_MAP => init_configuration_read_map,
       read_map      => configuration_read_map,
       write_map     => configuration_write_map
