@@ -1723,7 +1723,7 @@ class interface(cfg):
                         v.append(self.convToU64(x[(i*8)+8:(i*8)+16]))
 
                 if len(v) != 1024:
-                        raise Exception('Binary code length isn\'t 1024')
+                        raise Exception('Binary code length isn\'t 1024 instructions')
 
                 # Reformat the data into the loading format
                 # Break programming data into packets, with a reset tag on the front of each one
