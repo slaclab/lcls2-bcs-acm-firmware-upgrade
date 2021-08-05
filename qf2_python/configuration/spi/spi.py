@@ -72,8 +72,7 @@ class SL25FLL():
         self.__target = target
         self.__verbose = verbose
 
-        # Check if PROM is locked
-        self.__locked = (self.read_register(self.RDSR1, 1)[0] >> 7)
+        self.__update_lock_status()
 
         # Read CR3 register and assign current dummy cycle value
         self.__dummy_cycles = self.read_register(self.RDCR3, 1)[0] & 0xF
@@ -82,7 +81,7 @@ class SL25FLL():
         #self.write_register(self.EN4BYTEADDR)
 
         # If unlocked, make sure dummy cycles is set to 8 and 4 byte address mode is the default
-        if self.__locked == 0:
+        if self.__lock_region == 0:
 
             # Check CR2NV state
             if (self.read_any_register(bytearray([0x00, 0x00, 0x03]), 1)[0] & 0xFE) != 0x60:
@@ -130,9 +129,14 @@ class SL25FLL():
         #self.write_register(self.EX4BYTEADDR)
         pass
 
-    def lock(self):
-        if self.__locked == 1:
-            return
+    def __update_lock_status(self):
+        
+        # Check if PROM is locked
+        self.__lock_region = self.read_register(self.RDSR1, 1)[0] & 0xFC
+    
+    def lock(self, region):
+        if self.__lock_region != 0:
+            raise Exception('You are attempting to lock a PROM that is already locked, please unlock it first')
 
         # Make sure CMP is == 0 (i.e. CR1NV is in default state of all zeros)
         self.write_register(self.WREN)
@@ -145,20 +149,21 @@ class SL25FLL():
             raise SPI_Base_Exception('Could not set CR1NV to 0x00. Have you put a jumper on the write protect header?')
 
         # Set the protection bit
-        # TBPROT=1, BP=0110, == 32 lowest sectors (Spartan bootloader + cfg + a few extra sectors for future use)
+        # CMP must be 0
+        # Other settings come from constants file
         self.write_register(self.WREN)
-        self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x00, 0xD8]))
+        self.write_register(self.WRAR, bytearray([0x00, 0x00, 0x00, region]))
 
         while self.read_register(self.RDSR1, 1)[0] & 0x1:
             continue
 
-        if self.read_register(self.RDSR1, 1)[0] != 0xD8:
-            raise SPI_Base_Exception('Could not set SR1NV to 0xD8. Have you put a jumper on the write protect header?')
+        if self.read_register(self.RDSR1, 1)[0] != region:
+            raise SPI_Base_Exception('Could not set SR1NV to '+hex(region)+'. Have you put a jumper on the write protect header?')
 
-        self.__locked = 1
+        self.__update_lock_status()
 
     def unlock(self):
-        if self.__locked == 0:
+        if self.__lock_region == 0:
             return
 
         # Release the lock - clear SR1NV
@@ -171,7 +176,7 @@ class SL25FLL():
         if self.read_register(self.RDSR1, 1)[0] != 0x00:
             raise SPI_Base_Exception('Could not set SR1NV to 0x00. Have you put a jumper on the write protect header?')
 
-        self.__locked = 0
+        self.__update_lock_status()
 
     def read_any_register(self, address, num_bytes):
         self.__target.write(self.RDAR, 8, False, False, True)
@@ -235,7 +240,7 @@ class SL25FLL():
         return result
 
     def chip_erase(self, address):
-        if self.__locked == 1:
+        if self.__lock_region != 0:
             raise SPI_Base_Exception('Full chip erase not possible - PROM is currently locked')
 
         # Write enable
@@ -248,8 +253,14 @@ class SL25FLL():
             continue
 
     def sector_erase(self, address):
-        if (self.__locked == 1) and (address < (32 * 65536)):
-            raise SPI_Base_Exception('Data cannot be erased - PROM is currently locked')
+        if (self.__lock_region == spi_constants.LOCK_REGION_BOOTLOADER) and (address < (32 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif (self.__lock_region == spi_constants.LOCK_REGION_BOOTLOADER_RUNTIME) and (address < (64 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif (self.__lock_region == spi_constants.LOCK_REGION_SPARTAN_KINTEX) and (address < (256 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif self.__lock_region == 0xFC:
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
 
         # Write enable
         self.write_register(self.WREN)
@@ -273,11 +284,17 @@ class SL25FLL():
             continue
 
     def page_program(self, data, address, verify=False):
-        if (self.__locked == 1) and (address < (32 * 65536)):
-            raise SPI_Base_Exception('Data cannot be erased - PROM is currently locked')
+        if (self.__lock_region == spi_constants.LOCK_REGION_BOOTLOADER) and (address < (32 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif (self.__lock_region == spi_constants.LOCK_REGION_BOOTLOADER_RUNTIME) and (address < (64 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif (self.__lock_region == spi_constants.LOCK_REGION_SPARTAN_KINTEX) and (address < (256 * spi_constants.SECTOR_SIZE)):
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
+        elif self.__lock_region == 0xFC:
+            raise SPI_Base_Exception('Sector cannot be erased - PROM is currently locked')
 
         if len(data) != 256:
-            raise SPI_Base_Exception('Data is not size of page')
+            raise SPI_Base_Exception('Data is equal to size of page')
 
         # Write enable
         self.write_register(self.WREN)
@@ -304,7 +321,7 @@ class SL25FLL():
 
         #time.sleep(0.1)
 
-        if ( verify==True ):
+        if verify == True:
             compare_data = self.read_data(address, 256)
             if compare_data != data:
                 raise SPI_Base_Exception('Write-verify failed')
@@ -525,8 +542,8 @@ class interface():
     def prom_size(self):
         return self.__prom_size
 
-    def lock(self):
-        return self.__interface.lock()
+    def lock(self, region):
+        return self.__interface.lock(region)
 
     def unlock(self):
         return self.__interface.unlock()

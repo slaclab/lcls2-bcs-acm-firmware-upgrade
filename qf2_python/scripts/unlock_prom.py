@@ -15,7 +15,7 @@ args = parser.parse_args()
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=int(args.port), input_select=0, speed=0, noinit=True), args.verbose)
 
-print('Unlocking Bootloader')
+print('Unlocking PROM')
 prom.unlock()
 
 del prom
