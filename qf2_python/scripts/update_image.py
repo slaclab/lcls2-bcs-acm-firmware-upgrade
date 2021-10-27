@@ -34,9 +34,11 @@ args = parser.parse_args()
 if args.image == 'B':
     FIRMWARE_SECTOR_OFFSET = 0
     FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE    
+    CONFIG_ADDRESS = 25 * spi_constants.SECTOR_SIZE    
 elif args.image == 'R':
     FIRMWARE_SECTOR_OFFSET = 32
     FIRMWARE_ID_ADDRESS = 55 * spi_constants.SECTOR_SIZE    
+    CONFIG_ADDRESS = 56 * spi_constants.SECTOR_SIZE    
 elif args.image == 'K':
     FIRMWARE_SECTOR_OFFSET = 65
     FIRMWARE_ID_ADDRESS = 64 * spi_constants.SECTOR_SIZE
@@ -127,12 +129,21 @@ if args.image == 'K':
     for i in range(0, 3):
         length += int(fw_id_data[48+i]) << ((2-i)*8)
     print('Firmware length: '+str(length))
+
+    s = str()
+    for j in fw_id_data[52:56]:
+        s += '{:02x}'.format(j)
+    print('CRC32: '+s)
+
+else:
+    s = str()
+    for j in fw_id_data[48:52]:
+        s += '{:02x}'.format(j)
+    print('CRC32: '+s)
     
 # Migrate if not(nomigrate) and a Spartan image
 if (args.nomigrate == False) and (args.image != 'K'):
 
-    CONFIG_ADDRESS = (FIRMWARE_SECTOR_OFFSET+24) * spi_constants.SECTOR_SIZE
-    
     print('Migrating configuration to new firmware')
     
     s = str()
@@ -150,33 +161,17 @@ if (args.nomigrate == False) and (args.image != 'K'):
         prev_cfg = my_exec_cfg('import qf2_python.QF2_pre.v_'+s+' as x')
 
         prev_prom_cfg = prom.read_data(CONFIG_ADDRESS, 256)
-        prev_cfg.import_prom_data(prev_prom_cfg)
+        prev_cfg.import_firmware_prom_data(prev_prom_cfg)
 
         print('Scanning for matching keys...')
 
-        prev_network_keys = prev_cfg.get_network_keys()
         prev_write_keys = prev_cfg.get_write_keys()
-        new_network_keys = new_cfg.get_network_keys()
         new_write_keys = new_cfg.get_write_keys()
-
-        network_keys_in_prev_not_new = list()
-        network_keys_in_both = list()
-        network_keys_in_new_not_prev = list()
 
         write_keys_in_prev_not_new = list()
         write_keys_in_both = list()
         write_keys_in_new_not_prev = list()
         
-        for i in new_network_keys:
-            if i in prev_network_keys:
-                network_keys_in_both.append(i)
-            else:
-                network_keys_in_new_not_prev.append(i)
-
-        for i in prev_network_keys:
-            if not(i in new_network_keys):
-                network_keys_in_prev_not_new.append(i)
-
         for i in new_write_keys:
             if i in prev_write_keys:
                 write_keys_in_both.append(i)
@@ -189,21 +184,6 @@ if (args.nomigrate == False) and (args.image != 'K'):
 
         if args.verbose == True:
             print('')
-            s = str()
-            for i in network_keys_in_new_not_prev:
-                s += i+', '
-            print('Network keys not present in previous image (will be set to defaults): '+s)
-                
-            s = str()
-            for i in network_keys_in_prev_not_new:
-                s += i+', '
-            print('Network keys not present in new image (will be discarded): '+s)
-        
-            s = str()
-            for i in network_keys_in_both:
-                s += i+', '
-            print('Network keys present in both images (will be copied): '+s)
-
             s = str()
             for i in write_keys_in_new_not_prev:
                 s += i+', '
@@ -222,23 +202,16 @@ if (args.nomigrate == False) and (args.image != 'K'):
         print('')
         print('Copying settings to new configuration...')
         
-        for i in network_keys_in_both:
-            new_cfg.set_network_value(i, prev_cfg.get_network_value(i))
-
         for i in write_keys_in_both:
             new_cfg.set_write_value(i, prev_cfg.get_write_value(i))
 
         if args.verbose == True:
             print('')
-            print('Network configuration is now:')
-            print('')
-            new_cfg.print_network_cfg()
-            print('')
-            print('Write configuration is now:')
+            print('Firmware configuration is now:')
             print('')
             new_cfg.print_write_cfg()
 
-    new_prom_cfg = new_cfg.export_prom_data()
+    new_prom_cfg = new_cfg.export_firmware_prom_data()
 
     print('')
     if ( (prev_hash != 0) and (prev_prom_cfg == new_prom_cfg) ):

@@ -63,9 +63,9 @@ def generate_fw_id_data(bitfile):
         sha256.append((length >> 8) & 0xFF)
         sha256.append(length & 0xFF)
 
-    #for i in range(0, len(sha256)):
-    #    print(str(i)+' '+str(hex(sha256[i])))
-        
+    # Add additional CRC32 at the end
+    sha256 += parser.padded_crc32()
+    
     # Pad to page boundary
     sha256 += bytearray([0xFF]) * (256 - len(sha256) % 256)
 

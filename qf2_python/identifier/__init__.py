@@ -5,11 +5,13 @@ __all__ = [
     'v1',
     'v2',
     'v3',
+    'v4',
+    'v5',
     ]
 
 import socket
 
-HIGHEST_VERSION = 3
+HIGHEST_VERSION = 5
 
 def __query_board(target, verbose=False):
     UDPSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

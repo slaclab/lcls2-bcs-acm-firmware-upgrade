@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import time, sys, hashlib
+import time, sys, hashlib, zlib
 from qf2_python.configuration.spi import constants
 
 # Compatibility layer
@@ -174,6 +174,17 @@ class bitfile():
         data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
         m.update(data)
         return bytearray(m.digest())
+
+    def padded_crc32(self):
+        data = self.__bitfile_data
+        data += bytearray([0xFF]) * (constants.SECTOR_SIZE - len(data) % constants.SECTOR_SIZE)
+        data = zlib.crc32(data)
+        return bytearray([
+            (data >> 24) & 0xFF,
+            (data >> 16) & 0xFF,
+            (data >> 8) & 0xFF,
+            data & 0xFF,
+        ])
     
     def data(self):
         return self.__bitfile_data

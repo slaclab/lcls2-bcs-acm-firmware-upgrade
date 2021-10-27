@@ -74,9 +74,6 @@ if args.defaults == False:
                 if type(i_v) == unicode:
                     i_v = str(i_v)
                     unknown_key = True
-                #if cfg.is_network_key(i_k):
-                #    unknown_key = False
-                #    cfg.set_network_value(i_k, i_v)
                 if cfg.is_write_key(i_k):
                     unknown_key = False
                     cfg.set_write_value(i_k, i_v)
@@ -88,9 +85,6 @@ if args.defaults == False:
         for i in args.settings[0]:
             print(i[0]+' : '+i[1])
             unknown_key = True
-            #if cfg.is_network_key(i[0]):
-            #    unknown_key = False
-            #    cfg.set_network_value(i[0], i[1])
             if cfg.is_write_key(i[0]):
                 unknown_key = False
                 cfg.set_write_value(i[0], i[1])
@@ -99,7 +93,6 @@ if args.defaults == False:
 
 if args.verbose == True:
     print('Updated settings are:')
-    #cfg.print_network_cfg()
     cfg.print_write_cfg()
 
 print('Exporting PROM settings')
