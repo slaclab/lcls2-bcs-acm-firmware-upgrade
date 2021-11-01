@@ -1694,6 +1694,7 @@ class interface(cfg):
 
                 for i in p:
                         TempSock.sendto(bytearray(i),(self.__target, 50006))
+                        time.sleep(0.1)
 
         def programControllerPMODB(self, f):
                 p = self.__formatPMODControllerBinary(f)
@@ -1703,6 +1704,7 @@ class interface(cfg):
 
                 for i in p:
                         TempSock.sendto(bytearray(i),(self.__target, 50007))
+                        time.sleep(0.1)
         
         def __formatPMODControllerBinary(self, f):
                 
@@ -1714,8 +1716,8 @@ class interface(cfg):
                 # Only Python3...
                 #int.from_bytes(b, byteorder='big', signed=False)
                 print(self.convToU64(x[0:8]))
-                if self.convToU64(x[0:8]) != 28:
-                        raise Exception('Binary PRAM data width is not 28')
+                if self.convToU64(x[0:8]) != 27:
+                        raise Exception('Binary PRAM data width is not 27')
 
                 # Iterate through, ignoring first entry
                 v = list()
@@ -1755,7 +1757,7 @@ class interface(cfg):
 
                 TempSock = socket(AF_INET,SOCK_DGRAM)
                 TempSock.bind(("0.0.0.0", 0))
-                TempSock.settimeout(2)
+                TempSock.settimeout(5)
                 
                 #read_bytes = str()
 
@@ -1778,7 +1780,7 @@ class interface(cfg):
 
                 TempSock = socket(AF_INET,SOCK_DGRAM)
                 TempSock.bind(("0.0.0.0", 0))
-                TempSock.settimeout(2)
+                TempSock.settimeout(5)
                 
                 #read_bytes = str()
 
