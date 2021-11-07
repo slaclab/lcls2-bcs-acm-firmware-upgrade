@@ -26,7 +26,7 @@ class interface():
     def __init__(self, target):
         self.target = target
 
-    def program(self, data, position):
+    def program(self, data):
 
         # Start in idle
         self.target.go_to_run_test_idle()
@@ -56,15 +56,16 @@ class interface():
         tprev = time.time()
         init = 0
 
-        # to fix timer
+        # TODO: fix timer
         while time.time() - tprev < 2.0:
 
             # Check for init gone high
             self.target.go_to_shift_ir()
             init = self.target.write_read(ISC_NOOP, 6, True)
-            init = init & 0x11
+            init = init & 0x13
             self.target.go_to_run_test_idle()
-            
+
+            # Bit 4 is INIT, bits 1:0 are always '01'
             if init == 0x11:
                 break
 
@@ -115,7 +116,7 @@ class interface():
 
         if ((status & 0x31) != 0x31):
             raise Exception('DONE & INIT did not go high after programming')
-        
+
     def enter_user_1_dr(self):
         self.target.go_to_run_test_idle()
         self.target.go_to_shift_ir()

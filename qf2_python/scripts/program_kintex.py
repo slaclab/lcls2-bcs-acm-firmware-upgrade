@@ -5,7 +5,8 @@ import argparse
 import qf2_python.identifier as identifier
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
-import qf2_python.configuration.jtag.xilinx_kintex_7 as xilinx_kintex_7
+
+import qf2_python.configuration.jtag.xilinx_7_ultrascale as xilinx_7_ultrascale
 
 # Fixed for this design
 SEQUENCER_PORT = 50003
@@ -81,8 +82,8 @@ print('Device selected for programming is in chain location:',str(device_choice)
 # TODO: Make this more generic
 # Restricted to Kintex 7
 if str('Xilinx Kintex 7') in chain.idcode_resolve_name(chain.idcode(device_choice)):
-        print('Xilinx Kintex 7 interface selected')
-        interface = xilinx_kintex_7.interface(chain)
+        print('Xilinx 7 series & Ultrascale programming interface selected')
+        interface = xilinx_7_ultrascale.interface(chain)
 else:
         print('Not able to program this device')
         exit()

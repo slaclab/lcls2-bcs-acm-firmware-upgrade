@@ -6,11 +6,7 @@ import qf2_python.identifier as identifier
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.jtag.xilinx_bitfile_parser as xilinx_bitfile_parser
 
-print('TODO: Merge 7 series programming code')
-print('TODO: Add header select for programming')
-print('')
-
-# Fixed for S6 programming interface
+# Fixed for QF2-pre programming interface
 SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='Program an external device over JTAG via PMOD C', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -86,19 +82,24 @@ device_choice = matching_devices[0]
 
 if str('Xilinx Virtex 5') in chain.idcode_resolve_name(chain.idcode(device_choice)):
         print('Xilinx Virtex 5 interface selected')
-        interface = xilinx_virtex_5.interface(chain)
+        import qf2_python.configuration.jtag.xilinx_virtex_5 as x
+        interface = x.interface(chain)
 elif str('Xilinx Spartan 6') in chain.idcode_resolve_name(chain.idcode(device_choice)):
         print('Xilinx Spartan 6 interface selected')
-        interface = xilinx_spartan_6.interface(chain)
+        import qf2_python.configuration.jtag.xilinx_spartan_6 as x
+        interface = x.interface(chain)
 elif str('Xilinx Artix 7') in chain.idcode_resolve_name(chain.idcode(device_choice)):
-        print('Xilinx 7 series interface selected')
-        interface = xilinx_7_series.interface(chain)
+        print('Xilinx 7 series / Ultrascale interface selected')
+        import qf2_python.configuration.jtag.xilinx_7_ultrascale as x
+        interface = x.interface(chain)
 elif str('Xilinx Kintex 7') in chain.idcode_resolve_name(chain.idcode(device_choice)):
-        print('Xilinx Kintex 7 interface selected')
-        interface = xilinx_kintex_7.interface(chain)
+        print('Xilinx 7 series / Ultrascale interface selected')
+        import qf2_python.configuration.jtag.xilinx_7_ultrascale as x
+        interface = x.interface(chain)
 elif str('Xilinx Virtex 7') in chain.idcode_resolve_name(chain.idcode(device_choice)):
-        print('Xilinx Virtex 7 interface selected')
-        interface = xilinx_virtex_7.interface(chain)
+        print('Xilinx 7 series / Ultrascale interface selected')
+        import qf2_python.configuration.jtag.xilinx_7_ultrascale as x
+        interface = x.interface(chain)
 else:
         print('Not able to program this device')
         exit()
