@@ -3,23 +3,23 @@
 import argparse
 import qf2_python.identifier
 
-parser = argparse.ArgumentParser(description='Display QF2-pre FMC PROM data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Write QF2-pre FMC PROM data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-d', '--device', default='M24C02', help='PROM device to target (M24C02/AT24C32D)')
-parser.add_argument('-a', '--address', type=int)
-parser.add_argument('-w', '--write_value', type=int)
-parser.add_argument('-b', '--bottom_site', action="store_true", help='Select bottom HPC site (default is top LPC site)')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-a', '--address', type=int, required=True)
+parser.add_argument('-w', '--write_value', type=int, required=True)
+parser.add_argument('-b', '--bottom_site', default=False, action="store_true", help='Select bottom HPC site (default is top LPC site)')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 # Start the class
 x = qf2_python.identifier.get_active_interface(args.target, args.verbose)
 
-if args.address == None:
-   raise Exception('Write address not specified')
+#if args.address == None:
+#   raise Exception('Write address not specified')
 
-if args.write_value == None:
-   raise Exception('Write value not specified')
+#if args.write_value == None:
+#   raise Exception('Write value not specified')
 
 # Most PROMs have similar basic behavior on the QF2-pre, but the exact addressing varies.
 # Typically, the PROM base address is (0x50 | ADDR), where ADDR == 0 to 7 depending on how GA0 & GA1 are wired up.

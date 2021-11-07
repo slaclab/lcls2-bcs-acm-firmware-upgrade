@@ -5,14 +5,20 @@ import argparse
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.spi.spi as spi
 import qf2_python.configuration.spi.constants as spi_const
+import qf2_python.identifier as identifier
 
-parser = argparse.ArgumentParser(description='Lock Spartan-6 image and configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Lock firmware images and configuration data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 parser.add_argument('-r', '--region', type=int, required=True, help='Region of PROM to lock')
-parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
+#parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
+
+SEQUENCER_PORT = 50003
 
 args = parser.parse_args()
+
+# Verify we are in the bootloader
+identifier.verifyInBootloader(args.target, args.verbose)
 
 # Check region argument
 if args.region == 0:
@@ -27,7 +33,7 @@ else:
     raise Exception('Lock region argument \''+str(args.region)+'\' is not a valid choice')
 
 # Initialise the interface to the PROM
-prom = spi.interface(jtag.chain(ip=args.target, stream_port=int(args.port), input_select=0, speed=0, noinit=True), args.verbose)
+prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
 
 # Sector options
 # Lock bootloader 0-31

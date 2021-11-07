@@ -248,26 +248,38 @@ def reboot_to_bootloader(target, verbose=False, wait_for_reboot=False):
     print('Reboot complete')
     TempSock.close()
 
-def get_active_interface(target, r, verbose):
+def get_active_interface(target, r, verbose, development):
     x = get_board_information(r, verbose)
 
     # Map the SHA256 to target based on the currently active firmware
+    # Alternatively, use development code without using the SHA256
     h = str()
-    if x['Active firmware type'] == 'Bootloader':
-        h = x['Bootloader SHA256']
-    elif x['Active firmware type'] == 'Runtime':
-        h = x['Runtime SHA256']
-    elif x['Active firmware type'] == 'HiRel Bootloader':
-        h = x['Bootloader SHA256']
-    elif x['Active firmware type'] == 'HiRel Runtime':
-        h = x['Runtime SHA256']
-        
+    if development == False:
+        if x['Active firmware type'] == 'Bootloader':
+            h = x['Bootloader SHA256']
+        elif x['Active firmware type'] == 'Runtime':
+            h = x['Runtime SHA256']
+        elif x['Active firmware type'] == 'HiRel Bootloader':
+            h = x['Bootloader SHA256']
+        elif x['Active firmware type'] == 'HiRel Runtime':
+            h = x['Runtime SHA256']
+        h = '.v_'+h
+    else:
+        if x['Active firmware type'] == 'Bootloader':
+            h = '.dev_bootloader'
+        elif x['Active firmware type'] == 'Runtime':
+            h = '.dev_runtime'
+        elif x['Active firmware type'] == 'HiRel Bootloader':
+            h = '.dev_bootloader'
+        elif x['Active firmware type'] == 'HiRel Runtime':
+            h = '.dev_runtime'
+            
     # Return an interface
-    return my_exec_interface('import qf2_python.'+x['Board type']+'.v_'+h+' as x',
+    return my_exec_interface('import qf2_python.'+x['Board type']+h+' as x',
                              target,
                              x['Active firmware version'],
                              verbose)
-
+    
 def verifyInBootloader(r, verbose):
     x = get_board_information(r, verbose)    
     if (x['Active firmware type'] != 'Bootloader') and (x['Active firmware type'] != 'HiRel Bootloader'):

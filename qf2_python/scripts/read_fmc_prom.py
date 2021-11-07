@@ -3,12 +3,12 @@
 import argparse
 import qf2_python.identifier
 
-parser = argparse.ArgumentParser(description='Display QF2-pre FMC PROM data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Read QF2-pre FMC PROM data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-d', '--device', default='M24C02', help='PROM device to target (M24C02/AT24C32D)')
 parser.add_argument('-a', '--address', required=True, type=int)
 parser.add_argument('-b', '--bottom_site', default=False, action="store_true", help='Select bottom HPC site (default is top LPC site)')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
+parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
 
 # Start the class

@@ -239,47 +239,49 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
 
-                '__ICAP_READ_DATA' : [98*8, 16, int()],
+                'SSTATE' : [99*8, 8, int()],
                 
-                '__SD_DAT' : [97*8+1, 4, int()],
-                '__SD_CMD' : [97*8, 1, int()],
+                '__SD_DAT' : [98*8+1, 4, int()],
+                '__SD_CMD' : [98*8, 1, int()],
 
-                '__LATCH_RNW' : [96*8+7, 1, int()],
-                '__LATCH_R8N16' : [96*8+6, 1, int()],
-                '__LATCH_D8N16' : [96*8+5, 1, int()],
-                '__LATCH_SCL' : [96*8+2, 1, int()],
-                '__LATCH_SDA' : [96*8+1, 1, int()],
-                '__LATCH_SIR' : [96*8, 1, int()],
-                '__LATCH_CHAIN' : [95*8, 8, int()],
-                '__LATCH_SLAVE_ADDRESS' : [94*8, 8, int()],
-                '__LATCH_READ_SLAVE_REGISTER' : [92*8, 16, int()],
-                '__LATCH_WRITE_DATA' : [90*8, 16, int()],
+                '__LATCH_RNW' : [97*8+7, 1, int()],
+                '__LATCH_R8N16' : [97*8+6, 1, int()],
+                '__LATCH_D8N16' : [97*8+5, 1, int()],
+                '__LATCH_SCL' : [97*8+2, 1, int()],
+                '__LATCH_SDA' : [97*8+1, 1, int()],
+                '__LATCH_SIR' : [97*8, 1, int()],
+                '__LATCH_CHAIN' : [96*8, 8, int()],
+                '__LATCH_SLAVE_ADDRESS' : [95*8, 8, int()],
+                '__LATCH_READ_SLAVE_REGISTER' : [93*8, 16, int()],
+                '__LATCH_WRITE_DATA' : [91*8, 16, int()],
                 
-                'FAN_PWM_CURRENT_DUTY_CYCLE' : [89*8, 8, int()],
+                'FAN_PWM_CURRENT_DUTY_CYCLE' : [90*8, 8, int()],
                 
-                '__MDIO_EXTENDED_STATUS' : [87*8, 16, int()],
-                '__MDIO_BASIC_STATUS' : [85*8, 16, int()],
+                '__MDIO_EXTENDED_STATUS' : [88*8, 16, int()],
+                '__MDIO_BASIC_STATUS' : [86*8, 16, int()],
                 
-                '__TAS2505_COUNT' : [80*8, 32, int()],
+                '__TAS2505_COUNT' : [81*8, 32, int()],
                 
-                'CONFIGURATION_DEFAULT' : [79*8, 1, int()],
+                'CONFIGURATION_DEFAULT' : [80*8, 1, int()],
                 
-                '__FLASH_READER_DATA_OUT_EMPTY' : [78*8+2, 1, int()],
-                '__FLASH_READER_ERROR' : [78*8+1, 1, int()],
-                '__FLASH_READER_DONE' : [78*8, 1, int()],
+                '__FLASH_READER_DATA_OUT_EMPTY' : [79*8+2, 1, int()],
+                '__FLASH_READER_ERROR' : [79*8+1, 1, int()],
+                '__FLASH_READER_DONE' : [79*8, 1, int()],
                 
-                '__ICAP_LAST_BOOT_DATA' : [77*8, 8, int()],
+                '__ICAP_LAST_BOOT_DATA' : [78*8, 8, int()],
 
-                '__CONTROLLER_SYS_I2C_READ_DATA' : [75*8, 16, int()],
+                '__CONTROLLER_SYS_I2C_READ_DATA' : [76*8, 16, int()],
                 
-                'I2C_ERROR_LATCH' : [74*8+7, 1, int()],
-                'I2C_DONE_LATCH' : [74*8+6, 1, int()],
-                'ATSHA204_ERROR' : [74*8+5, 1, int()],
-                'ATSHA204_DONE' : [74*8+4, 1, int()],
-                '__N_IS_QF2P' : [74*8+3, 1, int()],
-                '__JACK_SENSE' : [74*8+2, 1, int()],
-                '__SYS_I2C_SDA' : [74*8+1, 1, int()],
-                '__SYS_I2C_SCL' : [74*8, 1, int()]
+                'I2C_ERROR_LATCH' : [75*8+7, 1, int()],
+                'I2C_DONE_LATCH' : [75*8+6, 1, int()],
+                'ATSHA204_ERROR' : [75*8+5, 1, int()],
+                'ATSHA204_DONE' : [75*8+4, 1, int()],
+                '__N_IS_QF2P' : [75*8+3, 1, int()],
+                '__JACK_SENSE' : [75*8+2, 1, int()],
+                '__SYS_I2C_SDA' : [75*8+1, 1, int()],
+                '__SYS_I2C_SCL' : [75*8, 1, int()],
+
+                'SEM_STATUS' : [74*8, 8, int()],
                 
                 # Left out monitoring for the minute
                 
@@ -324,7 +326,15 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-                #raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
+                while True:
+                        self.import_network_data()
+                        print('ICAP LAST BOOT DATA: '+hex(self.get_read_value('__ICAP_LAST_BOOT_DATA')))
+                        print('SSTATE: '+hex(self.get_read_value('SSTATE')))
+                        print('SEM STATUS: ' + hex(self.get_read_value('SEM_STATUS')))
+                        #if self.get_read_value('SEM_STATUS') == 5:
+                        exit()
+                        
+                raise Exception('This is an intentional exception - the bootloader interface is a placeholder for future use.')
 
         def sd_init(self):
 

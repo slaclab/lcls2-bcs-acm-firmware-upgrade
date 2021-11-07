@@ -13,11 +13,13 @@ def my_exec_cfg(x, verbose=False):
     exec(x,globals(),ldict)
     return ldict['x'].cfg(verbose)
 
-parser = argparse.ArgumentParser(description='Verify Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Verify firmware and network configuration stored in PROM', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 
 args = parser.parse_args()
+
+identifier.verifyInBootloader(args.target, args.verbose)
 
 NETWORK_CONFIG_ADDRESS = 24 * spi_constants.SECTOR_SIZE
 BOOTLOADER_FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE

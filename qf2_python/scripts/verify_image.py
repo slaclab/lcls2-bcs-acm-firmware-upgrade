@@ -13,16 +13,18 @@ import qf2_python.scripts.helpers as helpers
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.spi.spi as spi
 
-parser = argparse.ArgumentParser(description='Verify Spartan-6 image', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Verify firmware image stored in PROM', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-b', '--bit', help='Bitfile to compare against')
+parser.add_argument('-b', '--bit', default=None, help='Bitfile to compare against')
 parser.add_argument('-i', '--image', default='K', type=str, help='Target image')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 
+args = parser.parse_args()
+
+identifier.verifyInBootloader(args.target, args.verbose)
+
 # Deprecated - fixed in current hardware
 #parser.add_argument('-p', '--port', default=50003, help='UDP port for JTAG interface')
-
-args = parser.parse_args()
 
 # Validate the image argument and set the image offsets
 if args.image == 'B':

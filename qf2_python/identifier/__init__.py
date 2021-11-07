@@ -76,14 +76,14 @@ def get_board_information(target, verbose=False):
     # Return the instance
     return x
 
-def get_active_interface(target, verbose=False):
+def get_active_interface(target, verbose=False, development=False):
     # Query the board
     r = __query_board(target, verbose)
 
     # Decide on packet version interface to use and import the associated module
     ldict = locals()
     exec('import qf2_python.identifier.v'+str(r[0])+' as x')
-    x = ldict['x'].get_active_interface(target, r, verbose)
+    x = ldict['x'].get_active_interface(target, r, verbose, development)
 
     # Return the instance
     return x

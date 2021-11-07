@@ -20,15 +20,16 @@ parser.add_argument('-t', '--target', default='192.168.1.127', help='Current uni
 parser.add_argument('-b', '--bit', default=None, help='Firmware bitfile to store')
 parser.add_argument('-n', '--nomigrate', default=False, action="store_true", help='Don\'t migrate configuration when updating firmware')
 parser.add_argument('-i', '--image', default='K', type=str, help='Target image')
-parser.add_argument('-e', '--erase', default=False, action="store_true", help='Only erase the image')
 parser.add_argument('-r', '--reboot', default=False, action="store_true", help='Reboot automatically')
 parser.add_argument('-f', '--force', default=False, action="store_true", help='Force update even if previous PROM data is unrecognized or corrupt')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 
+args = parser.parse_args()
+
+identifier.verifyInBootloader(args.target, args.verbose)
+
 # Fixed for current hardware
 SEQUENCER_PORT = 50003
-
-args = parser.parse_args()
 
 # Validate the image argument and set the image offsets
 if args.image == 'B':
@@ -46,7 +47,7 @@ else:
     raise Exception('Image argument \''+args.image+'\' not a recognized type, choices are B (Bootloader), R (Runtime) or K (Kintex)')
     
 # Select default image to program if we are not erasing only
-if (args.bit == None) and (args.erase == False):
+if args.bit == None:
     if args.image == 'B':
         args.bit = 'firmwares/spartan_bootloader.bit'
     elif args.image == 'R':

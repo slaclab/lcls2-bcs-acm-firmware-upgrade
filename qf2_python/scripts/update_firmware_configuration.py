@@ -12,34 +12,36 @@ def my_exec_cfg(x, verbose=False):
     exec(x,globals(),ldict)
     return ldict['x'].cfg(verbose)
 
-parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Update firmware configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
-parser.add_argument('-X', '--bootloader', action="store_true", default=False, help='Store bootloader')
+parser.add_argument('-i', '--image', default='R', type=str, help='Target image')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-d', '--defaults', action="store_true", help='Reset to defaults')
-parser.add_argument('-j', '--json', help='JSON settings file')
+parser.add_argument('-d', '--defaults', action="store_true", default=False help='Reset to defaults')
+parser.add_argument('-j', '--json', type=str, help='JSON settings file')
 parser.add_argument('-s', '--settings', nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
-parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
-parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
+parser.add_argument('-v', '--verbose', action="store_true", default=False help='Verbose output')
+
+#parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
+SEQUENCER_PORT = 50003
+#SEQUENCER_PORT = int(args.port)
 
 args = parser.parse_args()
 
-# Check that the lock is only applied to the bootloader
-#    if args.bootloader == False:
-#if args.lock == True:
-#        raise Exception('ERROR: Lock argument can only be used for the bootloader')
+# Can only write to PROM from bootloader
+identifier.verifyInBootloader(args.target, args.verbose)
 
 # Chose firmware location
-if args.bootloader == True:
+if args.image == 'B':
     FIRMWARE_SECTOR_OFFSET = 0
     FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE
     CONFIG_ADDRESS = 25 * spi_constants.SECTOR_SIZE
-else:
+elif args.image == 'R':
     FIRMWARE_SECTOR_OFFSET = 32
-    FIRMWARE_ID_ADDRESS = 55 * spi_constants.SECTOR_SIZE
-    CONFIG_ADDRESS = 56 * spi_constants.SECTOR_SIZE
-
-SEQUENCER_PORT = int(args.port)
+    FIRMWARE_ID_ADDRESS = 55 * spi_constants.SECTOR_SIZE    
+    CONFIG_ADDRESS = 56 * spi_constants.SECTOR_SIZE    
+#elif args.image == 'K':
+else:
+    raise Exception('Image argument \''+args.image+'\' not a recognized type, choices are B (Bootloader), R (Runtime) or K (Kintex)')
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)
@@ -103,7 +105,7 @@ if ( x == pd ):
     # Disconnect the PROM interface before doing a reboot
     del prom
     if args.reboot == True:
-        if args.bootloader == True:
+        if args.image == 'B':
             print('Rebooting with new bootloader settings')
             identifier.reboot_to_bootloader(args.target, args.verbose)
         else:
@@ -119,7 +121,7 @@ prom.page_program(x, CONFIG_ADDRESS, True)
 # Disconnect the PROM interface before doing a reboot
 del prom
 if args.reboot == True:
-    if args.bootloader == True:
+    if args.image == 'B':
         print('Rebooting with new bootloader settings')
         identifier.reboot_to_bootloader(args.target, args.verbose)
     else:

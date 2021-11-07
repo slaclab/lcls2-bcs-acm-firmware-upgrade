@@ -3,7 +3,7 @@
 import argparse, time, datetime
 import qf2_python.identifier
 
-parser = argparse.ArgumentParser(description='Display QF2-pre monitors', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Display QF2-pre monitor data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 

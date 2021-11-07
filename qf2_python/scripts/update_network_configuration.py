@@ -15,23 +15,19 @@ def my_exec_cfg(x, verbose=False):
 parser = argparse.ArgumentParser(description='Store Spartan-6 configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 #parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-d', '--defaults', action="store_true", help='Reset to defaults')
+parser.add_argument('-d', '--defaults', default=False, action="store_true", help='Reset to defaults')
 parser.add_argument('-j', '--json', help='JSON settings file')
 parser.add_argument('-s', '--settings', nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
-parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 
 args = parser.parse_args()
 
-# Check that the lock is only applied to the bootloader
-#    if args.bootloader == False:
-#if args.lock == True:
-#        raise Exception('ERROR: Lock argument can only be used for the bootloader')
+identifier.verifyInBootloader(args.target, args.verbose)
 
 # TODO: Verify network space for bootloader and runtime are compatible
 FIRMWARE_ID_ADDRESS = 23 * spi_constants.SECTOR_SIZE
 CONFIG_ADDRESS = 24 * spi_constants.SECTOR_SIZE
-SEQUENCER_PORT = int(args.port)
+SEQUENCER_PORT = 50003
 
 # Initialise the interface to the PROM
 prom = spi.interface(jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=0, speed=0, noinit=True), args.verbose)

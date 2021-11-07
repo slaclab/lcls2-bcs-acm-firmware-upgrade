@@ -17,6 +17,13 @@ parser = argparse.ArgumentParser(description='Xilinx virtual cable interface', f
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 args = parser.parse_args()
 
+identifier.verifyInRuntime(args.target, args.verbose)
+
+# Get an active interface and check the main power state
+x = identifier.get_active_interface(args.target, args.verbose)
+if x.get_read_value('MAIN_POWER_STATE') != 1:
+        raise Exception('Board main power is currently off!')
+
 # Initialise the chain control
 chain = jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=1, speed=0)
 

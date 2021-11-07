@@ -12,6 +12,8 @@ parser.add_argument('-o', '--output_enable', default=False, action="store_true",
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
 
+identifier.verifyInRuntime(args.target, args.verbose)
+
 print('\nNOTE: This code assumes the startup frequency of the SI570 is 156.25MHz. If you are using a non-standard part you will needed to override it (-d).\n')
 
 def compute(r):

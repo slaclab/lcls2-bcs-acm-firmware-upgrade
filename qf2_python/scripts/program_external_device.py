@@ -15,10 +15,14 @@ SEQUENCER_PORT = 50003
 
 parser = argparse.ArgumentParser(description='Program an external device over JTAG via PMOD C', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
+parser.add_argument('-c', '--chain', type=int, required=True, help='Chain selection, 0==top, 1==bottom')
 parser.add_argument('-b', '--bit', required=True, help='Firmware bitfile to program')
 parser.add_argument('-s', '--speed', type=int, default=int(10), help='Clock speed divider (smaller is faster)')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help='Verbose output')
 args = parser.parse_args()
+
+if (args.chain != 0) and (args.chain != 1):
+        raise Exception('Invalid chain selection')
 
 # Verify we are in the bootloader
 identifier.verifyInBootloader(args.target, args.verbose)
@@ -27,7 +31,7 @@ identifier.verifyInBootloader(args.target, args.verbose)
 identifier.verifyFirmwareVersionRecentAs(0, 7, 0, 1, args.target, args.verbose)
 
 # Initialise the chain control
-chain = jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=1, speed=args.speed)
+chain = jtag.chain(ip=args.target, stream_port=SEQUENCER_PORT, input_select=args.chain+1, speed=args.speed)
 
 print('There are '+str(chain.num_devices())+' devices in the chain:')
 
