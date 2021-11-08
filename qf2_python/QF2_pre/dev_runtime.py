@@ -34,7 +34,7 @@ class cfg(mycfg.base):
 
         __write_bytes = 63
         __network_bytes = 33
-        __read_bytes = 117+(23*3)+2*15
+        __read_bytes = 117+(23*3)+2*15+3
 
         # Key : [Start (bits), Length (bits), Type / Default]
         __network_cfg = {
@@ -94,68 +94,73 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
 
-                'LATCHED_DEBUG_RX_SCAN_BITS' : [608+(133*8), 56, int()],
-                'LATCHED_DEBUG_RX_DELAY' : [608+(132*8), 8, int()],
-                'LATCHED_DEBUG_RX_DELAY_LAST_END' : [608+(131*8), 8, int()],
-                'LATCHED_DEBUG_RX_DELAY_LAST_START' : [608+(130*8), 8, int()],
-                'LATCHED_DEBUG_RX_DELAY_END' : [608+(129*8), 8, int()],
-                'LATCHED_DEBUG_RX_DELAY_START' : [608+(128*8), 8, int()],
-                'LATCHED_DEBUG_RX_10B_DATA' : [608+(126*8), 10, int()],
-                'LATCHED_DEBUG_RX_HS' : [608+(125*8), 8, int()],
+                'LATCHED_DEBUG_RX_SCAN_BITS' : [608+(136*8), 56, int()],
+                'LATCHED_DEBUG_RX_DELAY' : [608+(135*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_LAST_END' : [608+(134*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_LAST_START' : [608+(133*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_END' : [608+(132*8), 8, int()],
+                'LATCHED_DEBUG_RX_DELAY_START' : [608+(131*8), 8, int()],
+                'LATCHED_DEBUG_RX_10B_DATA' : [608+(129*8), 10, int()],
+                'LATCHED_DEBUG_RX_HS' : [608+(128*8), 8, int()],
 
-                'DEBUG_RX_SCAN_BITS' : [608+(118*8), 56, int()],
-                'DEBUG_RX_DELAY' : [608+(117*8), 8, int()],
-                'DEBUG_RX_DELAY_LAST_END' : [608+(116*8), 8, int()],
-                'DEBUG_RX_DELAY_LAST_START' : [608+(115*8), 8, int()],
-                'DEBUG_RX_DELAY_END' : [608+(114*8), 8, int()],
-                'DEBUG_RX_DELAY_START' : [608+(113*8), 8, int()],
-                'DEBUG_RX_10B_DATA' : [608+(111*8), 10, int()],
-                'DEBUG_RX_HS' : [608+(110*8), 8, int()],               
+                'DEBUG_RX_SCAN_BITS' : [608+(121*8), 56, int()],
+                'DEBUG_RX_DELAY' : [608+(120*8), 8, int()],
+                'DEBUG_RX_DELAY_LAST_END' : [608+(119*8), 8, int()],
+                'DEBUG_RX_DELAY_LAST_START' : [608+(118*8), 8, int()],
+                'DEBUG_RX_DELAY_END' : [608+(117*8), 8, int()],
+                'DEBUG_RX_DELAY_START' : [608+(116*8), 8, int()],
+                'DEBUG_RX_10B_DATA' : [608+(114*8), 10, int()],
+                'DEBUG_RX_HS' : [608+(113*8), 8, int()],               
 
-                'SI57X_B_COUNT' : [608+(106*8), 32, int()],
-                'SI57X_A_COUNT' : [608+(102*8), 32, int()],
+                'SI57X_B_COUNT' : [608+(109*8), 32, int()],
+                'SI57X_A_COUNT' : [608+(105*8), 32, int()],
 
-                'MDIO_EXTENDED_STATUS' : [608+(100*8), 16, int()],
-                'MDIO_BASIC_STATUS' : [608+(98*8), 16, int()],
-                'FAN_PWM_CURRENT_DUTY_CYCLE' : [608+(97*8), 8, int()],
+                'MDIO_EXTENDED_STATUS' : [608+(103*8), 16, int()],
+                'MDIO_BASIC_STATUS' : [608+(101*8), 16, int()],
+                'FAN_PWM_CURRENT_DUTY_CYCLE' : [608+(100*8), 8, int()],
                 
-                '__TAS_COUNT' : [608+(93*8), 32, int()],
+                '__TAS_COUNT' : [608+(96*8), 32, int()],
                 
-                '__CORRUPTED_BITSTREAM_TABLE' : [609+(92*8), 1, int()],
-                '__CONFIGURATION_DEFAULT' : [608+(92*8), 1, int()],
+                '__CORRUPTED_BITSTREAM_TABLE' : [609+(95*8), 1, int()],
+                '__CONFIGURATION_DEFAULT' : [608+(95*8), 1, int()],
                 
-                '__FLASH_READER_DATA_OUT_EMPTY' : [610+(91*8), 1, int()],
-                '__FLASH_READER_ERROR' : [609+(91*8), 1, int()],
-                '__FLASH_READER_DONE' : [608+(91*8), 1, int()],
+                '__FLASH_READER_DATA_OUT_EMPTY' : [610+(94*8), 1, int()],
+                '__FLASH_READER_ERROR' : [609+(94*8), 1, int()],
+                '__FLASH_READER_DONE' : [608+(94*8), 1, int()],
                 
-                '__ATSHA204A_ERROR' : [613+(90*8), 1, int()],
-                '__ATSHA204A_DONE' : [612+(90*8), 1, int()],
-                'MAIN_POWER_STATE' : [611+(90*8), 1, int()],
-                '__FAN_TACH' : [610+(90*8), 1, int()],
-                '__N_IS_QF2_PRE' : [609+(90*8), 1, int()],
-                '__JACK_SENSE' : [608+(90*8), 1, int()],
+                '__ATSHA204A_ERROR' : [613+(93*8), 1, int()],
+                '__ATSHA204A_DONE' : [612+(93*8), 1, int()],
+                'MAIN_POWER_STATE' : [611+(93*8), 1, int()],
+                '__FAN_TACH' : [610+(93*8), 1, int()],
+                '__N_IS_QF2_PRE' : [609+(93*8), 1, int()],
+                '__JACK_SENSE' : [608+(93*8), 1, int()],
                 
-                'CONTROLLER_I2C_READ_DATA' : [608+(88*8), 16, int()],
+                'CONTROLLER_I2C_READ_DATA' : [608+(91*8), 16, int()],
                 
-                'I2C_ERROR_LATCH' : [615+(87*8), 1, int()],
-                'I2C_DONE_LATCH' : [614+(87*8), 1, int()],
-                'BOARD_OT_SHUTDOWN_LATCH' : [613+(87*8), 1, int()],
-                'KINTEX_OT_SHUTDOWN_LATCH' : [612+(87*8), 1, int()],
-                '__SYS_I2C_SDA' : [609+(87*8), 1, int()],
-                '__SYS_I2C_SCL' : [608+(87*8), 1, int()],
+                'I2C_ERROR_LATCH' : [615+(90*8), 1, int()],
+                'I2C_DONE_LATCH' : [614+(90*8), 1, int()],
+                'BOARD_OT_SHUTDOWN_LATCH' : [613+(90*8), 1, int()],
+                'KINTEX_OT_SHUTDOWN_LATCH' : [612+(90*8), 1, int()],
+                '__SYS_I2C_SDA' : [609+(90*8), 1, int()],
+                '__SYS_I2C_SCL' : [608+(90*8), 1, int()],
                 
-                'SI57X_B_CURRENT_RFREQ' : [608+(82*8), 38, int()],
-                'SI57X_B_CURRENT_N1' : [608+(81*8), 7, int()],
-                'SI57X_B_CURRENT_HSDIV' : [608+(80*8), 3, int()],
-                'SI57X_B_ERROR' : [609+(79*8), 1, int()],
-                'SI57X_B_DONE' : [608+(79*8), 1, int()],
+                'SI57X_B_CURRENT_RFREQ' : [608+(85*8), 38, int()],
+                'SI57X_B_CURRENT_N1' : [608+(84*8), 7, int()],
+                'SI57X_B_CURRENT_HSDIV' : [608+(83*8), 3, int()],
+                'SI57X_B_ERROR' : [609+(82*8), 1, int()],
+                'SI57X_B_DONE' : [608+(82*8), 1, int()],
                 
-                'SI57X_A_CURRENT_RFREQ' : [608+(74*8), 38, int()],
-                'SI57X_A_CURRENT_N1' : [608+(73*8), 7, int()],
-                'SI57X_A_CURRENT_HSDIV' : [608+(72*8), 3, int()],
-                'SI57X_A_ERROR' : [609+(71*8), 1, int()],
-                'SI57X_A_DONE' : [608+(71*8), 1, int()],
-                
+                'SI57X_A_CURRENT_RFREQ' : [608+(77*8), 38, int()],
+                'SI57X_A_CURRENT_N1' : [608+(76*8), 7, int()],
+                'SI57X_A_CURRENT_HSDIV' : [608+(75*8), 3, int()],
+                'SI57X_A_ERROR' : [609+(74*8), 1, int()],
+                'SI57X_A_DONE' : [608+(74*8), 1, int()],
+
+                'SEM_STATUS' : [608+(73*8), 8, int()],
+            
+                'PROM_STATUS' : [608+(72*8), 8, int()],
+                'PROM_CONFIG' : [608+(71*8), 8, int()],
+            
                 'FAN_SPEED' : [608+(69*8), 16, int()],
                 
                 'KINTEX_QSFP_2_RX1_POWER' : [608+(67*8), 16, int()],
@@ -274,6 +279,14 @@ class interface(cfg):
 
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
+
+                x = 4
+                while x != 5:
+                    self.import_network_data()
+                    x = self.get_read_value('SEM_STATUS')
+                    print('PROM STATUS: '+hex(self.get_read_value('PROM_STATUS')))
+                    print('PROM CONFIGURATION: '+hex(self.get_read_value('PROM_CONFIG')))
+                    print('SEM STATUS: '+hex(x))
 
         def enable_monitoring(self):
                 self.set_byte(1, 4, 4)
