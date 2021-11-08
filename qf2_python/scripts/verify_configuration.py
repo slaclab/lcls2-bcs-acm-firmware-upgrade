@@ -6,6 +6,7 @@ import argparse
 import qf2_python.configuration.jtag.jtag as jtag
 import qf2_python.configuration.spi.spi as spi
 import qf2_python.configuration.spi.constants as spi_constants
+import qf2_python.identifier as identifier
 
 # Dynamic execution helper
 def my_exec_cfg(x, verbose=False):

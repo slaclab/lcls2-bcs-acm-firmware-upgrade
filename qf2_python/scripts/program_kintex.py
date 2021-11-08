@@ -35,6 +35,9 @@ for i in range(0, chain.num_devices()):
         print(hex(chain.idcode(i))+' - '+ chain.idcode_resolve_name(chain.idcode(i)))
 print('')
 
+if chain.num_devices() != 1:
+        raise Exception('There can be only one device in the chain!')
+
 # Parse the bitfile and resolve the part type
 print('Loading bitfile:', args.bit)
 bitfile = xilinx_bitfile_parser.bitfile(args.bit)
@@ -47,17 +50,11 @@ print('Length:', bitfile.length(), 'bits')
 
 print('')
 
-matching_devices = list()
-for i in range(0, chain.num_devices()):
-        if bitfile.match_idcode(chain.idcode(i)):
-                matching_devices.append(i)
-
-if len(matching_devices) == 0:
-        print('No devices matching bitfile found in JTAG chain')
-        exit()
+if not(bitfile.match_idcode(chain.idcode(0))):
+        raise Exception('No devices matching bitfile found in JTAG chain')
 
 # Default to first (and only) entry
-device_choice = matching_devices[0]
+#device_choice = matching_devices[0]
 
 # Override choice from argument line if there's more than one device
 #if len(matching_devices) > 1:
@@ -75,13 +72,13 @@ device_choice = matching_devices[0]
 #                print 'No matching device selection found that corresponds to JTAG chain'
 #                exit()
 #else:
-print('Defaulting device selection in chain from IDCODE')
 
-print('Device selected for programming is in chain location:',str(device_choice))
+#print('Defaulting device selection in chain from IDCODE')
+#print('Device selected for programming is in chain location:',str(device_choice))
 
 # TODO: Make this more generic
 # Restricted to Kintex 7
-if str('Xilinx Kintex 7') in chain.idcode_resolve_name(chain.idcode(device_choice)):
+if str('Xilinx Kintex 7') in chain.idcode_resolve_name(chain.idcode(0)):
         print('Xilinx 7 series & Ultrascale programming interface selected')
         interface = xilinx_7_ultrascale.interface(chain)
 else:
@@ -92,4 +89,4 @@ print('Programming...')
 print('')
 
 # Load the bitfile
-interface.program(bitfile.data(), device_choice)
+interface.program(bitfile.data())
