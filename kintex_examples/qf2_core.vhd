@@ -5019,10 +5019,10 @@ begin
 
   -- Coding mux for transmitter
   tx_data_in <= outbound_data when (tx_state = TRANSMIT) and (outbound_available = '1') else
-                K28P3                        when (tx_state = CRC_LATCH) else
+                K_CRC                        when (tx_state = CRC_LATCH) else
                 latched_tx_crc(31 downto 24) when (tx_state = CRC_COPY) else
-                K28P4                        when (tx_state = BACKPRESSURE) else
-                K28P5;
+                K_BACKPRESSURE_REQUEST                        when (tx_state = BACKPRESSURE) else
+                K_COMMA;
 
   tx_is_k <= '0' when (tx_state = TRANSMIT) and (outbound_available = '1') else
              '1' when (tx_state = CRC_LATCH) else
@@ -5124,7 +5124,7 @@ begin
         tx_backpressure_count  <= 31;
         tx_backpressure_needed <= '1';
       else
-        if (rx_data_out = K28P4) and (rx_is_k = '1') then
+        if (rx_data_out = K_BACKPRESSURE_REQUEST) and (rx_is_k = '1') then
           tx_backpressure_count  <= 31;
           tx_backpressure_needed <= '1';
         elsif tx_backpressure_count /= 0 then
@@ -5186,7 +5186,7 @@ begin
 
           when RECEIVE_DATA =>
             -- Keep an eye out for packet end
-            if (rx_data_out = K28P3) and (rx_is_k = '1') then
+            if (rx_data_out = K_CRC) and (rx_is_k = '1') then
               -- Frame end is not delayed by a cycle to align with byte written
               -- in previous clock cycle
               latched_rx_crc        <= rx_crc;
@@ -5230,7 +5230,7 @@ begin
 
   -- Output to FIFO
   int_inbound_write     <= '1' when (rx_is_k = '0') and (rx_state = RECEIVE_DATA) else '0';
-  int_inbound_frame_end <= '1' when (rx_is_k = '1') and (rx_data_out = K28P3)     else '0';
+  int_inbound_frame_end <= '1' when (rx_is_k = '1') and (rx_data_out = K_CRC)     else '0';
 
   -- Frame end is signalled the cycle after the last byte, so we only register
   -- once to align the strobe
@@ -5712,9 +5712,11 @@ architecture rtl of qf2_core is
 
   signal clk_100mhz_tx, clk_100mhz_rx, clk_500mhz_tx, clk_500mhz_rx                                                : std_logic;
   signal tx_phase_shift                                                                                            : std_logic                    := '0';
-  signal int_clk_100mhz, int_async_reset, tx_sync_reset, rx_sync_reset                                             : std_logic                    := '1';
+  signal int_clk_100mhz, int_async_reset, tx_sync_reset, led_sync_reset, application_reset, rx_sync_reset                                             : std_logic                    := '1';
   signal tx_domain_transmitting, rx_domain_receiving, p_p_transmitting, p_p_receiving, p_transmitting, p_receiving : std_logic                    := '0';
 
+  signal reset_count : unsigned(27 downto 0) := (others => '1');
+  
 begin
 
   -- Base clock / reset block
@@ -5739,21 +5741,31 @@ begin
   -- TODO: Think of a better way? One option would be to assume that if the RX
   -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
   async_reset_delay : process(int_async_reset, int_clk_100mhz)
-    --variable reset_count : unsigned(26 downto 0) := to_unsigned(20000, 27); 
-    variable reset_count : unsigned(26 downto 0) := (others => '1');
   begin
     if int_async_reset = '1' then
-      --reset_count := to_unsigned(20000, 27);
-      reset_count := (others => '1');
-      async_reset <= '1';
+      reset_count <= (others => '1');
+      application_reset <= '1';
     elsif rising_edge(int_clk_100mhz) then
       if reset_count = 0 then
-        async_reset <= '0';
+        application_reset <= '0';
       else
-        reset_count := reset_count - 1;
+        reset_count <= reset_count - 1;
       end if;
     end if;
   end process async_reset_delay;
+
+  async_reset <= application_reset;
+  
+  -- LED sync reset is a special case as it has a potential update at startup
+  inst_led_sync_reset : async_to_sync_reset_shift
+    generic map (
+      LENGTH => 4
+      )
+    port map (
+      clk    => clk_100mhz_tx,
+      input  => application_reset,
+      output => led_sync_reset
+      );  
   
   -- Pass-through
   clk_100mhz  <= int_clk_100mhz;
@@ -5936,10 +5948,10 @@ begin
   proc_led_update : process(clk_100mhz_tx)
   begin
     if rising_edge(clk_100mhz_tx) then
-      if tx_sync_reset = '1' then
-        -- Initialize LED status on reset
-        led_outbound_empty <= '0';
-        led_outbound_dout  <= "100" & r_tx_domain_leds;
+      if led_sync_reset = '1' then
+        -- LEDs are off by default during reset
+        led_outbound_empty <= '1';
+        led_outbound_dout  <= "1" & x"00"; -- & r_tx_domain_leds;
       else
         if led_outbound_empty = '0' then
           if led_outbound_read = '1' then
