@@ -5715,7 +5715,7 @@ architecture rtl of qf2_core is
   signal int_clk_100mhz, int_async_reset, tx_sync_reset, led_sync_reset, application_reset, rx_sync_reset                                             : std_logic                    := '1';
   signal tx_domain_transmitting, rx_domain_receiving, p_p_transmitting, p_p_receiving, p_transmitting, p_receiving : std_logic                    := '0';
 
-  signal reset_count : unsigned(27 downto 0) := (others => '1');
+  signal reset_count : unsigned(28 downto 0) := (others => '1');
   
 begin
 
