@@ -280,13 +280,13 @@ class interface(cfg):
                 # Initialize the configuration layer
                 cfg.__init__(self, verbose)
 
-                x = 4
-                while x != 5:
-                    self.import_network_data()
-                    x = self.get_read_value('SEM_STATUS')
-                    print('PROM STATUS: '+hex(self.get_read_value('PROM_STATUS')))
-                    print('PROM CONFIGURATION: '+hex(self.get_read_value('PROM_CONFIG')))
-                    print('SEM STATUS: '+hex(x))
+                #x = 4
+                #while x != 5:
+                #    self.import_network_data()
+                #    x = self.get_read_value('SEM_STATUS')
+                #    print('PROM STATUS: '+hex(self.get_read_value('PROM_STATUS')))
+   #                 print('PROM CONFIGURATION: '+hex(self.get_read_value('PROM_CONFIG')))
+    #                print('SEM STATUS: '+hex(x))
 
         def enable_monitoring(self):
                 self.set_byte(1, 4, 4)
