@@ -3,7 +3,7 @@
 import argparse, time
 import qf2_python.identifier as identifier
 
-parser = argparse.ArgumentParser(description='Read QSFP data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Reboot loop test', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Target IP address')
 parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output')
 args = parser.parse_args()

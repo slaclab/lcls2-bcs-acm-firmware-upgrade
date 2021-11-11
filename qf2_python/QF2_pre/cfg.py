@@ -69,6 +69,12 @@ def conv_n(x, n):
 		x = x - 2**n
 	return x
 
+def rep_scan_bits(value):
+        return '{:056b}'.format(value)
+
+def rep_vmon(value):
+        return str(2.56 * float(value) / 65536.0)
+
 class base:
 
         class SHA256(object):
@@ -435,16 +441,25 @@ class base:
 
         def print_network_cfg(self):
                 for key, value in sorted(self.__network_cfg.items()):
-                        print(key+' : '+str(value[2]))
+                        if len(value) == 3:
+                                print(key+' : '+str(value[2]))
+                        else:
+                                print(key+' : '+value[3](value[2]))
 
         def print_write_cfg(self):
                 for key, value in sorted(self.__write_cfg.items()):
-                        print(key+' : '+str(value[2]))
+                        if len(value) == 3:
+                                print(key+' : '+str(value[2]))
+                        else:
+                                print(key+' : '+value[3](value[2]))
 
         def print_read_cfg(self):
                 for key, value in sorted(self.__read_cfg.items()):
-                        print(key+' : '+str(value[2]))
-
+                        if len(value) == 3:
+                                print(key+' : '+str(value[2]))
+                        else:
+                                print(key+' : '+value[3](value[2]))
+                                
         def __export_cfg_value(self, value):
                 return int(value[2]) << value[0]
 

@@ -85,6 +85,8 @@ class cfg(mycfg.base):
                 'MAIN_POWER_ENABLE' : [9, 1, int(1)],
                 'POWER_BURST_MODE' : [8, 1, int(0)],
                 
+                '__DEBUG_LATCH_CLEAR' : [4, 1, int(1)],
+            
                 '__SYS_I2C_RESET' : [2, 1, int(1)],
                 '__SYS_I2C_SDA' : [1, 1, int(1)],
                 '__SYS_I2C_SCL' : [0, 1, int(1)]
@@ -94,22 +96,22 @@ class cfg(mycfg.base):
         # Key : [Start (bits), Length (bits), Type]
         __read_cfg = {
 
-                'LATCHED_DEBUG_RX_SCAN_BITS' : [608+(136*8), 56, int()],
+                'LATCHED_DEBUG_RX_SCAN_BITS' : [608+(136*8), 56, int(), mycfg.rep_scan_bits],
                 'LATCHED_DEBUG_RX_DELAY' : [608+(135*8), 8, int()],
                 'LATCHED_DEBUG_RX_DELAY_LAST_END' : [608+(134*8), 8, int()],
                 'LATCHED_DEBUG_RX_DELAY_LAST_START' : [608+(133*8), 8, int()],
                 'LATCHED_DEBUG_RX_DELAY_END' : [608+(132*8), 8, int()],
                 'LATCHED_DEBUG_RX_DELAY_START' : [608+(131*8), 8, int()],
-                'LATCHED_DEBUG_RX_10B_DATA' : [608+(129*8), 10, int()],
+                'LATCHED_DEBUG_RX_10B_DATA' : [608+(129*8), 10, int(), hex],
                 'LATCHED_DEBUG_RX_HS' : [608+(128*8), 8, int()],
 
-                'DEBUG_RX_SCAN_BITS' : [608+(121*8), 56, int()],
+                'DEBUG_RX_SCAN_BITS' : [608+(121*8), 56, int(), mycfg.rep_scan_bits],
                 'DEBUG_RX_DELAY' : [608+(120*8), 8, int()],
                 'DEBUG_RX_DELAY_LAST_END' : [608+(119*8), 8, int()],
                 'DEBUG_RX_DELAY_LAST_START' : [608+(118*8), 8, int()],
                 'DEBUG_RX_DELAY_END' : [608+(117*8), 8, int()],
                 'DEBUG_RX_DELAY_START' : [608+(116*8), 8, int()],
-                'DEBUG_RX_10B_DATA' : [608+(114*8), 10, int()],
+                'DEBUG_RX_10B_DATA' : [608+(114*8), 10, int(), hex],
                 'DEBUG_RX_HS' : [608+(113*8), 8, int()],               
 
                 'SI57X_B_COUNT' : [608+(109*8), 32, int()],
@@ -119,10 +121,10 @@ class cfg(mycfg.base):
                 'MDIO_BASIC_STATUS' : [608+(101*8), 16, int()],
                 'FAN_PWM_CURRENT_DUTY_CYCLE' : [608+(100*8), 8, int()],
                 
-                '__TAS_COUNT' : [608+(96*8), 32, int()],
+                #'__TAS_COUNT' : [608+(96*8), 32, int()],
                 
-                '__CORRUPTED_BITSTREAM_TABLE' : [609+(95*8), 1, int()],
-                '__CONFIGURATION_DEFAULT' : [608+(95*8), 1, int()],
+                '__FIRMWARE_CONFIGURATION_DEFAULT' : [609+(95*8), 1, int()],
+                '__NETWORK_CONFIGURATION_DEFAULT' : [608+(95*8), 1, int()],
                 
                 '__FLASH_READER_DATA_OUT_EMPTY' : [610+(94*8), 1, int()],
                 '__FLASH_READER_ERROR' : [609+(94*8), 1, int()],
@@ -229,22 +231,22 @@ class cfg(mycfg.base):
                 'INA226_1_0' : [304, 16, int()],
                 'INA226_0_0' : [288, 16, int()],
                 
-                'VMON_1_7' : [272, 16, int()],
-                'VMON_1_6' : [256, 16, int()],
-                'VMON_1_5' : [240, 16, int()],
-                'VMON_1_4' : [224, 16, int()],
-                'VMON_1_3' : [208, 16, int()],
-                'VMON_1_2' : [192, 16, int()],
-                'VMON_1_1' : [176, 16, int()],
-                'VMON_1_0' : [160, 16, int()],
-                'VMON_0_7' : [144, 16, int()],
-                'VMON_0_6' : [128, 16, int()],
-                'VMON_0_5' : [112, 16, int()],
-                'VMON_0_4' : [96, 16, int()],
-                'VMON_0_3' : [80, 16, int()],
-                'VMON_0_2' : [64, 16, int()],
-                'VMON_0_1' : [48, 16, int()],
-                'VMON_0_0' : [32, 16, int()],
+                'VMON_1_7' : [272, 16, int(), mycfg.rep_vmon],
+                'VMON_1_6' : [256, 16, int(), mycfg.rep_vmon],
+                'VMON_1_5' : [240, 16, int(), mycfg.rep_vmon],
+                'VMON_1_4' : [224, 16, int(), mycfg.rep_vmon],
+                'VMON_1_3' : [208, 16, int(), mycfg.rep_vmon],
+                'VMON_1_2' : [192, 16, int(), mycfg.rep_vmon],
+                'VMON_1_1' : [176, 16, int(), mycfg.rep_vmon],
+                'VMON_1_0' : [160, 16, int(), mycfg.rep_vmon],
+                'VMON_0_7' : [144, 16, int(), mycfg.rep_vmon],
+                'VMON_0_6' : [128, 16, int(), mycfg.rep_vmon],
+                'VMON_0_5' : [112, 16, int(), mycfg.rep_vmon],
+                'VMON_0_4' : [96, 16, int(), mycfg.rep_vmon],
+                'VMON_0_3' : [80, 16, int(), mycfg.rep_vmon],
+                'VMON_0_2' : [64, 16, int(), mycfg.rep_vmon],
+                'VMON_0_1' : [48, 16, int(), mycfg.rep_vmon],
+                'VMON_0_0' : [32, 16, int(), mycfg.rep_vmon],
                 
                 'BOARD_TEMPERATURE' : [16, 16, int()],
                 'KINTEX_TEMPERATURE' : [0, 16, int()]

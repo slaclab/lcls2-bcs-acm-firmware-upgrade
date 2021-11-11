@@ -16,10 +16,10 @@ parser = argparse.ArgumentParser(description='Update firmware configuration', fo
 parser.add_argument('-t', '--target', default='192.168.1.127', help='Current unicast IP address of board')
 parser.add_argument('-i', '--image', default='R', type=str, help='Target image')
 parser.add_argument('-r', '--reboot', action="store_true", default=False, help='Reboot automatically')
-parser.add_argument('-d', '--defaults', action="store_true", default=False help='Reset to defaults')
+parser.add_argument('-d', '--defaults', action="store_true", default=False, help='Reset to defaults')
 parser.add_argument('-j', '--json', type=str, help='JSON settings file')
 parser.add_argument('-s', '--settings', nargs='+', action='append', type=lambda kv: kv.split("="), dest='settings')
-parser.add_argument('-v', '--verbose', action="store_true", default=False help='Verbose output')
+parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Verbose output')
 
 #parser.add_argument('-p', '--port', default=50003, help='UDP port for PROM interface')
 SEQUENCER_PORT = 50003
