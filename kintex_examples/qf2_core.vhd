@@ -3989,6 +3989,9 @@ use ieee.numeric_std.all;
 library unisim;
 
 entity base is
+  generic (
+    RESET_INIT : unsigned(10 downto 0)
+    );
   port (
 
     -- Reset signal output to rest of system
@@ -4056,7 +4059,7 @@ begin
 
   -- Master reset
   master_reset : process(clk_sys)
-    variable reset_counter : natural range 2000 downto 0 := 2000;
+    variable reset_counter : unsigned(10 downto 0) := RESET_INIT;
   begin
     if rising_edge(clk_sys) then
       if reset_counter = 0 then
@@ -5250,6 +5253,7 @@ library unimacro;
 
 entity qf2_core is
   generic (
+    FAST_SIMULATION : boolean := false;
     
     CHANNEL_1_ENABLE   : boolean := false;
     CHANNEL_1_LOOPBACK : boolean := false;
@@ -5518,6 +5522,9 @@ architecture rtl of qf2_core is
       );
   end component;
   component base
+    generic (
+      RESET_INIT : unsigned(10 downto 0)
+      );
     port (
 
       -- Reset signal output to rest of system
@@ -5720,28 +5727,68 @@ architecture rtl of qf2_core is
 begin
 
   -- Base clock / reset block
-  inst_base : base
-    port map (
-      async_reset      => int_async_reset,
-      clk_sys_p        => clk_sys_p,
-      clk_sys_n        => clk_sys_n,
-      clk_50mhz_no_buf => clk_50mhz_no_buf,
-      clk_100mhz       => int_clk_100mhz,
-      clk_100mhz_tx    => clk_100mhz_tx,
-      clk_500mhz_tx    => clk_500mhz_tx,
-      clk_100mhz_rx    => clk_100mhz_rx,
-      clk_500mhz_rx    => clk_500mhz_rx,
-      tx_ps_en         => tx_phase_shift,
-      tx_ps_done       => debug_tx_phase_shift_done
-      );
-
-  -- When int_async_reset is released it means the MMCM and PLL are locked, but
-  -- it doesn't mean that the links between the FPGAs are ready.
-  -- This is a simple fix - wait 'long enough' to ensure the links are stable.
-  -- TODO: Think of a better way? One option would be to assume that if the RX
-  -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
-  async_reset_delay : process(int_async_reset, int_clk_100mhz)
-  begin
+  g_base_sim : if FAST_SIMULATION = true generate
+    inst_base : base
+      generic map (
+        RESET_INIT => "00000010000"
+        )
+      port map (
+        async_reset      => int_async_reset,
+        clk_sys_p        => clk_sys_p,
+        clk_sys_n        => clk_sys_n,
+        clk_50mhz_no_buf => clk_50mhz_no_buf,
+        clk_100mhz       => int_clk_100mhz,
+        clk_100mhz_tx    => clk_100mhz_tx,
+        clk_500mhz_tx    => clk_500mhz_tx,
+        clk_100mhz_rx    => clk_100mhz_rx,
+        clk_500mhz_rx    => clk_500mhz_rx,
+        tx_ps_en         => tx_phase_shift,
+        tx_ps_done       => debug_tx_phase_shift_done
+        );
+    -- When int_async_reset is released it means the MMCM and PLL are locked, but
+    -- it doesn't mean that the links between the FPGAs are ready.
+    -- This is a simple fix - wait 'long enough' to ensure the links are stable.
+    -- TODO: Think of a better way? One option would be to assume that if the RX
+    -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
+    async_reset_delay : process(int_async_reset, int_clk_100mhz)
+    begin
+    if int_async_reset = '1' then
+      reset_count <= "00000000000001000000000000000";
+      application_reset <= '1';
+    elsif rising_edge(int_clk_100mhz) then
+      if reset_count = 0 then
+        application_reset <= '0';
+      else
+        reset_count <= reset_count - 1;
+      end if;
+    end if;
+  end process async_reset_delay;
+  end generate g_base_sim;
+  g_n_base_sim : if FAST_SIMULATION = false generate
+    inst_base : base
+      generic map (
+        RESET_INIT => (others => '1')
+        )
+      port map (
+        async_reset      => int_async_reset,
+        clk_sys_p        => clk_sys_p,
+        clk_sys_n        => clk_sys_n,
+        clk_50mhz_no_buf => clk_50mhz_no_buf,
+        clk_100mhz       => int_clk_100mhz,
+        clk_100mhz_tx    => clk_100mhz_tx,
+        clk_500mhz_tx    => clk_500mhz_tx,
+        clk_100mhz_rx    => clk_100mhz_rx,
+        clk_500mhz_rx    => clk_500mhz_rx,
+        tx_ps_en         => tx_phase_shift,
+        tx_ps_done       => debug_tx_phase_shift_done
+        );
+    -- When int_async_reset is released it means the MMCM and PLL are locked, but
+    -- it doesn't mean that the links between the FPGAs are ready.
+    -- This is a simple fix - wait 'long enough' to ensure the links are stable.
+    -- TODO: Think of a better way? One option would be to assume that if the RX
+    -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
+    async_reset_delay : process(int_async_reset, int_clk_100mhz)
+    begin
     if int_async_reset = '1' then
       reset_count <= (others => '1');
       application_reset <= '1';
@@ -5753,6 +5800,7 @@ begin
       end if;
     end if;
   end process async_reset_delay;
+  end generate g_n_base_sim;
 
   async_reset <= application_reset;
   
