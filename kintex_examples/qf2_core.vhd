@@ -36,120 +36,120 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package definitions is
-constant link_trainer_kernel_CORE_DATA_WIDTH : integer := 8;
-constant link_trainer_kernel_STACK_DEPTH : integer := 5;
-constant link_trainer_kernel_FIFO_DEPTH : integer := 0;
-constant link_trainer_kernel_PRAM_DEPTH : integer := 112;
-constant link_trainer_kernel_C_MAX : integer := 108;
-constant link_trainer_kernel_RA_MAX : integer := 7;
-constant link_trainer_kernel_RB_MAX : integer := 7;
-constant link_trainer_kernel_RC_MAX : integer := 7;
-constant link_trainer_kernel_RD_MAX : integer := 0;
-constant link_trainer_kernel_PI_MAX : integer := 1;
-constant link_trainer_kernel_PO_MAX : integer := 7;
-constant link_trainer_kernel_RA_INDIRECTION : std_logic := '0';
-constant link_trainer_kernel_RB_INDIRECTION : std_logic := '0';
-constant link_trainer_kernel_RC_INDIRECTION : std_logic := '0';
-constant link_trainer_kernel_RD_INDIRECTION : std_logic := '0';
-constant link_trainer_kernel_PRAM_ADDRESS_WIDTH : integer := 7;
-constant link_trainer_kernel_RRAM_ADDRESS_WIDTH : integer := 3;
-constant link_trainer_kernel_PORT_ADDRESS_WIDTH : integer := 3;
-constant link_trainer_kernel_PRAM_DATA_WIDTH : integer := 23;
-constant link_trainer_kernel_RRAM_DEPTH : integer := 7;
-constant link_trainer_kernel_PORT_DEPTH : integer := 7;
-constant link_trainer_kernel_C_ORIGIN : integer := 4;
-constant link_trainer_kernel_C_WIDTH : integer := 7;
-constant link_trainer_kernel_RA_ORIGIN : integer := 11;
-constant link_trainer_kernel_RA_WIDTH : integer := 3;
-constant link_trainer_kernel_RB_ORIGIN : integer := 14;
-constant link_trainer_kernel_RB_WIDTH : integer := 3;
-constant link_trainer_kernel_RC_ORIGIN : integer := 17;
-constant link_trainer_kernel_RC_WIDTH : integer := 3;
-constant link_trainer_kernel_RD_ORIGIN : integer := 20;
-constant link_trainer_kernel_RD_WIDTH : integer := 0;
-constant link_trainer_kernel_PI_ORIGIN : integer := 20;
-constant link_trainer_kernel_PI_WIDTH : integer := 0;
-constant link_trainer_kernel_PO_ORIGIN : integer := 20;
-constant link_trainer_kernel_PO_WIDTH : integer := 3;
-constant link_trainer_kernel_NUM_OPCODES : integer := 15;
-constant link_trainer_kernel_OPCODE_WIDTH : integer := 4;
-constant link_trainer_kernel_RA_INDIRECTION_ORIGIN : integer := 23;
-constant link_trainer_kernel_RB_INDIRECTION_ORIGIN : integer := 23;
-constant link_trainer_kernel_RC_INDIRECTION_ORIGIN : integer := 23;
-constant link_trainer_kernel_RD_INDIRECTION_ORIGIN : integer := 23;
-constant link_trainer_kernel_STACK_DATA_WIDTH : integer := 8;
-constant link_trainer_kernel_FIFO_DATA_WIDTH : integer := 0;
-constant link_trainer_kernel_PORT_DATA_WIDTH : integer := 8;
-type type_link_trainer_kernel_port_array is array (integer range link_trainer_kernel_PORT_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_PORT_DATA_WIDTH-1 downto 0);
-type type_link_trainer_kernel_rram_array is array (integer range link_trainer_kernel_RRAM_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_CORE_DATA_WIDTH-1 downto 0);
+  constant link_trainer_kernel_CORE_DATA_WIDTH       : integer   := 8;
+  constant link_trainer_kernel_STACK_DEPTH           : integer   := 5;
+  constant link_trainer_kernel_FIFO_DEPTH            : integer   := 0;
+  constant link_trainer_kernel_PRAM_DEPTH            : integer   := 112;
+  constant link_trainer_kernel_C_MAX                 : integer   := 108;
+  constant link_trainer_kernel_RA_MAX                : integer   := 7;
+  constant link_trainer_kernel_RB_MAX                : integer   := 7;
+  constant link_trainer_kernel_RC_MAX                : integer   := 7;
+  constant link_trainer_kernel_RD_MAX                : integer   := 0;
+  constant link_trainer_kernel_PI_MAX                : integer   := 1;
+  constant link_trainer_kernel_PO_MAX                : integer   := 7;
+  constant link_trainer_kernel_RA_INDIRECTION        : std_logic := '0';
+  constant link_trainer_kernel_RB_INDIRECTION        : std_logic := '0';
+  constant link_trainer_kernel_RC_INDIRECTION        : std_logic := '0';
+  constant link_trainer_kernel_RD_INDIRECTION        : std_logic := '0';
+  constant link_trainer_kernel_PRAM_ADDRESS_WIDTH    : integer   := 7;
+  constant link_trainer_kernel_RRAM_ADDRESS_WIDTH    : integer   := 3;
+  constant link_trainer_kernel_PORT_ADDRESS_WIDTH    : integer   := 3;
+  constant link_trainer_kernel_PRAM_DATA_WIDTH       : integer   := 23;
+  constant link_trainer_kernel_RRAM_DEPTH            : integer   := 7;
+  constant link_trainer_kernel_PORT_DEPTH            : integer   := 7;
+  constant link_trainer_kernel_C_ORIGIN              : integer   := 4;
+  constant link_trainer_kernel_C_WIDTH               : integer   := 7;
+  constant link_trainer_kernel_RA_ORIGIN             : integer   := 11;
+  constant link_trainer_kernel_RA_WIDTH              : integer   := 3;
+  constant link_trainer_kernel_RB_ORIGIN             : integer   := 14;
+  constant link_trainer_kernel_RB_WIDTH              : integer   := 3;
+  constant link_trainer_kernel_RC_ORIGIN             : integer   := 17;
+  constant link_trainer_kernel_RC_WIDTH              : integer   := 3;
+  constant link_trainer_kernel_RD_ORIGIN             : integer   := 20;
+  constant link_trainer_kernel_RD_WIDTH              : integer   := 0;
+  constant link_trainer_kernel_PI_ORIGIN             : integer   := 20;
+  constant link_trainer_kernel_PI_WIDTH              : integer   := 0;
+  constant link_trainer_kernel_PO_ORIGIN             : integer   := 20;
+  constant link_trainer_kernel_PO_WIDTH              : integer   := 3;
+  constant link_trainer_kernel_NUM_OPCODES           : integer   := 15;
+  constant link_trainer_kernel_OPCODE_WIDTH          : integer   := 4;
+  constant link_trainer_kernel_RA_INDIRECTION_ORIGIN : integer   := 23;
+  constant link_trainer_kernel_RB_INDIRECTION_ORIGIN : integer   := 23;
+  constant link_trainer_kernel_RC_INDIRECTION_ORIGIN : integer   := 23;
+  constant link_trainer_kernel_RD_INDIRECTION_ORIGIN : integer   := 23;
+  constant link_trainer_kernel_STACK_DATA_WIDTH      : integer   := 8;
+  constant link_trainer_kernel_FIFO_DATA_WIDTH       : integer   := 0;
+  constant link_trainer_kernel_PORT_DATA_WIDTH       : integer   := 8;
+  type type_link_trainer_kernel_port_array is array (integer range link_trainer_kernel_PORT_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_PORT_DATA_WIDTH-1 downto 0);
+  type type_link_trainer_kernel_rram_array is array (integer range link_trainer_kernel_RRAM_DEPTH-1 downto 0) of std_logic_vector(link_trainer_kernel_CORE_DATA_WIDTH-1 downto 0);
 
   component dp_ram_no_init
-    GENERIC (
+    generic (
       ADDRESS_WIDTH : integer;
-      DATA_WIDTH : integer;
-      DEPTH : integer
+      DATA_WIDTH    : integer;
+      DEPTH         : integer
       );
-    PORT (
+    port (
       -- main clock
       clk : in std_logic;
 
       -- master control for reloading the program memory from
       -- and external control interface at runtime
-      master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      master_write : in std_logic;
-      master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-      master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
-    
+      master_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_write         : in  std_logic;
+      master_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+      master_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0);
+
       -- read / write strobes and addresses
-      slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      slave_write : in std_logic;
-      slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-      slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
+      slave_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_write         : in  std_logic;
+      slave_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+      slave_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0)
       );
   end component;
   component dp_ram
-    GENERIC (
+    generic (
       ADDRESS_WIDTH : integer;
-      DATA_WIDTH : integer;
-      DEPTH : integer;
-      INIT : string
+      DATA_WIDTH    : integer;
+      DEPTH         : integer;
+      INIT          : string
       );
-    PORT (
+    port (
       -- main clock
       clk : in std_logic;
 
       -- master control for reloading the program memory from
       -- and external control interface at runtime
-      master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      master_write : in std_logic;
-      master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-      master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
-    
+      master_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_write         : in  std_logic;
+      master_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      master_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+      master_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0);
+
       -- read / write strobes and addresses
-      slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      slave_write : in std_logic;
-      slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-      slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-      slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
+      slave_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_write         : in  std_logic;
+      slave_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+      slave_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+      slave_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0)
       );
   end component;
 
   component lifo
-    GENERIC (
+    generic (
       DATA_WIDTH : integer;
-      DEPTH : integer
+      DEPTH      : integer
       );
-    PORT (
+    port (
       -- main clock
       clk : in std_logic;
 
       -- push & pop, data input and output
-      push : in std_logic;
-      pop : in std_logic;
-      data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
+      push     : in  std_logic;
+      pop      : in  std_logic;
+      data_in  : in  std_logic_vector(DATA_WIDTH-1 downto 0);
       data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
       );
   end component;
@@ -158,9 +158,9 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
     generic (
       RWIDTH : integer
       );
-    PORT (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
-      rb : in std_logic_vector(RWIDTH-1 downto 0);
+    port (
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
+      rb : in  std_logic_vector(RWIDTH-1 downto 0);
       rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
   end component;
@@ -171,9 +171,9 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       AWIDTH : integer
       );
     port (
-      c : in std_logic_vector(CWIDTH-1 downto 0);
-      ai : in std_logic_vector(AWIDTH-1 downto 0);
-      ao : out std_logic_vector(AWIDTH-1 downto 0);
+      c   : in  std_logic_vector(CWIDTH-1 downto 0);
+      ai  : in  std_logic_vector(AWIDTH-1 downto 0);
+      ao  : out std_logic_vector(AWIDTH-1 downto 0);
       sto : out std_logic_vector(SWIDTH-1 downto 0)
       );
   end component;
@@ -184,9 +184,9 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       AWIDTH : integer
       );
     port (
-      c : in std_logic_vector(CWIDTH-1 downto 0);
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
-      ai : in std_logic_vector(AWIDTH-1 downto 0);
+      c  : in  std_logic_vector(CWIDTH-1 downto 0);
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
+      ai : in  std_logic_vector(AWIDTH-1 downto 0);
       ao : out std_logic_vector(AWIDTH-1 downto 0)
       );
   end component;
@@ -197,9 +197,9 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       AWIDTH : integer
       );
     port (
-      c : in std_logic_vector(CWIDTH-1 downto 0);
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
-      ai : in std_logic_vector(AWIDTH-1 downto 0);
+      c  : in  std_logic_vector(CWIDTH-1 downto 0);
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
+      ai : in  std_logic_vector(AWIDTH-1 downto 0);
       ao : out std_logic_vector(AWIDTH-1 downto 0)
       );
   end component;
@@ -209,7 +209,7 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       AWIDTH : integer
       );
     port (
-      c : in std_logic_vector(CWIDTH-1 downto 0);
+      c  : in  std_logic_vector(CWIDTH-1 downto 0);
       ao : out std_logic_vector(AWIDTH-1 downto 0)
       );
   end component;
@@ -220,7 +220,7 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       );
     port (
       rc : out std_logic_vector(RWIDTH-1 downto 0);
-      pi : in std_logic_vector(PWIDTH-1 downto 0)
+      pi : in  std_logic_vector(PWIDTH-1 downto 0)
       );
   end component;
   component op_ld
@@ -229,7 +229,7 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       RWIDTH : integer
       );
     port (
-      c : in std_logic_vector(CWIDTH-1 downto 0);
+      c  : in  std_logic_vector(CWIDTH-1 downto 0);
       rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
   end component;
@@ -237,18 +237,18 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
     generic (
       RWIDTH : integer
       );
-    PORT (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
+    port (
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
       rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
-  end component;  
+  end component;
   component op_out
     generic (
       PWIDTH : integer;
       RWIDTH : integer
       );
     port (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
       po : out std_logic_vector(PWIDTH-1 downto 0)
       );
   end component;
@@ -258,8 +258,8 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       SWIDTH : integer
       );
     port (
-      rc : out std_logic_vector(RWIDTH-1 downto 0);
-      sti : in std_logic_vector(SWIDTH-1 downto 0)
+      rc  : out std_logic_vector(RWIDTH-1 downto 0);
+      sti : in  std_logic_vector(SWIDTH-1 downto 0)
       );
   end component;
   component op_push
@@ -268,7 +268,7 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       SWIDTH : integer
       );
     port (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
+      ra  : in  std_logic_vector(RWIDTH-1 downto 0);
       sto : out std_logic_vector(SWIDTH-1 downto 0)
       );
   end component;
@@ -278,8 +278,8 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       AWIDTH : integer
       );
     port (
-      ao : out std_logic_vector(AWIDTH-1 downto 0);
-      sti : in std_logic_vector(SWIDTH-1 downto 0)
+      ao  : out std_logic_vector(AWIDTH-1 downto 0);
+      sti : in  std_logic_vector(SWIDTH-1 downto 0)
       );
   end component;
   component op_shr
@@ -287,7 +287,7 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
       RWIDTH : integer
       );
     port (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
       rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
   end component;
@@ -295,9 +295,9 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
     generic (
       RWIDTH : integer
       );
-    PORT (
-      ra : in std_logic_vector(RWIDTH-1 downto 0);
-      rb : in std_logic_vector(RWIDTH-1 downto 0);
+    port (
+      ra : in  std_logic_vector(RWIDTH-1 downto 0);
+      rb : in  std_logic_vector(RWIDTH-1 downto 0);
       rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
   end component;
@@ -308,50 +308,50 @@ type type_link_trainer_kernel_rram_array is array (integer range link_trainer_ke
     port (
       ra : in  std_logic_vector(RWIDTH-1 downto 0);
       rb : in  std_logic_vector(RWIDTH-1 downto 0);
-      rc : out  std_logic_vector(RWIDTH-1 downto 0)
+      rc : out std_logic_vector(RWIDTH-1 downto 0)
       );
   end component;
-  end definitions;
+end definitions;
 
 --
 -- dp_ram_no_init
 --
-  
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-ENTITY dp_ram_no_init IS
-  GENERIC (
+entity dp_ram_no_init is
+  generic (
     ADDRESS_WIDTH : integer;
-    DATA_WIDTH : integer;
-    DEPTH : integer
+    DATA_WIDTH    : integer;
+    DEPTH         : integer
     );
-  PORT (
+  port (
     -- main clock
     clk : in std_logic;
 
     -- master control for reloading the program memory from
     -- and external control interface at runtime
-    master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    master_write : in std_logic;
-    master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-    master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    
-    -- read / write strobes and addresses
-    slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    slave_write : in std_logic;
-    slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-    slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0')
-    );
-END ENTITY dp_ram_no_init;
+    master_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_write         : in  std_logic;
+    master_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+    master_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
 
-architecture rtl OF dp_ram_no_init is 
+    -- read / write strobes and addresses
+    slave_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_write         : in  std_logic;
+    slave_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+    slave_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0')
+    );
+end entity dp_ram_no_init;
+
+architecture rtl of dp_ram_no_init is
 
   type type_ram_array is array (integer range DEPTH-1 downto 0) of std_logic_vector(DATA_WIDTH-1 downto 0);
-  
+
   function dp_ram_init_null (A : integer; B : integer) return type_ram_array is
     variable RES : type_ram_array;
   begin
@@ -380,24 +380,24 @@ architecture rtl OF dp_ram_no_init is
   end string_to_slv;
 
   -- define the ram array
-  signal int_ram_array : type_ram_array := dp_ram_init_null(DEPTH,DATA_WIDTH);
+  signal int_ram_array : type_ram_array := dp_ram_init_null(DEPTH, DATA_WIDTH);
 
   -- control signals for the ram
   -- split read, interlocked write
-  signal int_write : std_logic;
+  signal int_write         : std_logic;
   signal int_write_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-  signal int_write_data : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal int_write_data    : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-BEGIN
+begin
 
-    -- slave read
+  -- slave read
   slave_data_out <= int_ram_array(to_integer(unsigned(slave_read_address))) when rising_edge(clk);
-  
+
   -- master read
   master_data_out <= int_ram_array(to_integer(unsigned(master_read_address))) when rising_edge(clk);
 
   -- interlocked write (master_write must keep at '0' if slave is not halted)
-  int_write <= slave_write or master_write;
+  int_write         <= slave_write or master_write;
   int_write_address <= master_write_address when master_write = '1'
                        else slave_write_address;
   int_write_data <= master_data_in when master_write = '1'
@@ -412,48 +412,48 @@ BEGIN
     end if;
   end process write_process;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
 --
 -- dp_ram
 --
-  
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-ENTITY dp_ram IS
-  GENERIC (
+entity dp_ram is
+  generic (
     ADDRESS_WIDTH : integer;
-    DATA_WIDTH : integer;
-    DEPTH : integer;
-    INIT : string
+    DATA_WIDTH    : integer;
+    DEPTH         : integer;
+    INIT          : string
     );
-  PORT (
+  port (
     -- main clock
     clk : in std_logic;
 
     -- master control for reloading the program memory from
     -- and external control interface at runtime
-    master_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    master_write : in std_logic;
-    master_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    master_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-    master_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    
-    -- read / write strobes and addresses
-    slave_read_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    slave_write : in std_logic;
-    slave_write_address : in std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-    slave_data_in : in std_logic_vector(DATA_WIDTH-1 downto 0);
-    slave_data_out : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0')
-    );
-END ENTITY dp_ram;
+    master_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_write         : in  std_logic;
+    master_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    master_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+    master_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
 
-architecture rtl OF dp_ram is 
+    -- read / write strobes and addresses
+    slave_read_address  : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_write         : in  std_logic;
+    slave_write_address : in  std_logic_vector(ADDRESS_WIDTH-1 downto 0);
+    slave_data_in       : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+    slave_data_out      : out std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0')
+    );
+end entity dp_ram;
+
+architecture rtl of dp_ram is
 
   type type_ram_array is array (integer range DEPTH-1 downto 0) of std_logic_vector(DATA_WIDTH-1 downto 0);
-  
+
   function dp_ram_init_null (A : integer; B : integer) return type_ram_array is
     variable RES : type_ram_array;
   begin
@@ -486,7 +486,7 @@ architecture rtl OF dp_ram is
     variable slv : std_logic_vector(A*B-1 downto 0);
   begin
     if INIT'length = 0 then
-      RES := dp_ram_init_null(A,B);
+      RES := dp_ram_init_null(A, B);
     else
       slv := string_to_slv(INIT);
       for I in A-1 downto 0 loop
@@ -499,24 +499,24 @@ architecture rtl OF dp_ram is
   end dp_ram_init;
 
   -- define the ram array
-  signal int_ram_array : type_ram_array := dp_ram_init(DEPTH,DATA_WIDTH, INIT);
+  signal int_ram_array : type_ram_array := dp_ram_init(DEPTH, DATA_WIDTH, INIT);
 
   -- control signals for the ram
   -- split read, interlocked write
-  signal int_write : std_logic;
+  signal int_write         : std_logic;
   signal int_write_address : std_logic_vector(ADDRESS_WIDTH-1 downto 0);
-  signal int_write_data : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal int_write_data    : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-BEGIN
+begin
 
-    -- slave read
+  -- slave read
   slave_data_out <= int_ram_array(to_integer(unsigned(slave_read_address))) when rising_edge(clk);
-  
+
   -- master read
   master_data_out <= int_ram_array(to_integer(unsigned(master_read_address))) when rising_edge(clk);
 
   -- interlocked write (master_write must keep at '0' if slave is not halted)
-  int_write <= slave_write or master_write;
+  int_write         <= slave_write or master_write;
   int_write_address <= master_write_address when master_write = '1'
                        else slave_write_address;
   int_write_data <= master_data_in when master_write = '1'
@@ -531,7 +531,7 @@ BEGIN
     end if;
   end process write_process;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -558,7 +558,7 @@ architecture rtl of lifo is
 
   -- lifo shift array
   signal lifo_array : std_logic_vector((DEPTH * DATA_WIDTH) - 1 downto 0) := (others => '0');
-  
+
 begin
 
   data_out <= lifo_array(DATA_WIDTH-1 downto 0);
@@ -576,455 +576,455 @@ begin
 
 end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_add IS
+entity op_add is
   generic (
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
-    rb : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
+    rb : in  std_logic_vector(RWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_add;
+end entity op_add;
 
-ARCHITECTURE rtl OF op_add is   
-  signal int_q : std_logic_vector(RWIDTH downto 0);
+architecture rtl of op_add is
+  signal int_q   : std_logic_vector(RWIDTH downto 0);
   signal int_d_a : std_logic_vector(RWIDTH downto 0);
   signal int_d_b : std_logic_vector(RWIDTH downto 0);
-BEGIN
+begin
 
   int_d_a <= '0' & ra;
   int_d_b <= '0' & rb;
-  
+
   -- add a to b and assign to q
   int_q <= std_logic_vector(unsigned(int_d_a) + unsigned(int_d_b));
 
   -- output result
   rc <= int_q(RWIDTH-1 downto 0);
-  
-END ARCHITECTURE rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+end architecture rtl;
 
-ENTITY op_call IS
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity op_call is
   generic (
     CWIDTH : integer;
     SWIDTH : integer;
     AWIDTH : integer
     );
-  PORT (
-    c : in std_logic_vector(CWIDTH-1 downto 0);
-    ai : in std_logic_vector(AWIDTH-1 downto 0);
-    ao : out std_logic_vector(AWIDTH-1 downto 0);
+  port (
+    c   : in  std_logic_vector(CWIDTH-1 downto 0);
+    ai  : in  std_logic_vector(AWIDTH-1 downto 0);
+    ao  : out std_logic_vector(AWIDTH-1 downto 0);
     sto : out std_logic_vector(SWIDTH-1 downto 0)
     );
-END ENTITY op_call;
+end entity op_call;
 
-ARCHITECTURE rtl OF op_call is   
-BEGIN
+architecture rtl of op_call is
+begin
 
-  glt1: if CWIDTH > AWIDTH generate
+  glt1 : if CWIDTH > AWIDTH generate
     ao <= c(AWIDTH-1 downto 0);
   end generate glt1;
-  geq1: if CWIDTH = AWIDTH generate
+  geq1 : if CWIDTH = AWIDTH generate
     ao <= c;
   end generate geq1;
-  ggt1: if CWIDTH < AWIDTH generate
+  ggt1 : if CWIDTH < AWIDTH generate
     ao <= std_logic_vector(to_unsigned(0, AWIDTH-CWIDTH)) & c;
   end generate ggt1;
 
-  glt2: if SWIDTH > AWIDTH generate
+  glt2 : if SWIDTH > AWIDTH generate
     sto <= std_logic_vector(to_unsigned(0, SWIDTH-AWIDTH)) & ai;
   end generate glt2;
-  geq2: if SWIDTH = AWIDTH generate
+  geq2 : if SWIDTH = AWIDTH generate
     sto <= ai;
   end generate geq2;
-  ggt2: if SWIDTH < AWIDTH generate
+  ggt2 : if SWIDTH < AWIDTH generate
     sto <= ai(SWIDTH-1 downto 0);
   end generate ggt2;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_dbrnz IS
+entity op_dbrnz is
   generic (
     RWIDTH : integer;
     CWIDTH : integer;
     AWIDTH : integer
     );
-  PORT (
-    c : in std_logic_vector(CWIDTH-1 downto 0);
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
-    ai : in std_logic_vector(AWIDTH-1 downto 0);
+  port (
+    c  : in  std_logic_vector(CWIDTH-1 downto 0);
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
+    ai : in  std_logic_vector(AWIDTH-1 downto 0);
     ao : out std_logic_vector(AWIDTH-1 downto 0)
     );
-END ENTITY op_dbrnz;
+end entity op_dbrnz;
 
-ARCHITECTURE rtl OF op_dbrnz is
+architecture rtl of op_dbrnz is
   signal condition : std_logic;
-BEGIN
+begin
 
   condition <= '1' when ra /= std_logic_vector(to_unsigned(0, RWIDTH)) else '0';
 
-  glt: if CWIDTH < AWIDTH generate
+  glt : if CWIDTH < AWIDTH generate
     ao <= std_logic_vector(to_unsigned(0, AWIDTH-CWIDTH)) & c when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate glt;
-  geq: if CWIDTH = AWIDTH generate
+  geq : if CWIDTH = AWIDTH generate
     ao <= c when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate geq;
-  ggt: if CWIDTH > AWIDTH generate
+  ggt : if CWIDTH > AWIDTH generate
     ao <= c(AWIDTH-1 downto 0) when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate ggt;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_dbrz IS
+entity op_dbrz is
   generic (
     CWIDTH : integer;
     RWIDTH : integer;
     AWIDTH : integer
     );
-  PORT (
-    c : in std_logic_vector(CWIDTH-1 downto 0);
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
-    ai : in std_logic_vector(AWIDTH-1 downto 0);
+  port (
+    c  : in  std_logic_vector(CWIDTH-1 downto 0);
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
+    ai : in  std_logic_vector(AWIDTH-1 downto 0);
     ao : out std_logic_vector(AWIDTH-1 downto 0)
     );
-END ENTITY op_dbrz;
+end entity op_dbrz;
 
-ARCHITECTURE rtl OF op_dbrz is
+architecture rtl of op_dbrz is
   signal condition : std_logic;
-BEGIN
+begin
 
   condition <= '1' when ra = std_logic_vector(to_unsigned(0, RWIDTH)) else '0';
 
-  glt: if CWIDTH < AWIDTH generate
+  glt : if CWIDTH < AWIDTH generate
     ao <= std_logic_vector(to_unsigned(0, AWIDTH-CWIDTH)) & c when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate glt;
-  geq: if CWIDTH = AWIDTH generate
+  geq : if CWIDTH = AWIDTH generate
     ao <= c when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate geq;
-  ggt: if CWIDTH > AWIDTH generate
+  ggt : if CWIDTH > AWIDTH generate
     ao <= c(AWIDTH-1 downto 0) when condition = '1' else std_logic_vector(unsigned(ai)+1);
   end generate ggt;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_djmp IS
+entity op_djmp is
   generic (
     CWIDTH : integer;
     AWIDTH : integer
     );
-  PORT (
-    c : in std_logic_vector(CWIDTH-1 downto 0);
+  port (
+    c  : in  std_logic_vector(CWIDTH-1 downto 0);
     ao : out std_logic_vector(AWIDTH-1 downto 0)
     );
-END ENTITY op_djmp;
+end entity op_djmp;
 
-ARCHITECTURE rtl OF op_djmp is   
-BEGIN
-  glt: if CWIDTH < AWIDTH generate
+architecture rtl of op_djmp is
+begin
+  glt : if CWIDTH < AWIDTH generate
     ao <= std_logic_vector(to_unsigned(0, AWIDTH-CWIDTH)) & c;
   end generate glt;
-  geq: if CWIDTH = AWIDTH generate
+  geq : if CWIDTH = AWIDTH generate
     ao <= c;
   end generate geq;
-  ggt: if CWIDTH > AWIDTH generate
+  ggt : if CWIDTH > AWIDTH generate
     ao <= c(AWIDTH-1 downto 0);
   end generate ggt;
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_in IS
+entity op_in is
   generic (
     PWIDTH : integer;
     RWIDTH : integer
     );
-  PORT (
+  port (
     rc : out std_logic_vector(RWIDTH-1 downto 0);
-    pi : in std_logic_vector(PWIDTH-1 downto 0)
+    pi : in  std_logic_vector(PWIDTH-1 downto 0)
     );
-END ENTITY op_in;
+end entity op_in;
 
-ARCHITECTURE rtl OF op_in is   
-BEGIN
+architecture rtl of op_in is
+begin
 
-  glt: if PWIDTH < RWIDTH generate
+  glt : if PWIDTH < RWIDTH generate
     rc <= std_logic_vector(to_unsigned(0, RWIDTH-PWIDTH)) & pi;
   end generate glt;
-  geq: if PWIDTH = RWIDTH generate
+  geq : if PWIDTH = RWIDTH generate
     rc <= pi;
   end generate geq;
-  ggt: if PWIDTH > RWIDTH generate
+  ggt : if PWIDTH > RWIDTH generate
     rc <= pi(RWIDTH-1 downto 0);
   end generate ggt;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_ld IS
+entity op_ld is
   generic (
     CWIDTH : integer;
     RWIDTH : integer
     );
-  PORT (
-    c : in std_logic_vector(CWIDTH-1 downto 0);
+  port (
+    c  : in  std_logic_vector(CWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_ld;
+end entity op_ld;
 
-ARCHITECTURE rtl OF op_ld is   
-BEGIN
+architecture rtl of op_ld is
+begin
 
-  glt: if CWIDTH < RWIDTH generate
+  glt : if CWIDTH < RWIDTH generate
     rc <= std_logic_vector(to_unsigned(0, RWIDTH-CWIDTH)) & c;
   end generate glt;
-  geq: if CWIDTH = RWIDTH generate
+  geq : if CWIDTH = RWIDTH generate
     rc <= c;
   end generate geq;
-  ggt: if CWIDTH > RWIDTH generate
+  ggt : if CWIDTH > RWIDTH generate
     rc <= c(RWIDTH-1 downto 0);
   end generate ggt;
-  
-END ARCHITECTURE rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+end architecture rtl;
 
-ENTITY op_mov IS
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity op_mov is
   generic (
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_mov;
+end entity op_mov;
 
-ARCHITECTURE rtl OF op_mov is   
-BEGIN
+architecture rtl of op_mov is
+begin
 
   rc <= ra;
-  
-END ARCHITECTURE rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+end architecture rtl;
 
-ENTITY op_out IS
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity op_out is
   generic (
     PWIDTH : integer;
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
     po : out std_logic_vector(PWIDTH-1 downto 0)
     );
-END ENTITY op_out;
+end entity op_out;
 
-ARCHITECTURE rtl OF op_out is   
-BEGIN
+architecture rtl of op_out is
+begin
 
-  glt: if PWIDTH > RWIDTH generate
+  glt : if PWIDTH > RWIDTH generate
     po <= std_logic_vector(to_unsigned(0, PWIDTH-RWIDTH)) & ra;
   end generate glt;
-  geq: if PWIDTH = RWIDTH generate
+  geq : if PWIDTH = RWIDTH generate
     po <= ra;
   end generate geq;
-  ggt: if PWIDTH < RWIDTH generate
+  ggt : if PWIDTH < RWIDTH generate
     po <= ra(PWIDTH-1 downto 0);
   end generate ggt;
-  
-END ARCHITECTURE rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+end architecture rtl;
 
-ENTITY op_pop IS
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity op_pop is
   generic (
     SWIDTH : integer;
     RWIDTH : integer
     );
-  PORT (
-    rc : out std_logic_vector(RWIDTH-1 downto 0);
-    sti : in std_logic_vector(SWIDTH-1 downto 0)
+  port (
+    rc  : out std_logic_vector(RWIDTH-1 downto 0);
+    sti : in  std_logic_vector(SWIDTH-1 downto 0)
     );
-END ENTITY op_pop;
+end entity op_pop;
 
-ARCHITECTURE rtl OF op_pop is   
-BEGIN
-  glt: if RWIDTH > SWIDTH generate
+architecture rtl of op_pop is
+begin
+  glt : if RWIDTH > SWIDTH generate
     rc <= std_logic_vector(to_unsigned(0, RWIDTH-SWIDTH)) & sti;
   end generate glt;
-  geq: if SWIDTH = RWIDTH generate
+  geq : if SWIDTH = RWIDTH generate
     rc <= sti;
   end generate geq;
-  ggt: if RWIDTH < SWIDTH generate
+  ggt : if RWIDTH < SWIDTH generate
     rc <= sti(RWIDTH-1 downto 0);
   end generate ggt;
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_push IS
+entity op_push is
   generic (
     RWIDTH : integer;
     SWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra  : in  std_logic_vector(RWIDTH-1 downto 0);
     sto : out std_logic_vector(SWIDTH-1 downto 0)
     );
-END ENTITY op_push;
+end entity op_push;
 
-ARCHITECTURE rtl OF op_push is   
-BEGIN
+architecture rtl of op_push is
+begin
 
-  glt2: if SWIDTH > RWIDTH generate
+  glt2 : if SWIDTH > RWIDTH generate
     sto <= std_logic_vector(to_unsigned(0, SWIDTH-RWIDTH)) & ra;
   end generate glt2;
-  geq2: if SWIDTH = RWIDTH generate
+  geq2 : if SWIDTH = RWIDTH generate
     sto <= ra;
   end generate geq2;
-  ggt2: if SWIDTH < RWIDTH generate
+  ggt2 : if SWIDTH < RWIDTH generate
     sto <= ra(SWIDTH-1 downto 0);
   end generate ggt2;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_ret IS
+entity op_ret is
   generic (
     SWIDTH : integer;
     AWIDTH : integer
     );
-  PORT (
-    ao : out std_logic_vector(AWIDTH-1 downto 0);
-    sti : in std_logic_vector(SWIDTH-1 downto 0)
+  port (
+    ao  : out std_logic_vector(AWIDTH-1 downto 0);
+    sti : in  std_logic_vector(SWIDTH-1 downto 0)
     );
-END ENTITY op_ret;
+end entity op_ret;
 
-ARCHITECTURE rtl OF op_ret is   
-BEGIN
-  glt: if AWIDTH > SWIDTH generate
+architecture rtl of op_ret is
+begin
+  glt : if AWIDTH > SWIDTH generate
     ao <= std_logic_vector(unsigned(std_logic_vector(to_unsigned(0, AWIDTH-SWIDTH)) & sti) + 1);
   end generate glt;
-  geq: if SWIDTH = AWIDTH generate
+  geq : if SWIDTH = AWIDTH generate
     ao <= std_logic_vector(unsigned(sti) + 1);
   end generate geq;
-  ggt: if AWIDTH < SWIDTH generate
+  ggt : if AWIDTH < SWIDTH generate
     ao <= std_logic_vector(unsigned(sti(AWIDTH-1 downto 0)) + 1);
   end generate ggt;
-END ARCHITECTURE rtl;
+end architecture rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY op_shr IS
+entity op_shr is
   generic (
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_shr;
+end entity op_shr;
 
-ARCHITECTURE rtl OF op_shr is   
-BEGIN
+architecture rtl of op_shr is
+begin
 
   -- rotate bits
   rc(RWIDTH-2 downto 0) <= ra(RWIDTH-1 downto 1);
-  rc(RWIDTH-1) <= '0';
-  
-END ARCHITECTURE rtl;
+  rc(RWIDTH-1)          <= '0';
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+end architecture rtl;
 
-ENTITY op_sub IS
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity op_sub is
   generic (
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
-    rb : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
+    rb : in  std_logic_vector(RWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_sub;
+end entity op_sub;
 
-ARCHITECTURE rtl OF op_sub is   
-  signal int_q : std_logic_vector(RWIDTH downto 0);
+architecture rtl of op_sub is
+  signal int_q   : std_logic_vector(RWIDTH downto 0);
   signal int_d_a : std_logic_vector(RWIDTH downto 0);
   signal int_d_b : std_logic_vector(RWIDTH downto 0);
-BEGIN
+begin
 
   int_d_a <= '0' & ra;
   int_d_b <= '0' & rb;
-  
+
   -- add a to b and assign to q
   int_q <= std_logic_vector(unsigned(int_d_b) - unsigned(int_d_a));
 
   -- output result
   rc <= int_q(RWIDTH-1 downto 0);
-  
-END ARCHITECTURE rtl;
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+end architecture rtl;
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-ENTITY op_test_unsigned_gt IS
+entity op_test_unsigned_gt is
   generic (
     RWIDTH : integer
     );
-  PORT (
-    ra : in std_logic_vector(RWIDTH-1 downto 0);
-    rb : in std_logic_vector(RWIDTH-1 downto 0);
+  port (
+    ra : in  std_logic_vector(RWIDTH-1 downto 0);
+    rb : in  std_logic_vector(RWIDTH-1 downto 0);
     rc : out std_logic_vector(RWIDTH-1 downto 0)
     );
-END ENTITY op_test_unsigned_gt;
+end entity op_test_unsigned_gt;
 
-ARCHITECTURE rtl OF op_test_unsigned_gt is
-BEGIN
+architecture rtl of op_test_unsigned_gt is
+begin
 
   -- unsigned greater than flag
   rc(RWIDTH-1 downto 1) <= (others => '0');
-  rc(0) <= '1' when unsigned(rb) > unsigned(ra) else '0';
-  
-END ARCHITECTURE rtl;
+  rc(0)                 <= '1' when unsigned(rb) > unsigned(ra) else '0';
+
+end architecture rtl;
 
 --
 -- async_to_sync_reset_shift
@@ -1076,591 +1076,591 @@ library qf2_pre;
 use qf2_pre.definitions.all;
 entity link_trainer_kernel is
   port (
-    prog_data_in : in std_logic_vector(22 downto 0);
-    prog_data_out : out std_logic_vector(22 downto 0);
-    prog_address_in : in std_logic_vector(6 downto 0);
-    port_in : in type_link_trainer_kernel_port_array;
-    port_in_strobe : out std_logic_vector(6 downto 0) := (others => '0');
-    port_out : out type_link_trainer_kernel_port_array := (others => (others => '0'));
-    port_out_strobe : out std_logic_vector(6 downto 0) := (others => '0');
-    clk, sync_reset, prog_write : in std_logic
-);
+    prog_data_in                : in  std_logic_vector(22 downto 0);
+    prog_data_out               : out std_logic_vector(22 downto 0);
+    prog_address_in             : in  std_logic_vector(6 downto 0);
+    port_in                     : in  type_link_trainer_kernel_port_array;
+    port_in_strobe              : out std_logic_vector(6 downto 0)        := (others => '0');
+    port_out                    : out type_link_trainer_kernel_port_array := (others => (others => '0'));
+    port_out_strobe             : out std_logic_vector(6 downto 0)        := (others => '0');
+    clk, sync_reset, prog_write : in  std_logic
+    );
 end entity link_trainer_kernel;
 architecture v1 of link_trainer_kernel is
-constant CORE_DATA_WIDTH : integer := link_trainer_kernel_CORE_DATA_WIDTH;
-constant STACK_DATA_WIDTH : integer := link_trainer_kernel_STACK_DATA_WIDTH;
-constant FIFO_DATA_WIDTH : integer := link_trainer_kernel_FIFO_DATA_WIDTH;
-constant PORT_DATA_WIDTH : integer := link_trainer_kernel_PORT_DATA_WIDTH;
-constant STACK_DEPTH : integer := link_trainer_kernel_STACK_DEPTH;
-constant FIFO_DEPTH : integer := link_trainer_kernel_FIFO_DEPTH;
-constant PRAM_DEPTH : integer := link_trainer_kernel_PRAM_DEPTH;
-constant C_MAX : integer := link_trainer_kernel_C_MAX;
-constant RA_MAX : integer := link_trainer_kernel_RA_MAX;
-constant RB_MAX : integer := link_trainer_kernel_RB_MAX;
-constant RC_MAX : integer := link_trainer_kernel_RC_MAX;
-constant RD_MAX : integer := link_trainer_kernel_RD_MAX;
-constant PI_MAX : integer := link_trainer_kernel_PI_MAX;
-constant PO_MAX : integer := link_trainer_kernel_PO_MAX;
-constant RA_INDIRECTION : std_logic := link_trainer_kernel_RA_INDIRECTION;
-constant RB_INDIRECTION : std_logic := link_trainer_kernel_RB_INDIRECTION;
-constant RC_INDIRECTION : std_logic := link_trainer_kernel_RC_INDIRECTION;
-constant RD_INDIRECTION : std_logic := link_trainer_kernel_RD_INDIRECTION;
-constant PRAM_ADDRESS_WIDTH : integer := link_trainer_kernel_PRAM_ADDRESS_WIDTH;
-constant RRAM_ADDRESS_WIDTH : integer := link_trainer_kernel_RRAM_ADDRESS_WIDTH;
-constant PORT_ADDRESS_WIDTH : integer := link_trainer_kernel_PORT_ADDRESS_WIDTH;
-constant PRAM_DATA_WIDTH : integer := link_trainer_kernel_PRAM_DATA_WIDTH;
-constant RRAM_DEPTH : integer := link_trainer_kernel_RRAM_DEPTH;
-constant PORT_DEPTH : integer := link_trainer_kernel_PORT_DEPTH;
-constant C_ORIGIN : integer := link_trainer_kernel_C_ORIGIN;
-constant C_WIDTH : integer := link_trainer_kernel_C_WIDTH;
-constant RA_ORIGIN : integer := link_trainer_kernel_RA_ORIGIN;
-constant RA_WIDTH : integer := link_trainer_kernel_RA_WIDTH;
-constant RB_ORIGIN : integer := link_trainer_kernel_RB_ORIGIN;
-constant RB_WIDTH : integer := link_trainer_kernel_RB_WIDTH;
-constant RC_ORIGIN : integer := link_trainer_kernel_RC_ORIGIN;
-constant RC_WIDTH : integer := link_trainer_kernel_RC_WIDTH;
-constant RD_ORIGIN : integer := link_trainer_kernel_RD_ORIGIN;
-constant RD_WIDTH : integer := link_trainer_kernel_RD_WIDTH;
-constant PI_ORIGIN : integer := link_trainer_kernel_PI_ORIGIN;
-constant PI_WIDTH : integer := link_trainer_kernel_PI_WIDTH;
-constant PO_ORIGIN : integer := link_trainer_kernel_PO_ORIGIN;
-constant PO_WIDTH : integer := link_trainer_kernel_PO_WIDTH;
-constant RA_INDIRECTION_ORIGIN : integer := link_trainer_kernel_RA_INDIRECTION_ORIGIN;
-constant RB_INDIRECTION_ORIGIN : integer := link_trainer_kernel_RB_INDIRECTION_ORIGIN;
-constant RC_INDIRECTION_ORIGIN : integer := link_trainer_kernel_RC_INDIRECTION_ORIGIN;
-constant RD_INDIRECTION_ORIGIN : integer := link_trainer_kernel_RD_INDIRECTION_ORIGIN;
-constant NUM_OPCODES : integer := link_trainer_kernel_NUM_OPCODES;
-constant OPCODE_WIDTH : integer := link_trainer_kernel_OPCODE_WIDTH;
-signal po_unlatched : std_logic_vector(PORT_DATA_WIDTH-1 downto 0) := (others => '0');
-signal po_latched : std_logic_vector(PORT_DATA_WIDTH-1 downto 0) := (others => '0');
-signal po_mux : std_logic_vector(PORT_DATA_WIDTH-1 downto 0) := (others => '0');
-signal po_write : std_logic := '0';
-signal po_write_pulse : std_logic := '0';
-signal pi_read : std_logic := '0';
-signal pi_read_pulse : std_logic := '0';
-signal pi : std_logic_vector(PORT_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ra : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rb : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_unlatched : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_latched : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_write : std_logic := '0';
-signal rc_write_pulse : std_logic := '0';
-signal rd : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rd_unlatched : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rd_latched : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rd_write : std_logic := '0';
-signal rd_write_pulse : std_logic := '0';
-signal opcode_finish : std_logic := '0';
-signal opcode_start : std_logic := '0';
-signal ai : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal pram_prefetch_data : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0) := (others => '0');
-signal int_prog_data_out : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0) := (others => '0');
-signal pram_master_read_address : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal ra_rc_cache_address_match : std_logic := '0';
-signal ra_rd_cache_address_match : std_logic := '0';
-signal rb_rc_cache_address_match : std_logic := '0';
-signal rb_rd_cache_address_match : std_logic := '0';
-signal rc_cache_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rd_cache_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rc_cache_data : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rd_cache_data : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ra_from_rram : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rb_from_rram : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal pram_address : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal pram_address_inc : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal pram_address_delayed : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal next_pram_address : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal pram_data : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0) := (others => '0');
-type processor_state is (
-PRAM_ALIGN,
-OPCODE_WITH_LOOKAHEAD,
-OPCODE_WITH_INDIRECT_READ,
-OPCODE_WITH_INDIRECT_WRITE
-);
-signal current_state, next_state : processor_state;
-signal pram_alignment_required, indirect_read_required, indirect_write_required : std_logic;
-signal do_indirect_read, do_indirect_write, ao_op_valid : std_logic;
-signal ao_op : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0);
-signal do_ra_indirect_delay, do_rb_indirect_delay : std_logic := '0';
-signal ra_indirect, rb_indirect, rc_indirect, rd_indirect : std_logic := '0';
-signal do_ra_indirect, do_rb_indirect, do_rc_indirect, do_rd_indirect : std_logic := '0';
-signal delayed_write : std_logic := '0';
-signal write_latch : std_logic := '0';
-signal fifo_push : std_logic := '0';
-signal fifo_push_mux : std_logic := '0';
-signal fifo_pop : std_logic := '0';
-signal fifo_pop_mux : std_logic := '0';
-signal st_push : std_logic := '0';
-signal st_push_mux : std_logic := '0';
-signal st_pop : std_logic := '0';
-signal st_pop_mux : std_logic := '0';
-signal ti : std_logic := '0';
-signal gnd : std_logic := '0';
-signal gnd_pram_address : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal gnd_pram_data : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_add : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ao_op_call : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal sto_op_call : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ao_op_dbrnz : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal ao_op_dbrz : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal ao_op_djmp : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_in : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_ld : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_mov : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal po_op_out : std_logic_vector(PORT_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_pop : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal sto_op_push : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ao_op_ret : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_shr : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_sub : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal rc_op_test_unsigned_gt : std_logic_vector(CORE_DATA_WIDTH-1 downto 0) := (others => '0');
-signal ra_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rb_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rc_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal rd_address : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-signal po_address : std_logic_vector(PO_WIDTH-1 downto 0) := (others => '0');
-signal sto : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal sto_latched : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal sto_unlatched : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal sti : std_logic_vector(STACK_DATA_WIDTH-1 downto 0) := (others => '0');
-signal opcode : std_logic_vector(OPCODE_WIDTH-1 downto 0) := (others => '0');
-signal c : std_logic_vector(C_WIDTH-1 downto 0) := (others => '0');
-constant OPCODE_add : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(0, OPCODE_WIDTH));
-constant OPCODE_call : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(1, OPCODE_WIDTH));
-constant OPCODE_dbrnz : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(2, OPCODE_WIDTH));
-constant OPCODE_dbrz : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(3, OPCODE_WIDTH));
-constant OPCODE_djmp : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(4, OPCODE_WIDTH));
-constant OPCODE_in : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(5, OPCODE_WIDTH));
-constant OPCODE_ld : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(6, OPCODE_WIDTH));
-constant OPCODE_mov : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(7, OPCODE_WIDTH));
-constant OPCODE_out : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(8, OPCODE_WIDTH));
-constant OPCODE_pop : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(9, OPCODE_WIDTH));
-constant OPCODE_push : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(10, OPCODE_WIDTH));
-constant OPCODE_ret : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(11, OPCODE_WIDTH));
-constant OPCODE_shr : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(12, OPCODE_WIDTH));
-constant OPCODE_sub : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(13, OPCODE_WIDTH));
-constant OPCODE_test_unsigned_gt : std_logic_vector(OPCODE_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(14, OPCODE_WIDTH));
+  constant CORE_DATA_WIDTH         : integer                                         := link_trainer_kernel_CORE_DATA_WIDTH;
+  constant STACK_DATA_WIDTH        : integer                                         := link_trainer_kernel_STACK_DATA_WIDTH;
+  constant FIFO_DATA_WIDTH         : integer                                         := link_trainer_kernel_FIFO_DATA_WIDTH;
+  constant PORT_DATA_WIDTH         : integer                                         := link_trainer_kernel_PORT_DATA_WIDTH;
+  constant STACK_DEPTH             : integer                                         := link_trainer_kernel_STACK_DEPTH;
+  constant FIFO_DEPTH              : integer                                         := link_trainer_kernel_FIFO_DEPTH;
+  constant PRAM_DEPTH              : integer                                         := link_trainer_kernel_PRAM_DEPTH;
+  constant C_MAX                   : integer                                         := link_trainer_kernel_C_MAX;
+  constant RA_MAX                  : integer                                         := link_trainer_kernel_RA_MAX;
+  constant RB_MAX                  : integer                                         := link_trainer_kernel_RB_MAX;
+  constant RC_MAX                  : integer                                         := link_trainer_kernel_RC_MAX;
+  constant RD_MAX                  : integer                                         := link_trainer_kernel_RD_MAX;
+  constant PI_MAX                  : integer                                         := link_trainer_kernel_PI_MAX;
+  constant PO_MAX                  : integer                                         := link_trainer_kernel_PO_MAX;
+  constant RA_INDIRECTION          : std_logic                                       := link_trainer_kernel_RA_INDIRECTION;
+  constant RB_INDIRECTION          : std_logic                                       := link_trainer_kernel_RB_INDIRECTION;
+  constant RC_INDIRECTION          : std_logic                                       := link_trainer_kernel_RC_INDIRECTION;
+  constant RD_INDIRECTION          : std_logic                                       := link_trainer_kernel_RD_INDIRECTION;
+  constant PRAM_ADDRESS_WIDTH      : integer                                         := link_trainer_kernel_PRAM_ADDRESS_WIDTH;
+  constant RRAM_ADDRESS_WIDTH      : integer                                         := link_trainer_kernel_RRAM_ADDRESS_WIDTH;
+  constant PORT_ADDRESS_WIDTH      : integer                                         := link_trainer_kernel_PORT_ADDRESS_WIDTH;
+  constant PRAM_DATA_WIDTH         : integer                                         := link_trainer_kernel_PRAM_DATA_WIDTH;
+  constant RRAM_DEPTH              : integer                                         := link_trainer_kernel_RRAM_DEPTH;
+  constant PORT_DEPTH              : integer                                         := link_trainer_kernel_PORT_DEPTH;
+  constant C_ORIGIN                : integer                                         := link_trainer_kernel_C_ORIGIN;
+  constant C_WIDTH                 : integer                                         := link_trainer_kernel_C_WIDTH;
+  constant RA_ORIGIN               : integer                                         := link_trainer_kernel_RA_ORIGIN;
+  constant RA_WIDTH                : integer                                         := link_trainer_kernel_RA_WIDTH;
+  constant RB_ORIGIN               : integer                                         := link_trainer_kernel_RB_ORIGIN;
+  constant RB_WIDTH                : integer                                         := link_trainer_kernel_RB_WIDTH;
+  constant RC_ORIGIN               : integer                                         := link_trainer_kernel_RC_ORIGIN;
+  constant RC_WIDTH                : integer                                         := link_trainer_kernel_RC_WIDTH;
+  constant RD_ORIGIN               : integer                                         := link_trainer_kernel_RD_ORIGIN;
+  constant RD_WIDTH                : integer                                         := link_trainer_kernel_RD_WIDTH;
+  constant PI_ORIGIN               : integer                                         := link_trainer_kernel_PI_ORIGIN;
+  constant PI_WIDTH                : integer                                         := link_trainer_kernel_PI_WIDTH;
+  constant PO_ORIGIN               : integer                                         := link_trainer_kernel_PO_ORIGIN;
+  constant PO_WIDTH                : integer                                         := link_trainer_kernel_PO_WIDTH;
+  constant RA_INDIRECTION_ORIGIN   : integer                                         := link_trainer_kernel_RA_INDIRECTION_ORIGIN;
+  constant RB_INDIRECTION_ORIGIN   : integer                                         := link_trainer_kernel_RB_INDIRECTION_ORIGIN;
+  constant RC_INDIRECTION_ORIGIN   : integer                                         := link_trainer_kernel_RC_INDIRECTION_ORIGIN;
+  constant RD_INDIRECTION_ORIGIN   : integer                                         := link_trainer_kernel_RD_INDIRECTION_ORIGIN;
+  constant NUM_OPCODES             : integer                                         := link_trainer_kernel_NUM_OPCODES;
+  constant OPCODE_WIDTH            : integer                                         := link_trainer_kernel_OPCODE_WIDTH;
+  signal po_unlatched              : std_logic_vector(PORT_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal po_latched                : std_logic_vector(PORT_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal po_mux                    : std_logic_vector(PORT_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal po_write                  : std_logic                                       := '0';
+  signal po_write_pulse            : std_logic                                       := '0';
+  signal pi_read                   : std_logic                                       := '0';
+  signal pi_read_pulse             : std_logic                                       := '0';
+  signal pi                        : std_logic_vector(PORT_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal ra                        : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rb                        : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc                        : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_unlatched              : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_latched                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_write                  : std_logic                                       := '0';
+  signal rc_write_pulse            : std_logic                                       := '0';
+  signal rd                        : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rd_unlatched              : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rd_latched                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rd_write                  : std_logic                                       := '0';
+  signal rd_write_pulse            : std_logic                                       := '0';
+  signal opcode_finish             : std_logic                                       := '0';
+  signal opcode_start              : std_logic                                       := '0';
+  signal ai                        : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal pram_prefetch_data        : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal int_prog_data_out         : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal pram_master_read_address  : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal ra_rc_cache_address_match : std_logic                                       := '0';
+  signal ra_rd_cache_address_match : std_logic                                       := '0';
+  signal rb_rc_cache_address_match : std_logic                                       := '0';
+  signal rb_rd_cache_address_match : std_logic                                       := '0';
+  signal rc_cache_address          : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rd_cache_address          : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rc_cache_data             : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rd_cache_data             : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal ra_from_rram              : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rb_from_rram              : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal pram_address              : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal pram_address_inc          : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal pram_address_delayed      : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal next_pram_address         : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal pram_data                 : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
+  type processor_state is (
+    PRAM_ALIGN,
+    OPCODE_WITH_LOOKAHEAD,
+    OPCODE_WITH_INDIRECT_READ,
+    OPCODE_WITH_INDIRECT_WRITE
+    );
+  signal current_state, next_state                                                : processor_state;
+  signal pram_alignment_required, indirect_read_required, indirect_write_required : std_logic;
+  signal do_indirect_read, do_indirect_write, ao_op_valid                         : std_logic;
+  signal ao_op                                                                    : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0);
+  signal do_ra_indirect_delay, do_rb_indirect_delay                               : std_logic                                       := '0';
+  signal ra_indirect, rb_indirect, rc_indirect, rd_indirect                       : std_logic                                       := '0';
+  signal do_ra_indirect, do_rb_indirect, do_rc_indirect, do_rd_indirect           : std_logic                                       := '0';
+  signal delayed_write                                                            : std_logic                                       := '0';
+  signal write_latch                                                              : std_logic                                       := '0';
+  signal fifo_push                                                                : std_logic                                       := '0';
+  signal fifo_push_mux                                                            : std_logic                                       := '0';
+  signal fifo_pop                                                                 : std_logic                                       := '0';
+  signal fifo_pop_mux                                                             : std_logic                                       := '0';
+  signal st_push                                                                  : std_logic                                       := '0';
+  signal st_push_mux                                                              : std_logic                                       := '0';
+  signal st_pop                                                                   : std_logic                                       := '0';
+  signal st_pop_mux                                                               : std_logic                                       := '0';
+  signal ti                                                                       : std_logic                                       := '0';
+  signal gnd                                                                      : std_logic                                       := '0';
+  signal gnd_pram_address                                                         : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal gnd_pram_data                                                            : std_logic_vector(PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_add                                                                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal ao_op_call                                                               : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal sto_op_call                                                              : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal ao_op_dbrnz                                                              : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal ao_op_dbrz                                                               : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal ao_op_djmp                                                               : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rc_op_in                                                                 : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_ld                                                                 : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_mov                                                                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal po_op_out                                                                : std_logic_vector(PORT_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_pop                                                                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal sto_op_push                                                              : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal ao_op_ret                                                                : std_logic_vector(PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rc_op_shr                                                                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_sub                                                                : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal rc_op_test_unsigned_gt                                                   : std_logic_vector(CORE_DATA_WIDTH-1 downto 0)    := (others => '0');
+  signal ra_address                                                               : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rb_address                                                               : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rc_address                                                               : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal rd_address                                                               : std_logic_vector(RRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
+  signal po_address                                                               : std_logic_vector(PO_WIDTH-1 downto 0)           := (others => '0');
+  signal sto                                                                      : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal sto_latched                                                              : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal sto_unlatched                                                            : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal sti                                                                      : std_logic_vector(STACK_DATA_WIDTH-1 downto 0)   := (others => '0');
+  signal opcode                                                                   : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := (others => '0');
+  signal c                                                                        : std_logic_vector(C_WIDTH-1 downto 0)            := (others => '0');
+  constant OPCODE_add                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(0, OPCODE_WIDTH));
+  constant OPCODE_call                                                            : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(1, OPCODE_WIDTH));
+  constant OPCODE_dbrnz                                                           : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(2, OPCODE_WIDTH));
+  constant OPCODE_dbrz                                                            : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(3, OPCODE_WIDTH));
+  constant OPCODE_djmp                                                            : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(4, OPCODE_WIDTH));
+  constant OPCODE_in                                                              : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(5, OPCODE_WIDTH));
+  constant OPCODE_ld                                                              : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(6, OPCODE_WIDTH));
+  constant OPCODE_mov                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(7, OPCODE_WIDTH));
+  constant OPCODE_out                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(8, OPCODE_WIDTH));
+  constant OPCODE_pop                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(9, OPCODE_WIDTH));
+  constant OPCODE_push                                                            : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(10, OPCODE_WIDTH));
+  constant OPCODE_ret                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(11, OPCODE_WIDTH));
+  constant OPCODE_shr                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(12, OPCODE_WIDTH));
+  constant OPCODE_sub                                                             : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(13, OPCODE_WIDTH));
+  constant OPCODE_test_unsigned_gt                                                : std_logic_vector(OPCODE_WIDTH-1 downto 0)       := std_logic_vector(to_unsigned(14, OPCODE_WIDTH));
 begin
-opcode <= pram_data(OPCODE_WIDTH-1 downto 0);
-c <= pram_data(C_WIDTH-1+C_ORIGIN downto C_ORIGIN);
-pi <= port_in(0);
-port_in_strobes : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    port_in_strobe <= (others => '0');
-    if ( pi_read_pulse = '1' ) then
-      port_in_strobe(0) <= '1';
+  opcode <= pram_data(OPCODE_WIDTH-1 downto 0);
+  c      <= pram_data(C_WIDTH-1+C_ORIGIN downto C_ORIGIN);
+  pi     <= port_in(0);
+  port_in_strobes : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      port_in_strobe <= (others => '0');
+      if (pi_read_pulse = '1') then
+        port_in_strobe(0) <= '1';
+      end if;
     end if;
-  end if;
-end process port_in_strobes;
-po_address <= pram_data(PO_WIDTH-1+PO_ORIGIN downto PO_ORIGIN);
-port_out_strobes : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    port_out_strobe <= (others => '0');
-    if ( po_write_pulse = '1' ) then
-      port_out_strobe(to_integer(unsigned(po_address))) <= '1';
-      port_out(to_integer(unsigned(po_address))) <= po_mux;
+  end process port_in_strobes;
+  po_address <= pram_data(PO_WIDTH-1+PO_ORIGIN downto PO_ORIGIN);
+  port_out_strobes : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      port_out_strobe <= (others => '0');
+      if (po_write_pulse = '1') then
+        port_out_strobe(to_integer(unsigned(po_address))) <= '1';
+        port_out(to_integer(unsigned(po_address)))        <= po_mux;
+      end if;
     end if;
-  end if;
-end process port_out_strobes;
-po_mux <= po_unlatched when delayed_write = '0' else po_latched;
-ra_address <= pram_prefetch_data(RA_WIDTH-1+RA_ORIGIN downto RA_ORIGIN);
-rb_address <= pram_prefetch_data(RB_WIDTH-1+RB_ORIGIN downto RB_ORIGIN);
-rc_address <= pram_data(RC_WIDTH-1+RC_ORIGIN downto RC_ORIGIN);
-pram_inst : dp_ram
-  generic map (
-    ADDRESS_WIDTH => PRAM_ADDRESS_WIDTH,
-    DATA_WIDTH    => PRAM_DATA_WIDTH,
-    DEPTH         => PRAM_DEPTH,
-    INIT          => b"00000000000000000000110000000000000000000010000100000000000000000100001100000000000000001000100000000000000000010001010000000000000000100000001000000000111110110000101000000000000001100001100000000000000011000001100000000000000110000100000000000000001100010000000100000000100000000000000010100110001000000000000010010000100000000000000000000011011000000000000000001000000000110010000000011010000010000000000010011000000000000100000001101000000000000001100100110000000000100101110001100000000000000000010110000010010000000000011010010000000100000000100000000000000000011000100000000101110000000011010000010111000000000110100000000000100000001110000000000000001111100110000110001010000000011100010000011000000000111000101000000000000001100100000001010000000100000011000000000000000110011000000110000000010000000000000000010100010000000000000000000010110110000000000000000010000000000000000000001011000000000001000000000000000000000101010101100100001010000000000000011101000000010100000001000000110000000000000001110110000001100000000100000000000000000101000100000000000110100010100110000000000000100000011000000001100000000001101000000000000011100100110000001011100000000110100000101110000000001101000000000001000000011100000000000001000101001100001100010100000000111000100000110000000001110000000000001000101010010000000010100000001000101000000110000000010000000000000000011101011000000010100000000000000000000100000000000000000000000000000000000110000000100000000111110110000001000001000000011100000000000011001100001100000100000000111110110000000000001000000011010000000000001001100010000000000010000000000011010000000011000000010000110000001000000000100000000010001100000000000000001000000000001001100000000000010000000110100000000000000000001100001000000000000000010000000000000001010011000100000000000000001000110000000000000000000010000000000000000000000010100000000000000000000010000000000000101000001000000010000000001010011000000000000111001010011000000000000000001001100000000000000000000100000000000000000000000110000000000000000000010000000000000001100111000100000000000000000010110000000000000000000010000000000000000000000011000000000000000000001000000000000000110011100010000000000000000001011000000100100000000001101000000000000000000001010000000000001010100001000000000000000000010110000000000000000000010110000000000000000000011000000000000000000001011000000000000000000010100000000000010000000101000000000000000001010110000001000000000000101100000000000010000000110100000000000011010110010000001000000000000010010000000000000000000100100000000000000000001011")
-  port map (
-    clk => clk,
-    master_read_address => pram_master_read_address,
-    master_write_address => prog_address_in,
-    master_write => prog_write,
-    master_data_in => prog_data_in,
-    master_data_out => int_prog_data_out,
-    slave_write => gnd,
-    slave_write_address => gnd_pram_address,
-    slave_data_in => gnd_pram_data,
-    slave_data_out => pram_data,
-    slave_read_address => pram_address
-);
-pram_master_read_address <= prog_address_in when sync_reset = '1' else next_pram_address;
-pram_prefetch_data <= int_prog_data_out;
-prog_data_out <= int_prog_data_out;
-rram_inst : dp_ram_no_init
-  generic map (
-    ADDRESS_WIDTH => RRAM_ADDRESS_WIDTH,
-    DATA_WIDTH    => CORE_DATA_WIDTH,
-    DEPTH         => RRAM_DEPTH
-    )
-  port map (
-    clk => clk,
-    master_read_address => ra_address,
-    master_write_address => rc_address,
-    master_write => rc_write_pulse,
-    master_data_in => rc,
-    master_data_out => ra_from_rram,
-    slave_write => rd_write_pulse,
-    slave_write_address => rd_address,
-    slave_data_in => rd,
-    slave_data_out => rb_from_rram,
-    slave_read_address => rb_address
-);
-stack_inst : lifo
-generic map (
-  DATA_WIDTH    => STACK_DATA_WIDTH,
-  DEPTH         => STACK_DEPTH
-)
-port map (
-  clk => clk,
-  push => st_push,
-  pop => st_pop,
-  data_in => sto,
-  data_out => sti
-);
-cache_process : process(clk)
-begin
-if ( rising_edge(clk) ) then
-if ( rc_write_pulse = '1' ) then
-rc_cache_data <= rc;
-rc_cache_address <= rc_address;
-end if;
-if ( rd_write_pulse = '1' ) then
-rd_cache_data <= rd;
-rd_cache_address <= rd_address;
-end if;
-end if;
-end process cache_process;
-ra <= ra_from_rram when (do_ra_indirect_delay = '1') else
-rc_cache_data when (ra_rc_cache_address_match = '1') else
-rd_cache_data when (ra_rd_cache_address_match = '1') else
-ra_from_rram;
-rb <= rb_from_rram when (do_rb_indirect_delay = '1') else
-rc_cache_data when (rb_rc_cache_address_match = '1') else
-rd_cache_data when (rb_rd_cache_address_match = '1') else
-rb_from_rram;
-clk_state : process(clk)
-begin
-if (rising_edge(clk)) then
-if (sync_reset = '1') then
-current_state <= PRAM_ALIGN;
-opcode_start   <= '0';
-write_latch    <= '0';
-do_ra_indirect <= '0';
-do_rb_indirect <= '0';
-do_rc_indirect <= '0';
-do_rd_indirect <= '0';
-pram_address <= (others => '0');
-else
-opcode_start <= '0';
-write_latch <= '0';
-do_ra_indirect <= '0';
-do_rb_indirect <= '0';
-do_rc_indirect <= '0';
-do_rd_indirect <= '0';
-current_state <= next_state;
-case next_state is
-when PRAM_ALIGN =>
-pram_address <= next_pram_address;
-when OPCODE_WITH_LOOKAHEAD =>
-if ((indirect_read_required or indirect_write_required) = '0') then
-opcode_start  <= '1';
-pram_address <= next_pram_address;
-write_latch   <= '1';
-end if;
-if (indirect_read_required = '1') then
-do_ra_indirect <= ra_indirect;
-do_rb_indirect <= rb_indirect;
-elsif (indirect_write_required = '1') then
-do_rc_indirect <= rc_indirect;
-do_rd_indirect <= rd_indirect;
-end if;
-when OPCODE_WITH_INDIRECT_READ =>
-if (indirect_write_required = '0') then
-opcode_start  <= '1';
-pram_address  <= next_pram_address;
-write_latch <= '1';
-end if;
-if (indirect_write_required = '1') then
-do_rc_indirect <= rc_indirect;
-do_rd_indirect <= rd_indirect;
-end if;
-when OPCODE_WITH_INDIRECT_WRITE =>
-if (indirect_write_required = '0') then
-opcode_start  <= '1';
-pram_address <= next_pram_address;
-write_latch <= '1';
-end if;
-when others => null;
-end case;
-end if;
-end if;
-end process clk_state;
-next_state_process : process(current_state, do_indirect_read, do_indirect_write, pram_alignment_required)
-begin
-case current_state is
-when PRAM_ALIGN =>
-next_state <= OPCODE_WITH_LOOKAHEAD;
-when OPCODE_WITH_LOOKAHEAD =>
-if (do_indirect_read = '1') then
-next_state <= OPCODE_WITH_INDIRECT_READ;
-elsif (do_indirect_write = '1') then
-next_state <= OPCODE_WITH_INDIRECT_WRITE;
-elsif (pram_alignment_required = '1') then
-next_state <= PRAM_ALIGN;
-else
-next_state <= OPCODE_WITH_LOOKAHEAD;
-end if;
-when OPCODE_WITH_INDIRECT_READ =>
-if (do_indirect_write = '1') then
-next_state <= OPCODE_WITH_INDIRECT_WRITE;
-elsif (pram_alignment_required = '1') then
-next_state <= PRAM_ALIGN;
-else
-next_state <= OPCODE_WITH_LOOKAHEAD;
-end if;
-when OPCODE_WITH_INDIRECT_WRITE =>
-if (pram_alignment_required = '1') then
-next_state <= PRAM_ALIGN;
-else
-next_state <= OPCODE_WITH_LOOKAHEAD;
-end if;
-when others => null;
-end case;
- end process next_state_process;
-indirect_read_required  <= '1' when (ra_indirect or rb_indirect) = '1' else '0';
-indirect_write_required <= '1' when (rc_indirect or rd_indirect) = '1' else '0';
-do_indirect_read <= '1' when (do_ra_indirect or do_rb_indirect) = '1' else '0';
-do_indirect_write <= '1' when (do_rc_indirect or do_rd_indirect) = '1' else '0';
-do_ra_indirect_delay <= do_ra_indirect when rising_edge(clk);
-do_rb_indirect_delay <= do_rb_indirect when rising_edge(clk);
-pram_address_delayed <= pram_address when rising_edge(clk);
-ti <= opcode_start;
-add_inst : op_add
-generic map (
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  rb => rb,
-  rc => rc_op_add
-);
-call_inst : op_call
-generic map (
-  CWIDTH => C_WIDTH,
-  SWIDTH => STACK_DATA_WIDTH,
-  AWIDTH => PRAM_ADDRESS_WIDTH
-) port map (
-  c => c,
-  ai => pram_address_delayed,
-  ao => ao_op_call,
-  sto => sto_op_call
-);
-dbrnz_inst : op_dbrnz
-generic map (
-  CWIDTH => C_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH,
-  AWIDTH => PRAM_ADDRESS_WIDTH
-) port map (
-  c => c,
-  ra => ra,
-  ai => pram_address_delayed,
-  ao => ao_op_dbrnz
-);
-dbrz_inst : op_dbrz
-generic map (
-  CWIDTH => C_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH,
-  AWIDTH => PRAM_ADDRESS_WIDTH
-) port map (
-  c => c,
-  ra => ra,
-  ai => pram_address_delayed,
-  ao => ao_op_dbrz
-);
-djmp_inst : op_djmp
-generic map (
-  CWIDTH => C_WIDTH,
-  AWIDTH => PRAM_ADDRESS_WIDTH
-) port map (
-  c => c,
-  ao => ao_op_djmp
-);
-in_inst : op_in
-generic map (
-  PWIDTH => PORT_DATA_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  pi => pi,
-  rc => rc_op_in
-);
-ld_inst : op_ld
-generic map (
-  CWIDTH => C_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  c => c,
-  rc => rc_op_ld
-);
-mov_inst : op_mov
-generic map (
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  rc => rc_op_mov
-);
-out_inst : op_out
-generic map (
-  PWIDTH => PORT_DATA_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  po => po_op_out,
-  ra => ra
-);
-pop_inst : op_pop
-generic map (
-  SWIDTH => STACK_DATA_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  rc => rc_op_pop,
-  sti => sti
-);
-push_inst : op_push
-generic map (
-  SWIDTH => STACK_DATA_WIDTH,
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  sto => sto_op_push
-);
-ret_inst : op_ret
-generic map (
-  SWIDTH => STACK_DATA_WIDTH,
-  AWIDTH => PRAM_ADDRESS_WIDTH
-) port map (
-  ao => ao_op_ret,
-  sti => sti
-);
-shr_inst : op_shr
-generic map (
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  rc => rc_op_shr
-);
-sub_inst : op_sub
-generic map (
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  rb => rb,
-  rc => rc_op_sub
-);
-test_unsigned_gt_inst : op_test_unsigned_gt
-generic map (
-  RWIDTH => CORE_DATA_WIDTH
-) port map (
-  ra => ra,
-  rb => rb,
-  rc => rc_op_test_unsigned_gt
-);
-rc <= rc_unlatched when delayed_write = '0' else rc_latched;
-rc_latch_process : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    if ( write_latch = '1' ) then
-      rc_latched <= rc_unlatched;
+  end process port_out_strobes;
+  po_mux     <= po_unlatched when delayed_write = '0' else po_latched;
+  ra_address <= pram_prefetch_data(RA_WIDTH-1+RA_ORIGIN downto RA_ORIGIN);
+  rb_address <= pram_prefetch_data(RB_WIDTH-1+RB_ORIGIN downto RB_ORIGIN);
+  rc_address <= pram_data(RC_WIDTH-1+RC_ORIGIN downto RC_ORIGIN);
+  pram_inst : dp_ram
+    generic map (
+      ADDRESS_WIDTH => PRAM_ADDRESS_WIDTH,
+      DATA_WIDTH    => PRAM_DATA_WIDTH,
+      DEPTH         => PRAM_DEPTH,
+      INIT          => b"00000000000000000000110000000000000000000010000100000000000000000100001100000000000000001000100000000000000000010001010000000000000000100000001000000000111110110000101000000000000001100001100000000000000011000001100000000000000110000100000000000000001100010000000100000000100000000000000010100110001000000000000010010000100000000000000000000011011000000000000000001000000000110010000000011010000010000000000010011000000000000100000001101000000000000001100100110000000000100101110001100000000000000000010110000010010000000000011010010000000100000000100000000000000000011000100000000101110000000011010000010111000000000110100000000000100000001110000000000000001111100110000110001010000000011100010000011000000000111000101000000000000001100100000001010000000100000011000000000000000110011000000110000000010000000000000000010100010000000000000000000010110110000000000000000010000000000000000000001011000000000001000000000000000000000101010101100100001010000000000000011101000000010100000001000000110000000000000001110110000001100000000100000000000000000101000100000000000110100010100110000000000000100000011000000001100000000001101000000000000011100100110000001011100000000110100000101110000000001101000000000001000000011100000000000001000101001100001100010100000000111000100000110000000001110000000000001000101010010000000010100000001000101000000110000000010000000000000000011101011000000010100000000000000000000100000000000000000000000000000000000110000000100000000111110110000001000001000000011100000000000011001100001100000100000000111110110000000000001000000011010000000000001001100010000000000010000000000011010000000011000000010000110000001000000000100000000010001100000000000000001000000000001001100000000000010000000110100000000000000000001100001000000000000000010000000000000001010011000100000000000000001000110000000000000000000010000000000000000000000010100000000000000000000010000000000000101000001000000010000000001010011000000000000111001010011000000000000000001001100000000000000000000100000000000000000000000110000000000000000000010000000000000001100111000100000000000000000010110000000000000000000010000000000000000000000011000000000000000000001000000000000000110011100010000000000000000001011000000100100000000001101000000000000000000001010000000000001010100001000000000000000000010110000000000000000000010110000000000000000000011000000000000000000001011000000000000000000010100000000000010000000101000000000000000001010110000001000000000000101100000000000010000000110100000000000011010110010000001000000000000010010000000000000000000100100000000000000000001011")
+    port map (
+      clk                  => clk,
+      master_read_address  => pram_master_read_address,
+      master_write_address => prog_address_in,
+      master_write         => prog_write,
+      master_data_in       => prog_data_in,
+      master_data_out      => int_prog_data_out,
+      slave_write          => gnd,
+      slave_write_address  => gnd_pram_address,
+      slave_data_in        => gnd_pram_data,
+      slave_data_out       => pram_data,
+      slave_read_address   => pram_address
+      );
+  pram_master_read_address <= prog_address_in when sync_reset = '1' else next_pram_address;
+  pram_prefetch_data       <= int_prog_data_out;
+  prog_data_out            <= int_prog_data_out;
+  rram_inst : dp_ram_no_init
+    generic map (
+      ADDRESS_WIDTH => RRAM_ADDRESS_WIDTH,
+      DATA_WIDTH    => CORE_DATA_WIDTH,
+      DEPTH         => RRAM_DEPTH
+      )
+    port map (
+      clk                  => clk,
+      master_read_address  => ra_address,
+      master_write_address => rc_address,
+      master_write         => rc_write_pulse,
+      master_data_in       => rc,
+      master_data_out      => ra_from_rram,
+      slave_write          => rd_write_pulse,
+      slave_write_address  => rd_address,
+      slave_data_in        => rd,
+      slave_data_out       => rb_from_rram,
+      slave_read_address   => rb_address
+      );
+  stack_inst : lifo
+    generic map (
+      DATA_WIDTH => STACK_DATA_WIDTH,
+      DEPTH      => STACK_DEPTH
+      )
+    port map (
+      clk      => clk,
+      push     => st_push,
+      pop      => st_pop,
+      data_in  => sto,
+      data_out => sti
+      );
+  cache_process : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (rc_write_pulse = '1') then
+        rc_cache_data    <= rc;
+        rc_cache_address <= rc_address;
+      end if;
+      if (rd_write_pulse = '1') then
+        rd_cache_data    <= rd;
+        rd_cache_address <= rd_address;
+      end if;
     end if;
-  end if;
-end process rc_latch_process;
-rc_unlatched <= rc_op_add when (opcode = OPCODE_add) else
-rc_op_in when (opcode = OPCODE_in) else
-rc_op_ld when (opcode = OPCODE_ld) else
-rc_op_mov when (opcode = OPCODE_mov) else
-rc_op_pop when (opcode = OPCODE_pop) else
-rc_op_shr when (opcode = OPCODE_shr) else
-rc_op_sub when (opcode = OPCODE_sub) else
-rc_op_test_unsigned_gt when (opcode = OPCODE_test_unsigned_gt) else
-(others => '0');
-rd <= rd_unlatched when delayed_write = '0' else rd_latched;
-rd_latch_process : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    if ( write_latch = '1' ) then
-      rd_latched <= rd_unlatched;
+  end process cache_process;
+  ra <= ra_from_rram when (do_ra_indirect_delay = '1') else
+        rc_cache_data when (ra_rc_cache_address_match = '1') else
+        rd_cache_data when (ra_rd_cache_address_match = '1') else
+        ra_from_rram;
+  rb <= rb_from_rram when (do_rb_indirect_delay = '1') else
+        rc_cache_data when (rb_rc_cache_address_match = '1') else
+        rd_cache_data when (rb_rd_cache_address_match = '1') else
+        rb_from_rram;
+  clk_state : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (sync_reset = '1') then
+        current_state  <= PRAM_ALIGN;
+        opcode_start   <= '0';
+        write_latch    <= '0';
+        do_ra_indirect <= '0';
+        do_rb_indirect <= '0';
+        do_rc_indirect <= '0';
+        do_rd_indirect <= '0';
+        pram_address   <= (others => '0');
+      else
+        opcode_start   <= '0';
+        write_latch    <= '0';
+        do_ra_indirect <= '0';
+        do_rb_indirect <= '0';
+        do_rc_indirect <= '0';
+        do_rd_indirect <= '0';
+        current_state  <= next_state;
+        case next_state is
+          when PRAM_ALIGN =>
+            pram_address <= next_pram_address;
+          when OPCODE_WITH_LOOKAHEAD =>
+            if ((indirect_read_required or indirect_write_required) = '0') then
+              opcode_start <= '1';
+              pram_address <= next_pram_address;
+              write_latch  <= '1';
+            end if;
+            if (indirect_read_required = '1') then
+              do_ra_indirect <= ra_indirect;
+              do_rb_indirect <= rb_indirect;
+            elsif (indirect_write_required = '1') then
+              do_rc_indirect <= rc_indirect;
+              do_rd_indirect <= rd_indirect;
+            end if;
+          when OPCODE_WITH_INDIRECT_READ =>
+            if (indirect_write_required = '0') then
+              opcode_start <= '1';
+              pram_address <= next_pram_address;
+              write_latch  <= '1';
+            end if;
+            if (indirect_write_required = '1') then
+              do_rc_indirect <= rc_indirect;
+              do_rd_indirect <= rd_indirect;
+            end if;
+          when OPCODE_WITH_INDIRECT_WRITE =>
+            if (indirect_write_required = '0') then
+              opcode_start <= '1';
+              pram_address <= next_pram_address;
+              write_latch  <= '1';
+            end if;
+          when others => null;
+        end case;
+      end if;
     end if;
-  end if;
-end process rd_latch_process;
-rd_unlatched <= (others => '0');
-rc_write_pulse <= rc_write and opcode_finish;
-rc_write <= '1' when (opcode = OPCODE_add) else
-'1' when (opcode = OPCODE_in) else
-'1' when (opcode = OPCODE_ld) else
-'1' when (opcode = OPCODE_mov) else
-'1' when (opcode = OPCODE_pop) else
-'1' when (opcode = OPCODE_shr) else
-'1' when (opcode = OPCODE_sub) else
-'1' when (opcode = OPCODE_test_unsigned_gt) else
-'0';
-rd_write_pulse <= rd_write and opcode_finish;
-rd_write <= '0';
-pi_read_pulse <= pi_read and opcode_start;
-pi_read <= '1' when (opcode = OPCODE_in) else
-'0';
-po_latch_process : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    if ( write_latch = '1' ) then
-      po_latched <= po_unlatched;
+  end process clk_state;
+  next_state_process : process(current_state, do_indirect_read, do_indirect_write, pram_alignment_required)
+  begin
+    case current_state is
+      when PRAM_ALIGN =>
+        next_state <= OPCODE_WITH_LOOKAHEAD;
+      when OPCODE_WITH_LOOKAHEAD =>
+        if (do_indirect_read = '1') then
+          next_state <= OPCODE_WITH_INDIRECT_READ;
+        elsif (do_indirect_write = '1') then
+          next_state <= OPCODE_WITH_INDIRECT_WRITE;
+        elsif (pram_alignment_required = '1') then
+          next_state <= PRAM_ALIGN;
+        else
+          next_state <= OPCODE_WITH_LOOKAHEAD;
+        end if;
+      when OPCODE_WITH_INDIRECT_READ =>
+        if (do_indirect_write = '1') then
+          next_state <= OPCODE_WITH_INDIRECT_WRITE;
+        elsif (pram_alignment_required = '1') then
+          next_state <= PRAM_ALIGN;
+        else
+          next_state <= OPCODE_WITH_LOOKAHEAD;
+        end if;
+      when OPCODE_WITH_INDIRECT_WRITE =>
+        if (pram_alignment_required = '1') then
+          next_state <= PRAM_ALIGN;
+        else
+          next_state <= OPCODE_WITH_LOOKAHEAD;
+        end if;
+      when others => null;
+    end case;
+  end process next_state_process;
+  indirect_read_required  <= '1'            when (ra_indirect or rb_indirect) = '1'       else '0';
+  indirect_write_required <= '1'            when (rc_indirect or rd_indirect) = '1'       else '0';
+  do_indirect_read        <= '1'            when (do_ra_indirect or do_rb_indirect) = '1' else '0';
+  do_indirect_write       <= '1'            when (do_rc_indirect or do_rd_indirect) = '1' else '0';
+  do_ra_indirect_delay    <= do_ra_indirect when rising_edge(clk);
+  do_rb_indirect_delay    <= do_rb_indirect when rising_edge(clk);
+  pram_address_delayed    <= pram_address   when rising_edge(clk);
+  ti                      <= opcode_start;
+  add_inst : op_add
+    generic map (
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra => ra,
+        rb => rb,
+        rc => rc_op_add
+        );
+  call_inst : op_call
+    generic map (
+      CWIDTH => C_WIDTH,
+      SWIDTH => STACK_DATA_WIDTH,
+      AWIDTH => PRAM_ADDRESS_WIDTH
+      ) port map (
+        c   => c,
+        ai  => pram_address_delayed,
+        ao  => ao_op_call,
+        sto => sto_op_call
+        );
+  dbrnz_inst : op_dbrnz
+    generic map (
+      CWIDTH => C_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH,
+      AWIDTH => PRAM_ADDRESS_WIDTH
+      ) port map (
+        c  => c,
+        ra => ra,
+        ai => pram_address_delayed,
+        ao => ao_op_dbrnz
+        );
+  dbrz_inst : op_dbrz
+    generic map (
+      CWIDTH => C_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH,
+      AWIDTH => PRAM_ADDRESS_WIDTH
+      ) port map (
+        c  => c,
+        ra => ra,
+        ai => pram_address_delayed,
+        ao => ao_op_dbrz
+        );
+  djmp_inst : op_djmp
+    generic map (
+      CWIDTH => C_WIDTH,
+      AWIDTH => PRAM_ADDRESS_WIDTH
+      ) port map (
+        c  => c,
+        ao => ao_op_djmp
+        );
+  in_inst : op_in
+    generic map (
+      PWIDTH => PORT_DATA_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        pi => pi,
+        rc => rc_op_in
+        );
+  ld_inst : op_ld
+    generic map (
+      CWIDTH => C_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        c  => c,
+        rc => rc_op_ld
+        );
+  mov_inst : op_mov
+    generic map (
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra => ra,
+        rc => rc_op_mov
+        );
+  out_inst : op_out
+    generic map (
+      PWIDTH => PORT_DATA_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        po => po_op_out,
+        ra => ra
+        );
+  pop_inst : op_pop
+    generic map (
+      SWIDTH => STACK_DATA_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        rc  => rc_op_pop,
+        sti => sti
+        );
+  push_inst : op_push
+    generic map (
+      SWIDTH => STACK_DATA_WIDTH,
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra  => ra,
+        sto => sto_op_push
+        );
+  ret_inst : op_ret
+    generic map (
+      SWIDTH => STACK_DATA_WIDTH,
+      AWIDTH => PRAM_ADDRESS_WIDTH
+      ) port map (
+        ao  => ao_op_ret,
+        sti => sti
+        );
+  shr_inst : op_shr
+    generic map (
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra => ra,
+        rc => rc_op_shr
+        );
+  sub_inst : op_sub
+    generic map (
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra => ra,
+        rb => rb,
+        rc => rc_op_sub
+        );
+  test_unsigned_gt_inst : op_test_unsigned_gt
+    generic map (
+      RWIDTH => CORE_DATA_WIDTH
+      ) port map (
+        ra => ra,
+        rb => rb,
+        rc => rc_op_test_unsigned_gt
+        );
+  rc <= rc_unlatched when delayed_write = '0' else rc_latched;
+  rc_latch_process : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (write_latch = '1') then
+        rc_latched <= rc_unlatched;
+      end if;
     end if;
-  end if;
-end process po_latch_process;
-po_unlatched <= po_op_out when (opcode = OPCODE_out) else
-(others => '0');
-po_write_pulse <= po_write and opcode_finish;
-po_write <= '1' when (opcode = OPCODE_out) else
-'0';
-sto_latch_process : process(clk)
-begin
-  if ( rising_edge(clk) ) then
-    if ( write_latch = '1' ) then
-      sto_latched <= sto_unlatched;
+  end process rc_latch_process;
+  rc_unlatched <= rc_op_add when (opcode = OPCODE_add) else
+                  rc_op_in               when (opcode = OPCODE_in) else
+                  rc_op_ld               when (opcode = OPCODE_ld) else
+                  rc_op_mov              when (opcode = OPCODE_mov) else
+                  rc_op_pop              when (opcode = OPCODE_pop) else
+                  rc_op_shr              when (opcode = OPCODE_shr) else
+                  rc_op_sub              when (opcode = OPCODE_sub) else
+                  rc_op_test_unsigned_gt when (opcode = OPCODE_test_unsigned_gt) else
+                  (others => '0');
+  rd <= rd_unlatched when delayed_write = '0' else rd_latched;
+  rd_latch_process : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (write_latch = '1') then
+        rd_latched <= rd_unlatched;
+      end if;
     end if;
-  end if;
-end process sto_latch_process;
-sto <= sto_unlatched when delayed_write = '0' else sto_latched;
-sto_unlatched <= sto_op_call when (opcode = OPCODE_call) else
-sto_op_push when (opcode = OPCODE_push) else
-(others => '0');
-st_push <= st_push_mux and opcode_finish;
-st_push_mux <= '1' when (opcode = OPCODE_call) else
-'1' when (opcode = OPCODE_push) else
-'0';
-st_pop <= st_pop_mux and opcode_start;
-st_pop_mux <= '1' when (opcode = OPCODE_pop) else
-'1' when (opcode = OPCODE_ret) else
-'0';
-ra_rc_cache_address_match <= '1' when (rc_cache_address = pram_data(RA_WIDTH-1+RA_ORIGIN downto RA_ORIGIN)) else '0';
-rb_rc_cache_address_match <= '1' when (rc_cache_address = pram_data(RB_WIDTH-1+RB_ORIGIN downto RB_ORIGIN)) else '0';
-next_pram_address <= ao_op when ((ao_op_valid and opcode_finish) = '1') else pram_address_inc;
-pram_address_inc <= std_logic_vector(unsigned(pram_address)+1) when (pram_address /= std_logic_vector(to_unsigned(PRAM_DEPTH-1, PRAM_ADDRESS_WIDTH))) else (others => '0');
-ao_op_valid <= pram_alignment_required;
-ao_op <= ao_op_call when (opcode = OPCODE_call) else
-ao_op_dbrnz when (opcode = OPCODE_dbrnz) else
-ao_op_dbrz when (opcode = OPCODE_dbrz) else
-ao_op_djmp when (opcode = OPCODE_djmp) else
-ao_op_ret when (opcode = OPCODE_ret) else
-(others => '0');
-pram_alignment_required <='1' when (opcode = OPCODE_call) else
-'1' when (opcode = OPCODE_dbrnz) else
-'1' when (opcode = OPCODE_dbrz) else
-'1' when (opcode = OPCODE_djmp) else
-'1' when (opcode = OPCODE_ret) else
-'0';
-opcode_finish <= opcode_start;
+  end process rd_latch_process;
+  rd_unlatched   <= (others => '0');
+  rc_write_pulse <= rc_write and opcode_finish;
+  rc_write       <= '1' when (opcode = OPCODE_add) else
+              '1' when (opcode = OPCODE_in) else
+              '1' when (opcode = OPCODE_ld) else
+              '1' when (opcode = OPCODE_mov) else
+              '1' when (opcode = OPCODE_pop) else
+              '1' when (opcode = OPCODE_shr) else
+              '1' when (opcode = OPCODE_sub) else
+              '1' when (opcode = OPCODE_test_unsigned_gt) else
+              '0';
+  rd_write_pulse <= rd_write and opcode_finish;
+  rd_write       <= '0';
+  pi_read_pulse  <= pi_read and opcode_start;
+  pi_read        <= '1' when (opcode = OPCODE_in) else
+             '0';
+  po_latch_process : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (write_latch = '1') then
+        po_latched <= po_unlatched;
+      end if;
+    end if;
+  end process po_latch_process;
+  po_unlatched <= po_op_out when (opcode = OPCODE_out) else
+                  (others => '0');
+  po_write_pulse <= po_write and opcode_finish;
+  po_write       <= '1' when (opcode = OPCODE_out) else
+              '0';
+  sto_latch_process : process(clk)
+  begin
+    if (rising_edge(clk)) then
+      if (write_latch = '1') then
+        sto_latched <= sto_unlatched;
+      end if;
+    end if;
+  end process sto_latch_process;
+  sto           <= sto_unlatched when delayed_write = '0' else sto_latched;
+  sto_unlatched <= sto_op_call   when (opcode = OPCODE_call) else
+                   sto_op_push when (opcode = OPCODE_push) else
+                   (others => '0');
+  st_push     <= st_push_mux and opcode_finish;
+  st_push_mux <= '1' when (opcode = OPCODE_call) else
+                 '1' when (opcode = OPCODE_push) else
+                 '0';
+  st_pop     <= st_pop_mux and opcode_start;
+  st_pop_mux <= '1' when (opcode = OPCODE_pop) else
+                '1' when (opcode = OPCODE_ret) else
+                '0';
+  ra_rc_cache_address_match <= '1'                                        when (rc_cache_address = pram_data(RA_WIDTH-1+RA_ORIGIN downto RA_ORIGIN))             else '0';
+  rb_rc_cache_address_match <= '1'                                        when (rc_cache_address = pram_data(RB_WIDTH-1+RB_ORIGIN downto RB_ORIGIN))             else '0';
+  next_pram_address         <= ao_op                                      when ((ao_op_valid and opcode_finish) = '1')                                           else pram_address_inc;
+  pram_address_inc          <= std_logic_vector(unsigned(pram_address)+1) when (pram_address /= std_logic_vector(to_unsigned(PRAM_DEPTH-1, PRAM_ADDRESS_WIDTH))) else (others => '0');
+  ao_op_valid               <= pram_alignment_required;
+  ao_op                     <= ao_op_call                                 when (opcode = OPCODE_call) else
+           ao_op_dbrnz when (opcode = OPCODE_dbrnz) else
+           ao_op_dbrz  when (opcode = OPCODE_dbrz) else
+           ao_op_djmp  when (opcode = OPCODE_djmp) else
+           ao_op_ret   when (opcode = OPCODE_ret) else
+           (others => '0');
+  pram_alignment_required <= '1' when (opcode = OPCODE_call) else
+                             '1' when (opcode = OPCODE_dbrnz) else
+                             '1' when (opcode = OPCODE_dbrz) else
+                             '1' when (opcode = OPCODE_djmp) else
+                             '1' when (opcode = OPCODE_ret) else
+                             '0';
+  opcode_finish <= opcode_start;
 end architecture v1;
 
 --
@@ -1678,49 +1678,49 @@ use qf2_pre.definitions.all;
 
 entity link_trainer is
   port (
-    clk : in std_logic;
-    sync_reset : in  std_logic;
-    rx_bitslip : out std_logic;
-    rx_delay : out std_logic_vector(4 downto 0);
-    rx_disparity_error : in std_logic;
-    rx_crc_error : in std_logic;
-    rx_code_error : in std_logic;
-    rx_locked : out std_logic;
-    rx_delay_start : out std_logic_vector(7 downto 0);
-    rx_delay_end : out std_logic_vector(7 downto 0);
+    clk                 : in  std_logic;
+    sync_reset          : in  std_logic;
+    rx_bitslip          : out std_logic;
+    rx_delay            : out std_logic_vector(4 downto 0);
+    rx_disparity_error  : in  std_logic;
+    rx_crc_error        : in  std_logic;
+    rx_code_error       : in  std_logic;
+    rx_locked           : out std_logic;
+    rx_delay_start      : out std_logic_vector(7 downto 0);
+    rx_delay_end        : out std_logic_vector(7 downto 0);
     rx_delay_last_start : out std_logic_vector(7 downto 0);
-    rx_delay_last_end : out std_logic_vector(7 downto 0);
-    rx_scan_bits : out std_logic_vector(31 downto 0)
+    rx_delay_last_end   : out std_logic_vector(7 downto 0);
+    rx_scan_bits        : out std_logic_vector(31 downto 0)
     );
 end entity link_trainer;
 
 architecture rtl of link_trainer is
 
   component link_trainer_kernel
- port (
-    prog_data_in : in std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
-    prog_data_out : out std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
-    prog_address_in : in std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0);
-    port_in : in type_link_trainer_kernel_port_array;
-    port_in_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
-    port_out : out type_link_trainer_kernel_port_array;
-    port_out_strobe : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
-    clk, sync_reset, prog_write : in std_logic
-  );
+    port (
+      prog_data_in                : in  std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
+      prog_data_out               : out std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0);
+      prog_address_in             : in  std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0);
+      port_in                     : in  type_link_trainer_kernel_port_array;
+      port_in_strobe              : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
+      port_out                    : out type_link_trainer_kernel_port_array;
+      port_out_strobe             : out std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0);
+      clk, sync_reset, prog_write : in  std_logic
+      );
   end component;
-  
+
   signal gnd_prog_data_in    : std_logic_vector(link_trainer_kernel_PRAM_DATA_WIDTH-1 downto 0)    := (others => '0');
   signal gnd_prog_address_in : std_logic_vector(link_trainer_kernel_PRAM_ADDRESS_WIDTH-1 downto 0) := (others => '0');
-  signal gnd                 : std_logic                                                             := '0';
+  signal gnd                 : std_logic                                                           := '0';
 
-  signal port_in         : type_link_trainer_kernel_port_array := (others => (others => '0'));
-  signal port_out        : type_link_trainer_kernel_port_array := (others => (others => '0'));
+  signal port_in         : type_link_trainer_kernel_port_array                         := (others => (others => '0'));
+  signal port_out        : type_link_trainer_kernel_port_array                         := (others => (others => '0'));
   signal port_in_strobe  : std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0) := (others => '0');
   signal port_out_strobe : std_logic_vector(link_trainer_kernel_PORT_DEPTH-1 downto 0) := (others => '0');
 
-  signal rx_crc_error_latch, rx_code_error_latch, rx_disparity_error_latch, rx_error_latch_clear : std_logic := '0';
-  signal int_rx_scan_bits : std_logic_vector(31 downto 0) := (others => '0');
-  
+  signal rx_crc_error_latch, rx_code_error_latch, rx_disparity_error_latch, rx_error_latch_clear : std_logic                     := '0';
+  signal int_rx_scan_bits                                                                        : std_logic_vector(31 downto 0) := (others => '0');
+
 begin
 
   -- 8-bit kernel
@@ -1742,35 +1742,35 @@ begin
   rx_error_latch_proc : process(clk)
   begin
     if rising_edge(clk) then
-      if ( rx_crc_error = '1' ) then
+      if (rx_crc_error = '1') then
         rx_crc_error_latch <= '1';
       end if;
-      if ( rx_disparity_error = '1' ) then
+      if (rx_disparity_error = '1') then
         rx_disparity_error_latch <= '1';
       end if;
-      if ( rx_code_error = '1' ) then
+      if (rx_code_error = '1') then
         rx_code_error_latch <= '1';
       end if;
       if rx_error_latch_clear = '1' then
-        rx_crc_error_latch <= '0';
-        rx_code_error_latch <= '0';
+        rx_crc_error_latch       <= '0';
+        rx_code_error_latch      <= '0';
         rx_disparity_error_latch <= '0';
       end if;
     end if;
   end process rx_error_latch_proc;
-  
+
   -- Input ports
   port_in(0) <= "00000" & rx_crc_error_latch & rx_disparity_error_latch & rx_code_error_latch;
 
   -- Output ports
   rx_error_latch_clear <= port_out(0)(0);
-  rx_bitslip <= port_out(0)(1) and port_out_strobe(0); -- Single cycle
-  rx_locked <= port_out(0)(2);
-  rx_delay <= port_out(1)(4 downto 0);
-  rx_delay_start <= port_out(2);
-  rx_delay_end <= port_out(3);
-  rx_delay_last_start <= port_out(4);
-  rx_delay_last_end <= port_out(5);
+  rx_bitslip           <= port_out(0)(1) and port_out_strobe(0);  -- Single cycle
+  rx_locked            <= port_out(0)(2);
+  rx_delay             <= port_out(1)(4 downto 0);
+  rx_delay_start       <= port_out(2);
+  rx_delay_end         <= port_out(3);
+  rx_delay_last_start  <= port_out(4);
+  rx_delay_last_end    <= port_out(5);
 
   rx_scan_bits_proc : process(clk)
   begin
@@ -1781,7 +1781,7 @@ begin
     end if;
   end process rx_scan_bits_proc;
   rx_scan_bits <= int_rx_scan_bits;
-  
+
 end architecture rtl;
 
 --
@@ -2846,32 +2846,32 @@ architecture rtl of encode_8b10b is
     "00000000000"
     );
 
-  signal code_index : integer range 1023 downto 0 := 0;
-  signal code_vector : std_logic_vector(9 downto 0) := (others => '0');
+  signal code_index       : integer range 1023 downto 0   := 0;
+  signal code_vector      : std_logic_vector(9 downto 0)  := (others => '0');
   signal result, r_result : std_logic_vector(10 downto 0) := (others => '0');
 
   signal r_data_in : std_logic_vector(7 downto 0) := (others => '0');
-  signal r_is_k : std_logic := '0';
-  
+  signal r_is_k    : std_logic                    := '0';
+
 begin
 
   -- Register inputs
   r_data_in <= data_in when rising_edge(clk);
-  r_is_k <= is_k when rising_edge(clk);
-  
+  r_is_k    <= is_k    when rising_edge(clk);
+
   -- XOR output disparity change flag with running disparity
   running_disparity <= code_vector(9) xor result(10) when rising_edge(clk);
 
   -- Build code and register index
   code_vector <= (running_disparity & r_is_k & r_data_in);
-  result <= code_table(to_integer(unsigned(code_vector)));
+  result      <= code_table(to_integer(unsigned(code_vector)));
 
   -- Register output
   r_result <= result when rising_edge(clk);
 
   -- Pass out code minus running disparity
   data_out <= r_result(9 downto 0);
-  
+
 end rtl;
 
 --
@@ -3939,12 +3939,12 @@ architecture rtl of decode_8b10b is
   signal code_vector                     : std_logic_vector(9 downto 0)  := (others => '0');
   signal result, r_result                : std_logic_vector(11 downto 0) := (others => '0');
   signal r_code_error, r_disparity_error : std_logic                     := '0';
-  signal r_data_in : std_logic_vector(9 downto 0) := (others => '0');
-  
+  signal r_data_in                       : std_logic_vector(9 downto 0)  := (others => '0');
+
 begin
 
   -- Register the input
-  r_data_in         <= data_in                when rising_edge(clk);
+  r_data_in <= data_in when rising_edge(clk);
 
   -- Look up the 10b code in the table
   result <= code_table(to_integer(unsigned(r_data_in)));
@@ -3959,8 +3959,8 @@ begin
   -- there isn't a running disparity error
   disparity_proc : process(clk)
   begin
-    if ( rising_edge(clk) ) then
-      if ( result(9) = '1' and (running_disparity = result(10)) ) then
+    if (rising_edge(clk)) then
+      if (result(9) = '1' and (running_disparity = result(10))) then
         running_disparity <= not(running_disparity);
       end if;
     end if;
@@ -3974,7 +3974,7 @@ begin
   is_k            <= r_result(8);
   disparity_error <= r_disparity_error;
   code_error      <= r_code_error;
-  
+
 end rtl;
 
 -- base
@@ -4031,7 +4031,7 @@ entity base is
 end base;
 
 architecture rtl of base is
-  
+
   signal clk_sys : std_logic;
 
   signal mmcm_reset, pll_reset, idelayctrl_reset : std_logic := '1';
@@ -4040,7 +4040,7 @@ architecture rtl of base is
 
   signal int_clk_100mhz_tx, int_clk_500mhz_tx                    : std_logic;
   signal int_clk_100mhz_rx, pre_clk_100mhz_rx, int_clk_500mhz_rx : std_logic;
-  signal int_clk_300mhz_idelay                   : std_logic;
+  signal int_clk_300mhz_idelay                                   : std_logic;
   signal idelay_rdy, clk_300mhz_idelay                           : std_logic;
 
 begin
@@ -4197,7 +4197,7 @@ begin
   -- Release global reset when MMCM and IDELAYCTRL are locked
   -- PLL must be locked by this point
   async_reset <= not(mmcm_locked and idelay_rdy);
-  
+
   inst_bufg_clk_100mhz_tx : component unisim.vcomponents.BUFG
     port map (
       i => int_clk_100mhz_tx,
@@ -4573,13 +4573,13 @@ end entity k7_tx_8b10b;
 architecture rtl of k7_tx_8b10b is
 
   component encode_8b10b
-  port(
-    clk      : in  std_logic;
-    is_k     : in  std_logic;
-    data_in  : in  std_logic_vector(7 downto 0);
-    data_out : out std_logic_vector(9 downto 0)
-    );
-  end component;  
+    port(
+      clk      : in  std_logic;
+      is_k     : in  std_logic;
+      data_in  : in  std_logic_vector(7 downto 0);
+      data_out : out std_logic_vector(9 downto 0)
+      );
+  end component;
 
   signal value_10b                : std_logic_vector(9 downto 0);
   signal data_out, shift1, shift2 : std_logic;
@@ -4719,7 +4719,7 @@ entity comms_link is
     rx_p, rx_n : in  std_logic;
 
     -- Lock indicator to Spartan
-    rx_locked              : out std_logic;
+    rx_locked : out std_logic;
 
     -- Channel FIFO interface
     outbound_data      : in  std_logic_vector(7 downto 0);
@@ -4767,7 +4767,7 @@ architecture rtl of comms_link is
       output : out std_logic
       );
   end component;
-    component k7_tx_8b10b
+  component k7_tx_8b10b
     port (
       -- SERDES reset
       serdes_reset : in std_logic;
@@ -4817,21 +4817,21 @@ architecture rtl of comms_link is
       );
   end component;
   component link_trainer
-  port (
-    clk : in std_logic;
-    sync_reset : in  std_logic;
-    rx_bitslip : out std_logic;
-    rx_delay : out std_logic_vector(4 downto 0);
-    rx_disparity_error : in std_logic;
-    rx_crc_error : in std_logic;
-    rx_code_error : in std_logic;
-    rx_locked : out std_logic;
-    rx_delay_start : out std_logic_vector(7 downto 0);
-    rx_delay_end : out std_logic_vector(7 downto 0);
-    rx_delay_last_start : out std_logic_vector(7 downto 0);
-    rx_delay_last_end : out std_logic_vector(7 downto 0);
-    rx_scan_bits : out std_logic_vector(31 downto 0)
-    );
+    port (
+      clk                 : in  std_logic;
+      sync_reset          : in  std_logic;
+      rx_bitslip          : out std_logic;
+      rx_delay            : out std_logic_vector(4 downto 0);
+      rx_disparity_error  : in  std_logic;
+      rx_crc_error        : in  std_logic;
+      rx_code_error       : in  std_logic;
+      rx_locked           : out std_logic;
+      rx_delay_start      : out std_logic_vector(7 downto 0);
+      rx_delay_end        : out std_logic_vector(7 downto 0);
+      rx_delay_last_start : out std_logic_vector(7 downto 0);
+      rx_delay_last_end   : out std_logic_vector(7 downto 0);
+      rx_scan_bits        : out std_logic_vector(31 downto 0)
+      );
   end component;
 
   -- K codes
@@ -4849,13 +4849,12 @@ architecture rtl of comms_link is
   -- Signals
   signal tx_sync_reset, rx_sync_reset, rx_trainer_sync_reset             : std_logic                     := '1';
   signal tx_backpressure_needed                                          : std_logic                     := '0';
-  signal rx_bitslip, rx_backpressure_needed                   : std_logic                     := '0';
+  signal rx_bitslip, rx_backpressure_needed                              : std_logic                     := '0';
   signal rx_delay                                                        : std_logic_vector(4 downto 0)  := "00000";
   signal rx_crc_error, rx_code_error, rx_disparity_error                 : std_logic                     := '0';
   signal tx_crc, rx_crc, latched_tx_crc, latched_rx_crc, received_rx_crc : std_logic_vector(31 downto 0) := (others => '0');
-  signal tx_backpressure_count                                           : natural range 31 downto 0     := 0;
-  signal rx_backpressure_count                                           : natural range 15 downto 0     := 0;
-  signal rx_crc_count                                                    : natural range 4 downto 0      := 0;
+  signal tx_backpressure_count                                           : unsigned (4 downto 0)     := (others => '1');
+  signal rx_backpressure_count                                           : unsigned (3 downto 0)      := (others => '1');
   signal tx_data_in, rx_data_out                                         : std_logic_vector(7 downto 0)  := (others => '0');
   signal int_outbound_read, tx_is_k, rx_is_k                             : std_logic                     := '0';
   signal tx_crc_reset, rx_crc_reset                                      : std_logic                     := '1';
@@ -4871,7 +4870,7 @@ architecture rtl of comms_link is
     BACKPRESSURE
     );
   signal tx_state              : type_tx_state              := CRC_RESET;
-  signal tx_state_proc_counter : natural range 255 downto 0 := 15;
+  signal tx_state_proc_counter : unsigned(7 downto 0) := (others => '1');
 
   -- RX state
   type type_rx_state is (
@@ -4882,18 +4881,18 @@ architecture rtl of comms_link is
     WAIT_RETRAIN
     );
   signal rx_state              : type_rx_state            := WAIT_LOCK;
-  signal rx_state_proc_counter : natural range 3 downto 0 := 3;
+  signal rx_state_proc_counter : unsigned(7 downto 0) := (others => '1');
 
   -- Inbound registered / debug signals & CDCs
   signal int_inbound_write, int_inbound_frame_end, pre_inbound_write                                                                                                                                                                                                                  : std_logic                    := '0';
   signal pre_inbound_data                                                                                                                                                                                                                                                             : std_logic_vector(7 downto 0) := (others => '0');
   signal tx_state_is_backpressure, pre_tx_state_is_backpressure, rx_domain_tx_state_is_backpressure, r_rx_domain_tx_state_is_backpressure, r_tx_domain_tx_backpressure_needed, r_tx_domain_rx_backpressure_needed, tx_domain_tx_backpressure_needed, tx_domain_rx_backpressure_needed : std_logic                    := '1';
   signal rx_delay_start, rx_delay_end, rx_delay_last_start, rx_delay_last_end                                                                                                                                                                                                         : std_logic_vector(7 downto 0) := (others => '0');
-  signal int_phase_shift, int_rx_locked                                                                                                                                                                                                                                                              : std_logic                    := '0';
+  signal int_phase_shift, int_rx_locked                                                                                                                                                                                                                                               : std_logic                    := '0';
 
 begin
 
-  rx_locked              <= int_rx_locked;
+  rx_locked <= int_rx_locked;
 
   -- Debug signals
   debug_rx_data_out            <= rx_data_out;
@@ -4913,7 +4912,7 @@ begin
   inst_sync_tx_reset_gen : async_to_sync_reset_shift
     generic map (
       INPUT_POLARITY => '0',
-      LENGTH => 8
+      LENGTH         => 8
       )
     port map (
       clk    => clk_1x_tx,
@@ -4937,7 +4936,7 @@ begin
     if rising_edge(clk_1x_tx) then
       if tx_sync_reset = '1' then
         tx_state              <= COMMA;
-        tx_state_proc_counter <= 3;
+        tx_state_proc_counter <= to_unsigned(3, 8);
       else
         case tx_state is
 
@@ -4946,12 +4945,12 @@ begin
             tx_state_proc_counter <= tx_state_proc_counter - 1;
             if tx_state_proc_counter = 0 then
               tx_state              <= TRANSMIT;
-              tx_state_proc_counter <= 255;
+              tx_state_proc_counter <= (others => '1');
             end if;
             -- Generate commas if we are asked pause transmission
             if r_tx_domain_tx_backpressure_needed = '1' then
               tx_state              <= COMMA;
-              tx_state_proc_counter <= 3;
+              tx_state_proc_counter <= to_unsigned(3, 8);
             end if;
             -- Send a request for backpressure on opposite side of link
             if r_tx_domain_rx_backpressure_needed = '1' then
@@ -4960,16 +4959,16 @@ begin
 
           -- Transmit data
           when TRANSMIT =>
-            tx_state_proc_counter <= tx_state_proc_counter - 1;
             -- Throw in a comma block after 256 bytes
+            tx_state_proc_counter <= tx_state_proc_counter - 1;              
             if tx_state_proc_counter = 0 then
               tx_state              <= COMMA;
-              tx_state_proc_counter <= 3;
+              tx_state_proc_counter <= to_unsigned(3, 8);
             end if;
             -- Generate commas if we are asked to stop transmitting
             if r_tx_domain_tx_backpressure_needed = '1' then
               tx_state              <= COMMA;
-              tx_state_proc_counter <= 3;
+              tx_state_proc_counter <= to_unsigned(3, 8);
             end if;
             -- Request backpressure on opposite side of link
             if r_tx_domain_rx_backpressure_needed = '1' then
@@ -4982,7 +4981,7 @@ begin
             end if;
 
           when CRC_LATCH =>
-            tx_state_proc_counter <= 3;
+            tx_state_proc_counter <= to_unsigned(3, 8);
             tx_state              <= CRC_COPY;
 
           when CRC_COPY =>
@@ -4993,15 +4992,15 @@ begin
 
           when CRC_RESET =>
             tx_state              <= COMMA;
-            tx_state_proc_counter <= 3;
+            tx_state_proc_counter <= to_unsigned(3, 8);
 
           when BACKPRESSURE =>
             tx_state              <= COMMA;
-            tx_state_proc_counter <= 3;
+            tx_state_proc_counter <= to_unsigned(3, 8);
 
           when others =>
             tx_state              <= COMMA;
-            tx_state_proc_counter <= 3;
+            tx_state_proc_counter <= to_unsigned(3, 8);
 
         end case;
       end if;
@@ -5024,7 +5023,7 @@ begin
   tx_data_in <= outbound_data when (tx_state = TRANSMIT) and (outbound_available = '1') else
                 K_CRC                        when (tx_state = CRC_LATCH) else
                 latched_tx_crc(31 downto 24) when (tx_state = CRC_COPY) else
-                K_BACKPRESSURE_REQUEST                        when (tx_state = BACKPRESSURE) else
+                K_BACKPRESSURE_REQUEST       when (tx_state = BACKPRESSURE) else
                 K_COMMA;
 
   tx_is_k <= '0' when (tx_state = TRANSMIT) and (outbound_available = '1') else
@@ -5124,11 +5123,11 @@ begin
       tx_backpressure_needed <= '0';
       if int_rx_locked = '0' then
         -- Force idle TX when RX is not locked to prevent accidental overflow
-        tx_backpressure_count  <= 31;
+        tx_backpressure_count  <= (others => '1');
         tx_backpressure_needed <= '1';
       else
         if (rx_data_out = K_BACKPRESSURE_REQUEST) and (rx_is_k = '1') then
-          tx_backpressure_count  <= 31;
+          tx_backpressure_count  <= (others => '1');
           tx_backpressure_needed <= '1';
         elsif tx_backpressure_count /= 0 then
           tx_backpressure_count  <= tx_backpressure_count - 1;
@@ -5162,7 +5161,7 @@ begin
       if rx_backpressure_count /= 0 then
         rx_backpressure_count <= rx_backpressure_count - 1;
       elsif inbound_available = '0' then
-        rx_backpressure_count  <= 15;
+        rx_backpressure_count  <= (others => '1');
         rx_backpressure_needed <= '1';
       end if;
     end if;
@@ -5194,7 +5193,7 @@ begin
               -- in previous clock cycle
               latched_rx_crc        <= rx_crc;
               rx_crc_reset          <= '1';
-              rx_state_proc_counter <= 3;
+              rx_state_proc_counter <= to_unsigned(3, 8);
               -- End of packet, followed by CRC
               rx_state              <= RECEIVE_CRC;
             end if;
@@ -5254,20 +5253,20 @@ library unimacro;
 entity qf2_core is
   generic (
     FAST_SIMULATION : boolean := false;
-    
+
     CHANNEL_1_ENABLE   : boolean := false;
     CHANNEL_1_LOOPBACK : boolean := false;
-    
+
     CHANNEL_2_ENABLE   : boolean := false;
     CHANNEL_2_LOOPBACK : boolean := false;
 
     CHANNEL_3_ENABLE   : boolean := false;
     CHANNEL_3_LOOPBACK : boolean := false;
-    
+
     CHANNEL_4_ENABLE   : boolean := false;
     CHANNEL_4_LOOPBACK : boolean := false;
-    
-    MULTICAST_ENABLE   : boolean := false;
+
+    MULTICAST_ENABLE : boolean := false;
 
     FLASH_ENABLE : boolean := false;
 
@@ -5278,7 +5277,7 @@ entity qf2_core is
     PMOD_B_ENABLE : boolean := false;
 
     PMOD_C_ENABLE : boolean := false
-    
+
     );
   port(
 
@@ -5294,7 +5293,7 @@ entity qf2_core is
 
     -- RX lock signal to Spartan - used to drive TX PS linkup after RX is locked
     rx_locked : out std_logic;
-    
+
     -- System clock reference from MMCM
     -- Jitter-cleaned reference for other clock generation
     -- in application firmware layer. Buffer in application.
@@ -5317,26 +5316,26 @@ entity qf2_core is
     -- address should be held at value for a few cycles after request is pulsed
     -- to ensure it is copied correctly.
     flash_address : in std_logic_vector(23 downto 0) := (others => '0');
-    flash_request : in std_logic := '0';
+    flash_request : in std_logic                     := '0';
 
     -- Flash data receiver (independent clock)
-    flash_reset              : in  std_logic;
-    flash_clk   : in  std_logic := '0';
-    flash_data       : out std_logic_vector(7 downto 0);
-    flash_available  : out std_logic;
-    flash_frame_end  : out std_logic;
-    flash_read       : in  std_logic := '1';
+    flash_reset     : in  std_logic;
+    flash_clk       : in  std_logic := '0';
+    flash_data      : out std_logic_vector(7 downto 0);
+    flash_available : out std_logic;
+    flash_frame_end : out std_logic;
+    flash_read      : in  std_logic := '1';
 
     -- Monitoring data request signals (clk_100mhz domain)
     monitoring_request : in std_logic := '0';
-    
+
     -- Monitoring data receiver (independent clock)
-    monitoring_reset              : in  std_logic;
-    monitoring_clk   : in  std_logic := '0';
-    monitoring_data       : out std_logic_vector(7 downto 0);
-    monitoring_available  : out std_logic;
-    monitoring_frame_end  : out std_logic;
-    monitoring_read       : in  std_logic := '1';
+    monitoring_reset     : in  std_logic;
+    monitoring_clk       : in  std_logic := '0';
+    monitoring_data      : out std_logic_vector(7 downto 0);
+    monitoring_available : out std_logic;
+    monitoring_frame_end : out std_logic;
+    monitoring_read      : in  std_logic := '1';
 
     -- PMOD A core
     pmod_a_reset              : in  std_logic;
@@ -5344,11 +5343,11 @@ entity qf2_core is
     pmod_a_inbound_data       : out std_logic_vector(7 downto 0);
     pmod_a_inbound_available  : out std_logic;
     pmod_a_inbound_frame_end  : out std_logic;
-    pmod_a_inbound_read       : in  std_logic := '1';
+    pmod_a_inbound_read       : in  std_logic                    := '1';
     pmod_a_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
     pmod_a_outbound_available : out std_logic;
-    pmod_a_outbound_frame_end : in  std_logic := '1';
-    pmod_a_outbound_write     : in  std_logic := '0';
+    pmod_a_outbound_frame_end : in  std_logic                    := '1';
+    pmod_a_outbound_write     : in  std_logic                    := '0';
 
     -- PMOD B core
     pmod_b_reset              : in  std_logic;
@@ -5356,11 +5355,11 @@ entity qf2_core is
     pmod_b_inbound_data       : out std_logic_vector(7 downto 0);
     pmod_b_inbound_available  : out std_logic;
     pmod_b_inbound_frame_end  : out std_logic;
-    pmod_b_inbound_read       : in  std_logic := '1';
+    pmod_b_inbound_read       : in  std_logic                    := '1';
     pmod_b_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
     pmod_b_outbound_available : out std_logic;
-    pmod_b_outbound_frame_end : in  std_logic := '1';
-    pmod_b_outbound_write     : in  std_logic := '0';
+    pmod_b_outbound_frame_end : in  std_logic                    := '1';
+    pmod_b_outbound_write     : in  std_logic                    := '0';
 
     -- PMOD C core
     pmod_c_reset              : in  std_logic;
@@ -5368,12 +5367,12 @@ entity qf2_core is
     pmod_c_inbound_data       : out std_logic_vector(7 downto 0);
     pmod_c_inbound_available  : out std_logic;
     pmod_c_inbound_frame_end  : out std_logic;
-    pmod_c_inbound_read       : in  std_logic := '1';
+    pmod_c_inbound_read       : in  std_logic                    := '1';
     pmod_c_outbound_data      : in  std_logic_vector(7 downto 0) := (others => '0');
     pmod_c_outbound_available : out std_logic;
-    pmod_c_outbound_frame_end : in  std_logic := '1';
-    pmod_c_outbound_write     : in  std_logic := '0';
-    
+    pmod_c_outbound_frame_end : in  std_logic                    := '1';
+    pmod_c_outbound_write     : in  std_logic                    := '0';
+
     -- Channel 1 interface (port 50004)
     -- Reset must be high for at least 5 clock cycles of the
     -- application-supplied clock
@@ -5489,7 +5488,7 @@ architecture rtl of qf2_core is
 
       -- Lock indicator
       rx_locked : out std_logic;
-      
+
       -- Channel FIFO interface
       outbound_data      : in  std_logic_vector(7 downto 0);
       outbound_available : in  std_logic;
@@ -5579,7 +5578,7 @@ architecture rtl of qf2_core is
   signal outbound_stream_select, outbound_target : std_logic_vector(3 downto 0) := "0000";
   signal inbound_stream_select                   : std_logic_vector(3 downto 0) := "1111";
   signal state_outbound_copy, state_inbound_copy : std_logic                    := '0';
-  signal outbound_available                 : std_logic                    := '0';
+  signal outbound_available                      : std_logic                    := '0';
   signal outbound_copy, outbound_empty           : std_logic;
   signal inbound_copy, inbound_full              : std_logic;
 
@@ -5588,14 +5587,14 @@ architecture rtl of qf2_core is
   signal inbound_bridge_empty                        : std_logic;
   signal inbound_bridge_almost_full                  : std_logic;
   signal inbound_bridge_available                    : std_logic;
-  signal inbound_bridge_write                        : std_logic := '0';
+  signal inbound_bridge_write                        : std_logic                    := '0';
   signal outbound_bridge_dout, outbound_bridge_din   : std_logic_vector(8 downto 0) := (others => '0');
   signal outbound_bridge_empty, outbound_bridge_full : std_logic;
   signal outbound_bridge_read                        : std_logic;
 
   -- Channel FIFO signals
   signal int_channel_1_clk                                           : std_logic := '0';
-  signal int_channel_1_reset : std_logic := '1';
+  signal int_channel_1_reset                                         : std_logic := '1';
   signal channel_1_inbound_fifo_din, channel_1_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal channel_1_inbound_fifo_write, channel_1_inbound_fifo_read   : std_logic;
   signal channel_1_inbound_fifo_full, channel_1_inbound_fifo_empty   : std_logic;
@@ -5604,7 +5603,7 @@ architecture rtl of qf2_core is
   signal channel_1_outbound_fifo_full, channel_1_outbound_fifo_empty : std_logic;
 
   signal int_channel_2_clk                                           : std_logic := '0';
-  signal int_channel_2_reset : std_logic := '1';
+  signal int_channel_2_reset                                         : std_logic := '1';
   signal channel_2_inbound_fifo_din, channel_2_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal channel_2_inbound_fifo_write, channel_2_inbound_fifo_read   : std_logic;
   signal channel_2_inbound_fifo_full, channel_2_inbound_fifo_empty   : std_logic;
@@ -5613,7 +5612,7 @@ architecture rtl of qf2_core is
   signal channel_2_outbound_fifo_full, channel_2_outbound_fifo_empty : std_logic;
 
   signal int_channel_3_clk                                           : std_logic := '0';
-  signal int_channel_3_reset : std_logic := '1';
+  signal int_channel_3_reset                                         : std_logic := '1';
   signal channel_3_inbound_fifo_din, channel_3_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal channel_3_inbound_fifo_write, channel_3_inbound_fifo_read   : std_logic;
   signal channel_3_inbound_fifo_full, channel_3_inbound_fifo_empty   : std_logic;
@@ -5622,7 +5621,7 @@ architecture rtl of qf2_core is
   signal channel_3_outbound_fifo_full, channel_3_outbound_fifo_empty : std_logic;
 
   signal int_channel_4_clk                                           : std_logic := '0';
-  signal int_channel_4_reset : std_logic := '1';
+  signal int_channel_4_reset                                         : std_logic := '1';
   signal channel_4_inbound_fifo_din, channel_4_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal channel_4_inbound_fifo_write, channel_4_inbound_fifo_read   : std_logic;
   signal channel_4_inbound_fifo_full, channel_4_inbound_fifo_empty   : std_logic;
@@ -5631,7 +5630,7 @@ architecture rtl of qf2_core is
   signal channel_4_outbound_fifo_full, channel_4_outbound_fifo_empty : std_logic;
 
   signal int_multicast_clk                                           : std_logic := '0';
-  signal int_multicast_reset : std_logic := '1';
+  signal int_multicast_reset                                         : std_logic := '1';
   signal multicast_inbound_fifo_din, multicast_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal multicast_inbound_fifo_write, multicast_inbound_fifo_read   : std_logic;
   signal multicast_inbound_fifo_full, multicast_inbound_fifo_empty   : std_logic;
@@ -5640,7 +5639,7 @@ architecture rtl of qf2_core is
   signal multicast_outbound_fifo_full, multicast_outbound_fifo_empty : std_logic;
 
   -- PMOD FIFO signals
-  signal int_pmod_a_reset : std_logic := '1';
+  signal int_pmod_a_reset                                      : std_logic := '1';
   signal pmod_a_inbound_fifo_din, pmod_a_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal pmod_a_inbound_fifo_write, pmod_a_inbound_fifo_read   : std_logic;
   signal pmod_a_inbound_fifo_full, pmod_a_inbound_fifo_empty   : std_logic;
@@ -5648,7 +5647,7 @@ architecture rtl of qf2_core is
   signal pmod_a_outbound_fifo_write, pmod_a_outbound_fifo_read : std_logic;
   signal pmod_a_outbound_fifo_full, pmod_a_outbound_fifo_empty : std_logic;
 
-  signal int_pmod_b_reset : std_logic := '1';
+  signal int_pmod_b_reset                                      : std_logic := '1';
   signal pmod_b_inbound_fifo_din, pmod_b_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal pmod_b_inbound_fifo_write, pmod_b_inbound_fifo_read   : std_logic;
   signal pmod_b_inbound_fifo_full, pmod_b_inbound_fifo_empty   : std_logic;
@@ -5656,44 +5655,44 @@ architecture rtl of qf2_core is
   signal pmod_b_outbound_fifo_write, pmod_b_outbound_fifo_read : std_logic;
   signal pmod_b_outbound_fifo_full, pmod_b_outbound_fifo_empty : std_logic;
 
-  signal int_pmod_c_reset : std_logic := '1';
+  signal int_pmod_c_reset                                      : std_logic := '1';
   signal pmod_c_inbound_fifo_din, pmod_c_inbound_fifo_dout     : std_logic_vector(8 downto 0);
   signal pmod_c_inbound_fifo_write, pmod_c_inbound_fifo_read   : std_logic;
   signal pmod_c_inbound_fifo_full, pmod_c_inbound_fifo_empty   : std_logic;
   signal pmod_c_outbound_fifo_din, pmod_c_outbound_fifo_dout   : std_logic_vector(8 downto 0);
   signal pmod_c_outbound_fifo_write, pmod_c_outbound_fifo_read : std_logic;
   signal pmod_c_outbound_fifo_full, pmod_c_outbound_fifo_empty : std_logic;
-  
+
   -- LED channel
-  signal led_outbound_read  : std_logic := '0';
-  signal led_outbound_empty : std_logic := '1';
-  signal led_outbound_dout  : std_logic_vector(8 downto 0) := "100000000";
+  signal led_outbound_read                                    : std_logic                    := '0';
+  signal led_outbound_empty                                   : std_logic                    := '1';
+  signal led_outbound_dout                                    : std_logic_vector(8 downto 0) := "100000000";
   signal global_domain_leds, tx_domain_leds, r_tx_domain_leds : std_logic_vector(5 downto 0) := (others => '0');
 
   -- Flash channel
-  signal int_flash_reset : std_logic := '1';
-  signal flash_outbound_read  : std_logic := '0';
-  signal flash_outbound_empty : std_logic := '1';
-  signal flash_outbound_dout  : std_logic_vector(8 downto 0);
-  signal global_domain_flash_request, tx_domain_flash_request, r_tx_domain_flash_request, r_r_tx_domain_flash_request : std_logic := '0';
-  signal tx_domain_flash_address, r_tx_domain_flash_address : std_logic_vector(23 downto 0) := (others => '0');
-  signal shift_flash_address : std_logic_vector(23 downto 0) := (others => '0');
-  signal flash_address_counter : natural range 3 downto 0 := 0;
-  
-  signal flash_inbound_fifo_din, flash_inbound_fifo_dout     : std_logic_vector(8 downto 0);
-  signal flash_inbound_fifo_write, flash_inbound_fifo_read   : std_logic;
-  signal flash_inbound_fifo_full, flash_inbound_fifo_empty   : std_logic;
+  signal int_flash_reset                                                                                              : std_logic                     := '1';
+  signal flash_outbound_read                                                                                          : std_logic                     := '0';
+  signal flash_outbound_empty                                                                                         : std_logic                     := '1';
+  signal flash_outbound_dout                                                                                          : std_logic_vector(8 downto 0);
+  signal global_domain_flash_request, tx_domain_flash_request, r_tx_domain_flash_request, r_r_tx_domain_flash_request : std_logic                     := '0';
+  signal tx_domain_flash_address, r_tx_domain_flash_address                                                           : std_logic_vector(23 downto 0) := (others => '0');
+  signal shift_flash_address                                                                                          : std_logic_vector(23 downto 0) := (others => '0');
+  signal flash_address_counter                                                                                        : natural range 3 downto 0      := 0;
+
+  signal flash_inbound_fifo_din, flash_inbound_fifo_dout   : std_logic_vector(8 downto 0);
+  signal flash_inbound_fifo_write, flash_inbound_fifo_read : std_logic;
+  signal flash_inbound_fifo_full, flash_inbound_fifo_empty : std_logic;
 
   -- Monitoring channel
-  signal int_monitoring_reset : std_logic := '1';
-  signal monitoring_outbound_read  : std_logic := '0';
-  signal monitoring_outbound_empty : std_logic := '1';
-  constant monitoring_outbound_dout  : std_logic_vector(8 downto 0) := "100000000";
-  signal global_domain_monitoring_request, tx_domain_monitoring_request, r_tx_domain_monitoring_request, r_r_tx_domain_monitoring_request : std_logic := '0';
-  
-  signal monitoring_inbound_fifo_din, monitoring_inbound_fifo_dout     : std_logic_vector(8 downto 0);
-  signal monitoring_inbound_fifo_write, monitoring_inbound_fifo_read   : std_logic;
-  signal monitoring_inbound_fifo_full, monitoring_inbound_fifo_empty   : std_logic;
+  signal int_monitoring_reset                                                                                                             : std_logic                    := '1';
+  signal monitoring_outbound_read                                                                                                         : std_logic                    := '0';
+  signal monitoring_outbound_empty                                                                                                        : std_logic                    := '1';
+  constant monitoring_outbound_dout                                                                                                       : std_logic_vector(8 downto 0) := "100000000";
+  signal global_domain_monitoring_request, tx_domain_monitoring_request, r_tx_domain_monitoring_request, r_r_tx_domain_monitoring_request : std_logic                    := '0';
+
+  signal monitoring_inbound_fifo_din, monitoring_inbound_fifo_dout   : std_logic_vector(8 downto 0);
+  signal monitoring_inbound_fifo_write, monitoring_inbound_fifo_read : std_logic;
+  signal monitoring_inbound_fifo_full, monitoring_inbound_fifo_empty : std_logic;
 
   -- Unused counter signals
   signal inbound_bridge_fifo_wrcount, inbound_bridge_fifo_rdcount         : std_logic_vector(11 downto 0);
@@ -5708,22 +5707,22 @@ architecture rtl of qf2_core is
   signal channel_4_outbound_fifo_wrcount, channel_4_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
   signal multicast_inbound_fifo_wrcount, multicast_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
   signal multicast_outbound_fifo_wrcount, multicast_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_a_inbound_fifo_wrcount, pmod_a_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_a_outbound_fifo_wrcount, pmod_a_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_b_inbound_fifo_wrcount, pmod_b_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_b_outbound_fifo_wrcount, pmod_b_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_c_inbound_fifo_wrcount, pmod_c_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal pmod_c_outbound_fifo_wrcount, pmod_c_outbound_fifo_rdcount : std_logic_vector(11 downto 0);
-  signal flash_inbound_fifo_wrcount, flash_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
-  signal monitoring_inbound_fifo_wrcount, monitoring_inbound_fifo_rdcount   : std_logic_vector(11 downto 0);
+  signal pmod_a_inbound_fifo_wrcount, pmod_a_inbound_fifo_rdcount         : std_logic_vector(11 downto 0);
+  signal pmod_a_outbound_fifo_wrcount, pmod_a_outbound_fifo_rdcount       : std_logic_vector(11 downto 0);
+  signal pmod_b_inbound_fifo_wrcount, pmod_b_inbound_fifo_rdcount         : std_logic_vector(11 downto 0);
+  signal pmod_b_outbound_fifo_wrcount, pmod_b_outbound_fifo_rdcount       : std_logic_vector(11 downto 0);
+  signal pmod_c_inbound_fifo_wrcount, pmod_c_inbound_fifo_rdcount         : std_logic_vector(11 downto 0);
+  signal pmod_c_outbound_fifo_wrcount, pmod_c_outbound_fifo_rdcount       : std_logic_vector(11 downto 0);
+  signal flash_inbound_fifo_wrcount, flash_inbound_fifo_rdcount           : std_logic_vector(11 downto 0);
+  signal monitoring_inbound_fifo_wrcount, monitoring_inbound_fifo_rdcount : std_logic_vector(11 downto 0);
 
   signal clk_100mhz_tx, clk_100mhz_rx, clk_500mhz_tx, clk_500mhz_rx                                                : std_logic;
-  signal tx_phase_shift                                                                                            : std_logic                    := '0';
-  signal int_clk_100mhz, int_async_reset, tx_sync_reset, led_sync_reset, application_reset, rx_sync_reset                                             : std_logic                    := '1';
-  signal tx_domain_transmitting, rx_domain_receiving, p_p_transmitting, p_p_receiving, p_transmitting, p_receiving : std_logic                    := '0';
+  signal tx_phase_shift                                                                                            : std_logic := '0';
+  signal int_clk_100mhz, int_async_reset, tx_sync_reset, led_sync_reset, application_reset, rx_sync_reset          : std_logic := '1';
+  signal tx_domain_transmitting, rx_domain_receiving, p_p_transmitting, p_p_receiving, p_transmitting, p_receiving : std_logic := '0';
 
   signal reset_count : unsigned(28 downto 0) := (others => '1');
-  
+
 begin
 
   -- Base clock / reset block
@@ -5752,17 +5751,17 @@ begin
     -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
     async_reset_delay : process(int_async_reset, int_clk_100mhz)
     begin
-    if int_async_reset = '1' then
-      reset_count <= "00000000000001000000000000000";
-      application_reset <= '1';
-    elsif rising_edge(int_clk_100mhz) then
-      if reset_count = 0 then
-        application_reset <= '0';
-      else
-        reset_count <= reset_count - 1;
+      if int_async_reset = '1' then
+        reset_count       <= "00000000000001000000000000000";
+        application_reset <= '1';
+      elsif rising_edge(int_clk_100mhz) then
+        if reset_count = 0 then
+          application_reset <= '0';
+        else
+          reset_count <= reset_count - 1;
+        end if;
       end if;
-    end if;
-  end process async_reset_delay;
+    end process async_reset_delay;
   end generate g_base_sim;
   g_n_base_sim : if FAST_SIMULATION = false generate
     inst_base : base
@@ -5789,21 +5788,21 @@ begin
     -- is locked and the Spartan is requesting phase shifts, then things are 'OK'
     async_reset_delay : process(int_async_reset, int_clk_100mhz)
     begin
-    if int_async_reset = '1' then
-      reset_count <= (others => '1');
-      application_reset <= '1';
-    elsif rising_edge(int_clk_100mhz) then
-      if reset_count = 0 then
-        application_reset <= '0';
-      else
-        reset_count <= reset_count - 1;
+      if int_async_reset = '1' then
+        reset_count       <= (others => '1');
+        application_reset <= '1';
+      elsif rising_edge(int_clk_100mhz) then
+        if reset_count = 0 then
+          application_reset <= '0';
+        else
+          reset_count <= reset_count - 1;
+        end if;
       end if;
-    end if;
-  end process async_reset_delay;
+    end process async_reset_delay;
   end generate g_n_base_sim;
 
   async_reset <= application_reset;
-  
+
   -- LED sync reset is a special case as it has a potential update at startup
   inst_led_sync_reset : async_to_sync_reset_shift
     generic map (
@@ -5813,10 +5812,10 @@ begin
       clk    => clk_100mhz_tx,
       input  => application_reset,
       output => led_sync_reset
-      );  
-  
+      );
+
   -- Pass-through
-  clk_100mhz  <= int_clk_100mhz;
+  clk_100mhz <= int_clk_100mhz;
 
   -- Hold the reset for the receiver after the ISERDES is reset for a
   -- few cycles to allow it to initialise
@@ -5956,9 +5955,9 @@ begin
     led_outbound_empty            when outbound_stream_select = "0101" else
     flash_outbound_empty          when outbound_stream_select = "0110" else
     monitoring_outbound_empty     when outbound_stream_select = "0111" else
-    pmod_a_outbound_fifo_empty when outbound_stream_select = "1000" else
-    pmod_b_outbound_fifo_empty when outbound_stream_select = "1001" else
-    pmod_c_outbound_fifo_empty when outbound_stream_select = "1010" else
+    pmod_a_outbound_fifo_empty    when outbound_stream_select = "1000" else
+    pmod_b_outbound_fifo_empty    when outbound_stream_select = "1001" else
+    pmod_c_outbound_fifo_empty    when outbound_stream_select = "1010" else
     '0';
 
   outbound_bridge_din <=
@@ -5969,10 +5968,10 @@ begin
     multicast_outbound_fifo_dout when outbound_stream_select = "0100" else
     led_outbound_dout            when outbound_stream_select = "0101" else
     flash_outbound_dout          when outbound_stream_select = "0110" else
-    monitoring_outbound_dout     when outbound_stream_select = "0111" else    
-    pmod_a_outbound_fifo_dout     when outbound_stream_select = "1000" else    
-    pmod_b_outbound_fifo_dout     when outbound_stream_select = "1001" else    
-    pmod_c_outbound_fifo_dout     when outbound_stream_select = "1010" else    
+    monitoring_outbound_dout     when outbound_stream_select = "0111" else
+    pmod_a_outbound_fifo_dout    when outbound_stream_select = "1000" else
+    pmod_b_outbound_fifo_dout    when outbound_stream_select = "1001" else
+    pmod_c_outbound_fifo_dout    when outbound_stream_select = "1010" else
     ("00000" & outbound_target);
 
   channel_1_outbound_fifo_read <= outbound_copy when outbound_stream_select = "0000" else '0';
@@ -5983,10 +5982,10 @@ begin
   led_outbound_read            <= outbound_copy when outbound_stream_select = "0101" else '0';
   flash_outbound_read          <= outbound_copy when outbound_stream_select = "0110" else '0';
   monitoring_outbound_read     <= outbound_copy when outbound_stream_select = "0111" else '0';
-  pmod_a_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1000" else '0';
-  pmod_b_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1001" else '0';
-  pmod_c_outbound_fifo_read <= outbound_copy when outbound_stream_select = "1010" else '0';
-  
+  pmod_a_outbound_fifo_read    <= outbound_copy when outbound_stream_select = "1000" else '0';
+  pmod_b_outbound_fifo_read    <= outbound_copy when outbound_stream_select = "1001" else '0';
+  pmod_c_outbound_fifo_read    <= outbound_copy when outbound_stream_select = "1010" else '0';
+
   -- Cross the LED signals from the clk_100mhz domain (or whatever else) into
   -- the TX domain. We don't need to take great care here as a glitch wouldn't
   -- be obvious to anyone visibly inspecting them and is not a critical path.
@@ -5999,7 +5998,7 @@ begin
       if led_sync_reset = '1' then
         -- LEDs are off by default during reset
         led_outbound_empty <= '1';
-        led_outbound_dout  <= "1" & x"00"; -- & r_tx_domain_leds;
+        led_outbound_dout  <= "1" & x"00";  -- & r_tx_domain_leds;
       else
         if led_outbound_empty = '0' then
           if led_outbound_read = '1' then
@@ -6015,14 +6014,14 @@ begin
 
   -- Cross the monitoring data request clk_100mhz domain (or whatever else) into
   -- the TX domain. We double register then oneshot to get a single pulse.
-  global_domain_flash_request <= flash_request when rising_edge(int_clk_100mhz);
+  global_domain_flash_request <= flash_request               when rising_edge(int_clk_100mhz);
   tx_domain_flash_request     <= global_domain_flash_request when rising_edge(clk_100mhz_tx);
-  r_tx_domain_flash_request   <= tx_domain_flash_request when rising_edge(clk_100mhz_tx);
-  r_r_tx_domain_flash_request   <= r_tx_domain_flash_request when rising_edge(clk_100mhz_tx);
+  r_tx_domain_flash_request   <= tx_domain_flash_request     when rising_edge(clk_100mhz_tx);
+  r_r_tx_domain_flash_request <= r_tx_domain_flash_request   when rising_edge(clk_100mhz_tx);
 
-  tx_domain_flash_address   <= flash_address when rising_edge(clk_100mhz_tx);
-  r_tx_domain_flash_address   <= tx_domain_flash_address when rising_edge(clk_100mhz_tx);
-  
+  tx_domain_flash_address   <= flash_address           when rising_edge(clk_100mhz_tx);
+  r_tx_domain_flash_address <= tx_domain_flash_address when rising_edge(clk_100mhz_tx);
+
   proc_flash_request : process(clk_100mhz_tx)
   begin
     if rising_edge(clk_100mhz_tx) then
@@ -6034,36 +6033,36 @@ begin
           -- Decrement the count during a valid read cycle          
           if flash_outbound_read = '1' then
             flash_address_counter <= flash_address_counter - 1;
-            shift_flash_address <= shift_flash_address(shift_flash_address'left-8 downto 0) & x"00";
+            shift_flash_address   <= shift_flash_address(shift_flash_address'left-8 downto 0) & x"00";
           end if;
         elsif (not(r_r_tx_domain_flash_request) and r_tx_domain_flash_request) = '1' then
           flash_address_counter <= 3;
-          shift_flash_address <= r_tx_domain_flash_address;
+          shift_flash_address   <= r_tx_domain_flash_address;
         end if;
       end if;
     end if;
   end process proc_flash_request;
 
   flash_outbound_dout(7 downto 0) <= shift_flash_address(shift_flash_address'left downto shift_flash_address'left-7);
-  flash_outbound_dout(8) <= '1' when flash_address_counter = 1 else '0';
-  flash_outbound_empty <= '1' when flash_address_counter = 0 else '0';
-  
+  flash_outbound_dout(8)          <= '1' when flash_address_counter = 1 else '0';
+  flash_outbound_empty            <= '1' when flash_address_counter = 0 else '0';
+
   -- Cross the monitoring data request clk_100mhz domain (or whatever else) into
   -- the TX domain. We double register then oneshot to get a single pulse.
-  global_domain_monitoring_request <= monitoring_request when rising_edge(int_clk_100mhz);
+  global_domain_monitoring_request <= monitoring_request               when rising_edge(int_clk_100mhz);
   tx_domain_monitoring_request     <= global_domain_monitoring_request when rising_edge(clk_100mhz_tx);
-  r_tx_domain_monitoring_request   <= tx_domain_monitoring_request when rising_edge(clk_100mhz_tx);
-  r_r_tx_domain_monitoring_request   <= r_tx_domain_monitoring_request when rising_edge(clk_100mhz_tx);
-  
+  r_tx_domain_monitoring_request   <= tx_domain_monitoring_request     when rising_edge(clk_100mhz_tx);
+  r_r_tx_domain_monitoring_request <= r_tx_domain_monitoring_request   when rising_edge(clk_100mhz_tx);
+
   proc_monitoring_request : process(clk_100mhz_tx)
   begin
     if rising_edge(clk_100mhz_tx) then
       if tx_sync_reset = '1' then
         -- Initialize monitoring request layer to empty on reset
         monitoring_outbound_empty <= '1';
-        -- This isn't actually used currently.
-        -- All we need is to send a byte, the contents is irrelevant.
-        --monitoring_outbound_dout  <= "100000000";
+      -- This isn't actually used currently.
+      -- All we need is to send a byte, the contents is irrelevant.
+      --monitoring_outbound_dout  <= "100000000";
       else
         if monitoring_outbound_empty = '0' then
           if monitoring_outbound_read = '1' then
@@ -6075,7 +6074,7 @@ begin
       end if;
     end if;
   end process proc_monitoring_request;
-  
+
   -- HS comms
   inst_comms_link : comms_link
     port map (
@@ -6086,11 +6085,11 @@ begin
       clk_5x_rx      => clk_500mhz_rx,
       tx_phase_shift => tx_phase_shift,
 
-      tx_p => data_out_p,
-      tx_n => data_out_n,
-      rx_p => data_in_p,
-      rx_n => data_in_n,
-      rx_locked              => rx_locked,
+      tx_p      => data_out_p,
+      tx_n      => data_out_n,
+      rx_p      => data_in_p,
+      rx_n      => data_in_n,
+      rx_locked => rx_locked,
 
       outbound_data      => outbound_bridge_dout(7 downto 0),
       outbound_available => outbound_available,
@@ -6184,7 +6183,7 @@ begin
 
       if rx_sync_reset = '1' then
         inbound_stream_select <= "1111";
-        inbound_state        <= INIT;
+        inbound_state         <= INIT;
       else
 
         case inbound_state is
@@ -6232,44 +6231,44 @@ begin
 
   -- Inbound FIFO mux control
   inbound_full <=
-    channel_1_inbound_fifo_full when inbound_stream_select = "0000" else
-    channel_2_inbound_fifo_full when inbound_stream_select = "0001" else
-    channel_3_inbound_fifo_full when inbound_stream_select = "0010" else
-    channel_4_inbound_fifo_full when inbound_stream_select = "0011" else
-    multicast_inbound_fifo_full when inbound_stream_select = "0100" else
+    channel_1_inbound_fifo_full  when inbound_stream_select = "0000" else
+    channel_2_inbound_fifo_full  when inbound_stream_select = "0001" else
+    channel_3_inbound_fifo_full  when inbound_stream_select = "0010" else
+    channel_4_inbound_fifo_full  when inbound_stream_select = "0011" else
+    multicast_inbound_fifo_full  when inbound_stream_select = "0100" else
     -- "0101" == LEDs (unused)
-    flash_inbound_fifo_full when inbound_stream_select = "0110" else
-    monitoring_inbound_fifo_full when inbound_stream_select = "0111" else    
-    pmod_a_inbound_fifo_full when inbound_stream_select = "1000" else
-    pmod_b_inbound_fifo_full when inbound_stream_select = "1001" else
-    pmod_c_inbound_fifo_full when inbound_stream_select = "1010" else
+    flash_inbound_fifo_full      when inbound_stream_select = "0110" else
+    monitoring_inbound_fifo_full when inbound_stream_select = "0111" else
+    pmod_a_inbound_fifo_full     when inbound_stream_select = "1000" else
+    pmod_b_inbound_fifo_full     when inbound_stream_select = "1001" else
+    pmod_c_inbound_fifo_full     when inbound_stream_select = "1010" else
     '0';
 
-  channel_1_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0000" else '0';
-  channel_2_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0001" else '0';
-  channel_3_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0010" else '0';
-  channel_4_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0011" else '0';
-  multicast_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0100" else '0';
+  channel_1_inbound_fifo_write  <= inbound_copy when inbound_stream_select = "0000" else '0';
+  channel_2_inbound_fifo_write  <= inbound_copy when inbound_stream_select = "0001" else '0';
+  channel_3_inbound_fifo_write  <= inbound_copy when inbound_stream_select = "0010" else '0';
+  channel_4_inbound_fifo_write  <= inbound_copy when inbound_stream_select = "0011" else '0';
+  multicast_inbound_fifo_write  <= inbound_copy when inbound_stream_select = "0100" else '0';
   -- "0101" == LEDs (unused)
-  flash_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0110" else '0';
+  flash_inbound_fifo_write      <= inbound_copy when inbound_stream_select = "0110" else '0';
   monitoring_inbound_fifo_write <= inbound_copy when inbound_stream_select = "0111" else '0';
-  pmod_a_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1000" else '0';
-  pmod_b_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1001" else '0';
-  pmod_c_inbound_fifo_write <= inbound_copy when inbound_stream_select = "1010" else '0';
+  pmod_a_inbound_fifo_write     <= inbound_copy when inbound_stream_select = "1000" else '0';
+  pmod_b_inbound_fifo_write     <= inbound_copy when inbound_stream_select = "1001" else '0';
+  pmod_c_inbound_fifo_write     <= inbound_copy when inbound_stream_select = "1010" else '0';
 
   -- Direct fanouts
-  channel_1_inbound_fifo_din <= inbound_bridge_dout;
-  channel_2_inbound_fifo_din <= inbound_bridge_dout;
-  channel_3_inbound_fifo_din <= inbound_bridge_dout;
-  channel_4_inbound_fifo_din <= inbound_bridge_dout;
-  multicast_inbound_fifo_din <= inbound_bridge_dout;
+  channel_1_inbound_fifo_din  <= inbound_bridge_dout;
+  channel_2_inbound_fifo_din  <= inbound_bridge_dout;
+  channel_3_inbound_fifo_din  <= inbound_bridge_dout;
+  channel_4_inbound_fifo_din  <= inbound_bridge_dout;
+  multicast_inbound_fifo_din  <= inbound_bridge_dout;
   -- "0101" == LEDs (unused)
-  flash_inbound_fifo_din <= inbound_bridge_dout;
+  flash_inbound_fifo_din      <= inbound_bridge_dout;
   monitoring_inbound_fifo_din <= inbound_bridge_dout;
-  pmod_a_inbound_fifo_din <= inbound_bridge_dout;
-  pmod_b_inbound_fifo_din <= inbound_bridge_dout;
-  pmod_c_inbound_fifo_din <= inbound_bridge_dout;
-  
+  pmod_a_inbound_fifo_din     <= inbound_bridge_dout;
+  pmod_b_inbound_fifo_din     <= inbound_bridge_dout;
+  pmod_c_inbound_fifo_din     <= inbound_bridge_dout;
+
   -----------------------------------------------------------------------------
   -- FIFO instances
   -----------------------------------------------------------------------------
@@ -6330,13 +6329,13 @@ begin
         WRCLK       => int_channel_1_clk,
         WREN        => channel_1_outbound_fifo_write
         );
-    
+
 
     g_loopback_channel_1 : if CHANNEL_1_LOOPBACK = true generate
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_1_reset <= rx_sync_reset or tx_sync_reset;
-      
+
       -- Use the internal clock for loopback
       int_channel_1_clk <= clk_100mhz_rx;
 
@@ -6350,7 +6349,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_1_reset <= channel_1_reset or rx_sync_reset or tx_sync_reset;
-      
+
       -- Use external clock when not in loopback
       int_channel_1_clk <= channel_1_clk;
 
@@ -6442,7 +6441,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_2_reset <= rx_sync_reset or tx_sync_reset;
-      
+
       -- Use the internal clock for loopback
       int_channel_2_clk <= clk_100mhz_rx;
 
@@ -6547,7 +6546,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_3_reset <= rx_sync_reset or tx_sync_reset;
-      
+
       -- Use the internal clock for loopback
       int_channel_3_clk <= clk_100mhz_rx;
 
@@ -6561,7 +6560,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_3_reset <= channel_3_reset or rx_sync_reset or tx_sync_reset;
-      
+
       -- Use external clock when not in loopback
       int_channel_3_clk <= channel_3_clk;
 
@@ -6652,7 +6651,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_4_reset <= rx_sync_reset or tx_sync_reset;
-      
+
       -- Use the internal clock for loopback
       int_channel_4_clk <= clk_100mhz_rx;
 
@@ -6666,7 +6665,7 @@ begin
 
       -- Reset must be held low until FIFO clocks are stable
       int_channel_4_reset <= channel_4_reset or rx_sync_reset or tx_sync_reset;
-      
+
       -- Use external clock when not in loopback
       int_channel_4_clk <= channel_4_clk;
 
@@ -6757,7 +6756,7 @@ begin
 
     -- Reset must be held low until FIFO clocks are stable
     int_multicast_reset <= multicast_reset or rx_sync_reset or tx_sync_reset;
-    
+
     int_multicast_clk <= multicast_clk;
 
     multicast_inbound_fifo_read <= multicast_inbound_read when int_multicast_reset = '0' else '0';
@@ -6844,7 +6843,7 @@ begin
 
     -- Reset must be held low until FIFO clocks are stable
     int_pmod_a_reset <= pmod_a_reset or rx_sync_reset or tx_sync_reset;
-    
+
     pmod_a_inbound_fifo_read <= pmod_a_inbound_read when int_pmod_a_reset = '0' else '0';
     pmod_a_inbound_data      <= pmod_a_inbound_fifo_dout(7 downto 0);
     pmod_a_inbound_frame_end <= pmod_a_inbound_fifo_dout(8);
@@ -6929,7 +6928,7 @@ begin
 
     -- Reset must be held low until FIFO clocks are stable
     int_pmod_b_reset <= pmod_b_reset or rx_sync_reset or tx_sync_reset;
-    
+
     pmod_b_inbound_fifo_read <= pmod_b_inbound_read when int_pmod_b_reset = '0' else '0';
     pmod_b_inbound_data      <= pmod_b_inbound_fifo_dout(7 downto 0);
     pmod_b_inbound_frame_end <= pmod_b_inbound_fifo_dout(8);
@@ -7014,7 +7013,7 @@ begin
 
     -- Reset must be held low until FIFO clocks are stable
     int_pmod_c_reset <= pmod_c_reset or rx_sync_reset or tx_sync_reset;
-    
+
     pmod_c_inbound_fifo_read <= pmod_c_inbound_read when int_pmod_c_reset = '0' else '0';
     pmod_c_inbound_data      <= pmod_c_inbound_fifo_dout(7 downto 0);
     pmod_c_inbound_frame_end <= pmod_c_inbound_fifo_dout(8);
@@ -7037,7 +7036,7 @@ begin
     pmod_c_outbound_fifo_full  <= '0';
 
   end generate g_n_pmod_c;
-  
+
   -- Only instantiate the channel if enabled
   g_flash : if FLASH_ENABLE = true generate
 
@@ -7072,11 +7071,11 @@ begin
 
     -- Reset must be held low until FIFO clocks are stable
     int_flash_reset <= flash_reset or rx_sync_reset or tx_sync_reset;
-    
+
     flash_inbound_fifo_read <= flash_read when int_flash_reset = '0' else '0';
-    flash_data      <= flash_inbound_fifo_dout(7 downto 0);
-    flash_frame_end <= flash_inbound_fifo_dout(8);
-    flash_available <= not(flash_inbound_fifo_empty);
+    flash_data              <= flash_inbound_fifo_dout(7 downto 0);
+    flash_frame_end         <= flash_inbound_fifo_dout(8);
+    flash_available         <= not(flash_inbound_fifo_empty);
 
   end generate g_flash;
 
@@ -7119,14 +7118,14 @@ begin
         );
 
     -- Mappings
-    
+
     -- Reset must be held low until FIFO clocks are stable
     int_monitoring_reset <= monitoring_reset or rx_sync_reset or tx_sync_reset;
-    
-    monitoring_inbound_fifo_read <= monitoring_read when int_monitoring_reset = '0' else '0'; 
-    monitoring_data      <= monitoring_inbound_fifo_dout(7 downto 0);
-    monitoring_frame_end <= monitoring_inbound_fifo_dout(8);
-    monitoring_available <= not(monitoring_inbound_fifo_empty);
+
+    monitoring_inbound_fifo_read <= monitoring_read when int_monitoring_reset = '0' else '0';
+    monitoring_data              <= monitoring_inbound_fifo_dout(7 downto 0);
+    monitoring_frame_end         <= monitoring_inbound_fifo_dout(8);
+    monitoring_available         <= not(monitoring_inbound_fifo_empty);
 
   end generate g_monitoring;
 
@@ -7137,6 +7136,6 @@ begin
     monitoring_inbound_fifo_full  <= '0';
 
   end generate g_n_monitoring;
-  
+
 end architecture rtl;
 
